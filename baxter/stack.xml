@@ -1,0 +1,11 @@
+<stack>
+  <description brief="Baxter SDK Stack">
+  A set of code and messages that are used to interface with Rethink Robotics
+  Baxter Robot.
+  </description>
+  <author>Maintained by Chris Gindel</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.rethinkrobotics.com</url>
+  <depend stack="ros"/>
+</stack>

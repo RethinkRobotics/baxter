@@ -1,0 +1,15 @@
+<package>
+  <description brief="baxter_joint_msgs">
+
+     baxter_joint_msgs
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/baxter_joint_msgs</url>
+  <depend package="std_msgs"/>
+
+</package>
+
+
