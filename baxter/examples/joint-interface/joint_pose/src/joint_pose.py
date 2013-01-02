@@ -7,6 +7,7 @@ import time
 from optparse import OptionParser
 from errno import EINVAL
 from sensor_msgs.msg import JointState
+from sensor_msgs.msg import Joy
 from baxter_joint_msgs.msg import JointPosition
 
 class JointController(object):
@@ -93,18 +94,24 @@ class FileMapper(object):
 
 class JoystickMapper(object):
   def __init__(self, controller, padType):
-    self.sub = rospy.Subscriber("/joy", sensor_msgs.msg.Joy, self.incoming)
+    self.sub = rospy.Subscriber("/joy", Joy, self.incoming)
     self.controller = controller
     self.controls = {}
     self.padType = padType
     self.newData = False
 
+    cf = self.createCommandFunction
     self.bindings = {
-      'rightStickHorz': ['left_s0','left_e0','left_w0'],
-      'rightStickVert': ['left_s1','left_e1','left_w1'],
-      'leftStickHorz':  ['right_s0','right_e0','right_w0'],
-      'leftStickVert':  ['right_s1','right_e1','right_w1']
+      'rightStickHorz': [cf('left_s0',-1), cf('left_e0',-1), cf('left_w0',-1)],
+      'rightStickVert': [cf('left_s1',-1), cf('left_e1',-1), cf('left_w1',-1)],
+      'leftStickHorz':  [cf('right_s0',-1), cf('right_e0',-1), cf('right_w0',-1)],
+      'leftStickVert':  [cf('right_s1',-1), cf('right_e1',-1), cf('right_w1',-1)]
     }
+
+  def createCommandFunction(self, joint_name, scale):
+    def f(controlName):
+      return (joint_name, self.controls[controlName] * scale)
+    return f
 
   def incoming(self, msg):
     if self.padType == "xbox":
@@ -120,11 +127,11 @@ class JoystickMapper(object):
       self.controls['rightBumper'] = (msg.buttons[5] == 1)
       self.controls['leftStickHorz'] = msg.axes[0]
       self.controls['leftStickVert'] = msg.axes[1]
-      self.controls['rightTrigger'] = msg.axes[2]
+      self.controls['leftTrigger'] = msg.axes[2]
       self.controls['rightStickHorz'] = msg.axes[3]
       self.controls['rightStickVert'] = msg.axes[4]
       self.controls['rightTrigger'] = msg.axes[5]
-      self.controls['back'] = (msg.buttons[10] == 1)
+      self.controls['back'] = (msg.buttons[6] == 1)
     else:
       raise OSError(EINVAL, "unknown padType")
     self.newData = True
@@ -132,22 +139,23 @@ class JoystickMapper(object):
   def loop(self):
     self.done = False
     mode = 0
-    if self.newData:
-      lastControlis = self.controls.copy()
-      while not self.done:
-        if self.newData:
-          commands = {}
-          for key, value in self.bindings.items():
-            commands[value[mode % len(value)]] = (self.controls[key] / 1000.0)
-          if self.controls['rightBumper'] and not lastControls['rightBumper']:
-            mode += 1
-          if self.controls['leftBumper'] and not lastControls['leftBumper']:
-            mode -= 1
-          if self.controls['a'] and not lastControls['a']:
-            self.controller.record()
-          self.done = self.controls['back']
-          self.controller.command(commands)
-          lastControlis = self.controls.copy()
+    lastControls = self.controls.copy()
+    while not self.done:
+      if self.newData:
+        commands = {}
+        for key, value in self.bindings.items():
+          (joint_name, joint_pos) = value[mode % len(value)](key)
+          if joint_name:
+            commands[joint_name] = joint_pos
+        if self.controls['rightBumper'] and not lastControls['rightBumper']:
+          mode += 1
+        if self.controls['leftBumper'] and not lastControls['leftBumper']:
+          mode -= 1
+        if self.controls['a'] and not lastControls['a']:
+          self.controller.record()
+        self.done = self.controls['back']
+        self.controller.command(commands)
+        lastControls = self.controls.copy()
 
 class KeyboardMapper(object):
   """ class that listens to keypresses and sends associated robot joint commands """
