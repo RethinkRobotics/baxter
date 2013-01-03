@@ -53,18 +53,18 @@ class BaxterController(JointController):
   def command(self, jointDeltas, posIsDelta=True):
     msg = JointPosition()
     for jointName, delta in jointDeltas.items():
-      if jointName[:4] == 'left':
+      if jointName in self.leftPosition:
         if posIsDelta:
           self.leftPosition[jointName] += delta
         else:
           self.leftPosition[jointName] = delta
-      elif jointName[:5] == 'right':
+      elif jointName in self.rightPosition:
         if posIsDelta:
           self.rightPosition[jointName] += delta
         else:
           self.rightPosition[jointName] = delta
       else:
-       raise OSError(EINVAL, "unknown jointname")
+        raise OSError(EINVAL, "unknown jointname %s" % (jointName))
 
     msg.names = self.leftPosition.keys()
     msg.angles = self.leftPosition.values()
@@ -206,7 +206,10 @@ class KeyboardMapper(object):
   def createCommandFunction(self, jointName, delta):
     """create a function to increment a specific joint by a specific delta"""
     def commandFunction():
-      self.jointController.command({jointName: delta})
+      try:
+        self.jointController.command({jointName: delta})
+      except OSError:
+        print "joint %s not found; is the robot running?" % (jointName)
     commandFunction.__doc__ = "modify " + jointName + " by " + str(delta)
     return commandFunction
 
@@ -236,21 +239,21 @@ class KeyboardMapper(object):
       print "    " + str(key) + ": " + str(cmds[i].__doc__)
 
   def execBinding(self,c):
-    cmds = self.bindings[c]
-    i = self.mode % len(cmds)
-    print cmds[i].__doc__
-    cmds[i]()
+    if c in self.bindings:
+      cmds = self.bindings[c]
+      i = self.mode % len(cmds)
+      print cmds[i].__doc__
+      cmds[i]()
+    else:
+      print "unknown key: " + c
+      print "press '?' for help"
 
   def loop(self):
     self.done = False
     self.mode = 0
     while not self.done:
       c = self.getch()
-      try:
-        self.execBinding(c)
-      except KeyError:
-        print "unknown key: " + c
-        print "press '?' for help"
+      self.execBinding(c)
 
 if __name__ == '__main__':
   parser = OptionParser()
