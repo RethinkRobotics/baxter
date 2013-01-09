@@ -10,9 +10,12 @@ from errno import EINVAL
 import roslib
 roslib.load_manifest('joint_pose')
 import rospy
+import enable_robot
+
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
 from baxter_joint_msgs.msg import JointPosition
+
 
 class JointController(object):
   """ Abstract base class for robot joint controllers """
@@ -270,6 +273,9 @@ if __name__ == '__main__':
 
   if options.joystick or options.keyboard:
     rospy.init_node('posejoint')
+    rs = enable_robot.RobotState()
+    rs.enable()
+
     controller = BaxterController(options.outputFilename)
     if options.inputFilename:
       mapper = FileMapper(controller, options.inputFilename, options.rate)
@@ -278,5 +284,7 @@ if __name__ == '__main__':
     else:
       mapper = KeyboardMapper(controller)
     mapper.loop()
+
+    rs.disable()
   else:
     parser.error("use either keyboard (default) or joystick")
