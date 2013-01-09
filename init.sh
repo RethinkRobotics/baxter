@@ -17,10 +17,12 @@ cat <<-EOF > ${tf}
 		source "\${HOME}"/.bashrc
 	fi
 
-	if ! source /opt/ros/electric/setup.bash; then
-		echo "Failed to source setup for ROS electric"
+	if [ ! -s /opt/ros/electric/setup.bash -a ! -s /opt/ros/electric/setup.sh ]; then
+		echo "Failed to find environment script for ROS electric"
 		exit 1
 	fi
+
+	source /opt/ros/electric/setup.bash 2>/dev/null || source /opt/ros/electric/setup.sh
 
 	export ROS_PACKAGE_PATH=${topdir}:\${ROS_PACKAGE_PATH}
 	[[ -n "${master_uri}" ]] && export ROS_MASTER_URI="http://${master_uri}:11311"
