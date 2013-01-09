@@ -9,7 +9,6 @@ ipaddr=""
 
 if [ -n "${1}" ]; then
 	master_uri="${1}"
-  ipaddr=$(ip addr | grep eth0 | grep inet | sed 's/.*inet.\([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/')
 fi
 
 cat <<-EOF > ${tf}
