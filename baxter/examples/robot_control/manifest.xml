@@ -1,0 +1,13 @@
+<package>
+  <description brief="robot_control">
+     robot_control
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/baxter_joint_msgs</url>
+  <depend package="rospy"/>
+  <depend package="baxter_msgs"/>
+</package>
+
+
