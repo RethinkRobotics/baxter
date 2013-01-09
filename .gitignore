@@ -35,5 +35,7 @@ nosetests.xml
 .pydevproject
 *.swp
 
-baxter/examples/joint-interface/baxter_joint_msgs/msg_gen/
 baxter/examples/joint-interface/baxter_joint_msgs/src/baxter_joint_msgs/msg/
+baxter/baxter_msgs/src/baxter_msgs/
+msg_gen
+srv_gen
