@@ -1,11 +1,15 @@
 #!/usr/bin/env python
-import roslib; roslib.load_manifest('joint_pose')
-import rospy
-import sys, tty, termios
 import os.path
+import sys
+import termios
 import time
+import tty
 from optparse import OptionParser
 from errno import EINVAL
+
+import roslib
+roslib.load_manifest('joint_pose')
+import rospy
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
 from baxter_joint_msgs.msg import JointPosition
