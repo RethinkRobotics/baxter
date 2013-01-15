@@ -11,7 +11,7 @@
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
-  <depend package="baxter_joint_msgs"/>
+  <depend package="baxter_msgs"/>
   <depend package="robot_control"/>
 
 </package>

@@ -14,7 +14,8 @@ import enable_robot
 
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
-from baxter_joint_msgs.msg import JointPosition
+from baxter_msgs.msg import JointControlMode #TODO: rename to JointCommandMode on both sides
+from baxter_msgs.msg import JointPositions
 
 
 class JointController(object):
@@ -28,14 +29,24 @@ class BaxterController(JointController):
   """
   def __init__(self, outputFilename):
     super( BaxterController, self).__init__()
-    self.pubLeft = rospy.Publisher('/robot/limb/left/endpoint/command_joint_position', JointPosition)
-    self.pubRight = rospy.Publisher('/robot/limb/right/endpoint/command_joint_position', JointPosition)
+    self.pubLeftMode = rospy.Publisher('/robot/limb/left/joint_command_mode', JointControlMode)
+    self.pubRightMode = rospy.Publisher('/robot/limb/right/joint_command_mode', JointControlMode)
+    self.pubLeft = rospy.Publisher('/robot/limb/left/command_joint_angles', JointPositions)
+    self.pubRight = rospy.Publisher('/robot/limb/right/command_joint_angles', JointPositions)
     self.subLeft = rospy.Subscriber('/robot/limb/left/joint_states', JointState, self.leftJointState)
     self.subRight = rospy.Subscriber('/robot/limb/right/joint_states', JointState, self.rightJointState)
     self.leftPosition = {}
     self.rightPosition = {}
     self.outputFilename = outputFilename
     self.newFile = True
+    self.setPositionMode()
+
+  def setPositionMode(self):
+    msg = JointControlMode()
+    msg.data = JointControlMode.POSITION
+    self.pubLeftMode.publish(msg)
+    self.pubRightMode.publish(msg)
+
 
   def record(self):
     if self.outputFilename:
@@ -58,7 +69,7 @@ class BaxterController(JointController):
       self.rightPosition['right_'+data.name[i]] = data.position[i]
 
   def command(self, jointDeltas, posIsDelta=True):
-    msg = JointPosition()
+    msg = JointPositions()
     for jointName, delta in jointDeltas.items():
       if jointName in self.leftPosition:
         if posIsDelta:
