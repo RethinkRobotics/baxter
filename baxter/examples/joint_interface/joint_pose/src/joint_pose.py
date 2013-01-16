@@ -39,7 +39,6 @@ class BaxterController(JointController):
     self.rightPosition = {}
     self.outputFilename = outputFilename
     self.newFile = True
-    self.setPositionMode()
 
   def setPositionMode(self):
     msg = JointControlMode()
@@ -83,6 +82,8 @@ class BaxterController(JointController):
           self.rightPosition[jointName] = delta
       else:
         raise OSError(EINVAL, "unknown jointname %s" % (jointName))
+
+    self.setPositionMode()
 
     msg.names = self.leftPosition.keys()
     msg.angles = self.leftPosition.values()
