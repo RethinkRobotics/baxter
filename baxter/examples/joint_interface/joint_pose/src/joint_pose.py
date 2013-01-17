@@ -14,7 +14,7 @@ import enable_robot
 
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
-from baxter_msgs.msg import JointControlMode #TODO: rename to JointCommandMode on both sides
+from baxter_msgs.msg import JointCommandMode
 from baxter_msgs.msg import JointPositions
 
 
@@ -29,8 +29,8 @@ class BaxterController(JointController):
   """
   def __init__(self, outputFilename):
     super( BaxterController, self).__init__()
-    self.pubLeftMode = rospy.Publisher('/robot/limb/left/joint_command_mode', JointControlMode)
-    self.pubRightMode = rospy.Publisher('/robot/limb/right/joint_command_mode', JointControlMode)
+    self.pubLeftMode = rospy.Publisher('/robot/limb/left/joint_command_mode', JointCommandMode)
+    self.pubRightMode = rospy.Publisher('/robot/limb/right/joint_command_mode', JointCommandMode)
     self.pubLeft = rospy.Publisher('/robot/limb/left/command_joint_angles', JointPositions)
     self.pubRight = rospy.Publisher('/robot/limb/right/command_joint_angles', JointPositions)
     self.subLeft = rospy.Subscriber('/robot/limb/left/joint_states', JointState, self.leftJointState)
@@ -41,8 +41,8 @@ class BaxterController(JointController):
     self.newFile = True
 
   def setPositionMode(self):
-    msg = JointControlMode()
-    msg.data = JointControlMode.POSITION
+    msg = JointCommandMode()
+    msg.mode = JointCommandMode.POSITION
     self.pubLeftMode.publish(msg)
     self.pubRightMode.publish(msg)
 
@@ -81,7 +81,7 @@ class BaxterController(JointController):
         else:
           self.rightPosition[jointName] = delta
       else:
-        raise OSError(EINVAL, "unknown jointname %s" % (jointName))
+        pass#raise OSError(EINVAL, "unknown jointname %s" % (jointName))
 
     self.setPositionMode()
 
@@ -133,24 +133,47 @@ class JoystickMapper(object):
     return f
 
   def incoming(self, msg):
+    def deadband(axis,size):
+      if axis > size or axis < -size:
+        return axis
+      return 0
+
     if self.padType == "xbox":
-      self.controls['x'] = (msg.buttons[2] == 1)
-      self.controls['y'] = (msg.buttons[3] == 1)
-      self.controls['a'] = (msg.buttons[0] == 1)
-      self.controls['b'] = (msg.buttons[1] == 1)
+      self.controls['btnLeft'] = (msg.buttons[2] == 1)
+      self.controls['btnUp'] = (msg.buttons[3] == 1)
+      self.controls['btnDown'] = (msg.buttons[0] == 1)
+      self.controls['btnRight'] = (msg.buttons[1] == 1)
       self.controls['dPadUp'] = (msg.axes[7] > 0.5)
       self.controls['dPadDown'] = (msg.axes[7] < -0.5)
       self.controls['dPadLeft'] = (msg.axes[6] > 0.5)
       self.controls['dPadRight'] = (msg.axes[6] < -0.5)
       self.controls['leftBumper'] = (msg.buttons[4] == 1)
       self.controls['rightBumper'] = (msg.buttons[5] == 1)
-      self.controls['leftStickHorz'] = msg.axes[0]
-      self.controls['leftStickVert'] = msg.axes[1]
+      self.controls['leftStickHorz'] = deadband(msg.axes[0],0.1)
+      self.controls['leftStickVert'] = deadband(msg.axes[1],0.1)
       self.controls['leftTrigger'] = msg.axes[2]
-      self.controls['rightStickHorz'] = msg.axes[3]
-      self.controls['rightStickVert'] = msg.axes[4]
+      self.controls['rightStickHorz'] = deadband(msg.axes[3],0.1)
+      self.controls['rightStickVert'] = deadband(msg.axes[4],0.1)
       self.controls['rightTrigger'] = msg.axes[5]
-      self.controls['back'] = (msg.buttons[6] == 1)
+      self.controls['start'] = (msg.buttons[6] == 1)
+    elif self.padType == "logitech":
+      self.controls['btnLeft'] = (msg.buttons[0] == 1)
+      self.controls['btnUp'] = (msg.buttons[3] == 1)
+      self.controls['btnDown'] = (msg.buttons[1] == 1)
+      self.controls['btnRight'] = (msg.buttons[2] == 1)
+      self.controls['dPadUp'] = (msg.axes[5] > 0.5)
+      self.controls['dPadDown'] = (msg.axes[5] < -0.5)
+      self.controls['dPadLeft'] = (msg.axes[4] > 0.5)
+      self.controls['dPadRight'] = (msg.axes[4] < -0.5)
+      self.controls['leftBumper'] = (msg.buttons[4] == 1)
+      self.controls['rightBumper'] = (msg.buttons[5] == 1)
+      self.controls['leftStickHorz'] = deadband(msg.axes[0],0.1)
+      self.controls['leftStickVert'] = deadband(msg.axes[1],0.1)
+      self.controls['leftTrigger'] = msg.axes[2]
+      self.controls['rightStickHorz'] = deadband(msg.axes[3],0.1)
+      self.controls['rightStickVert'] = deadband(msg.axes[4],0.1)
+      self.controls['rightTrigger'] = msg.axes[5]
+      self.controls['start'] = (msg.buttons[6] == 1)
     else:
       raise OSError(EINVAL, "unknown padType")
     self.newData = True
@@ -159,6 +182,7 @@ class JoystickMapper(object):
     self.done = False
     mode = 0
     lastControls = self.controls.copy()
+    print("listening for joystick commands")
     while not self.done:
       if self.newData:
         commands = {}
@@ -170,9 +194,9 @@ class JoystickMapper(object):
           mode += 1
         if self.controls['leftBumper'] and not lastControls['leftBumper']:
           mode -= 1
-        if self.controls['a'] and not lastControls['a']:
+        if self.controls['btnDown'] and not lastControls['btnDown']:
           self.controller.record()
-        self.done = self.controls['back']
+        self.done = self.controls['start']
         self.controller.command(commands)
         lastControls = self.controls.copy()
 
@@ -238,6 +262,8 @@ class KeyboardMapper(object):
     try:
       tty.setraw(sys.stdin.fileno())
       ch = sys.stdin.read(1)
+    except:
+      raise OSError
     finally:
       termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch
@@ -276,27 +302,23 @@ class KeyboardMapper(object):
 
 if __name__ == '__main__':
   parser = OptionParser()
-  parser.add_option("-j", "--joystick", dest="joystick", action="store_true", default=False, help="use joystick for input")
-  parser.add_option("-k", "--keyboard", dest="keyboard", action="store_true", default=True, help="use keyboard for input")
+  parser.add_option("-j", "--joystick", dest="joystick", help="specify the type of joystick to use; xbox or logitech")
   parser.add_option("-o", "--output",   dest="outputFilename", help="filename for output")
   parser.add_option("-i", "--input",   dest="inputFilename", help="filename for playback")
   parser.add_option("-r", "--rate",   dest="rate", type="int", default=30,  help="rate for playback")
   (options, args) = parser.parse_args()
 
-  if options.joystick or options.keyboard:
-    rospy.init_node('posejoint')
-    rs = enable_robot.RobotState()
-    rs.enable()
+  rospy.init_node('posejoint')
+  rs = enable_robot.RobotState()
+  rs.enable()
 
-    controller = BaxterController(options.outputFilename)
-    if options.inputFilename:
-      mapper = FileMapper(controller, options.inputFilename, options.rate)
-    elif options.joystick:
-      mapper = JoystickMapper(controller, "xbox")
-    else:
-      mapper = KeyboardMapper(controller)
-    mapper.loop()
-
-    rs.disable()
+  controller = BaxterController(options.outputFilename)
+  if options.inputFilename:
+    mapper = FileMapper(controller, options.inputFilename, options.rate)
+  elif options.joystick:
+    mapper = JoystickMapper(controller, options.joystick)
   else:
-    parser.error("use either keyboard (default) or joystick")
+    mapper = KeyboardMapper(controller)
+  mapper.loop()
+
+  rs.disable()
