@@ -165,7 +165,7 @@ class Mapper(object):
     signal.signal(signal.SIGINT, self.handleCtrlC)
 
 
-  def handleCtrlC(self):
+  def handleCtrlC(self, signum, frame):
     """ Generic and crude ctrl-c handler
     Exits by using sys.exit.
     Recommended to override for a cleaner exit
@@ -239,7 +239,13 @@ class JoystickMapper(Mapper):
     self.newData = False
     self._setupBindings()
 
+  def handleCtrlC(self, signum, frame):
+    """ ctrl-c handler
+    """
+    self.stop()
+
   def stop(self):
+    print("Exiting...")
     self.done = True
 
   def _setupBindings(self):
@@ -403,6 +409,7 @@ class JoystickMapper(Mapper):
 
       self.controls['start'] = (msg.buttons[6] == 1)
     else:
+      print("no bindings for joystick type %s" % self.padType)
       self.done = True
       raise OSError(EINVAL, "unknown padType")
     self.newData = True
@@ -532,18 +539,23 @@ if __name__ == '__main__':
   parser.add_option("-r", "--rate",   dest="rate", type="int", default=30,  help="rate for playback")
   (options, args) = parser.parse_args()
 
+  print("Initializing node... ")
   rospy.init_node('posejoint')
+  print("Getting robot state... ")
   rs = enable_robot.RobotState()
+  print("Enabling robot... ")
   rs.enable()
 
   controller = JointPositionBaxterController(options.outputFilename)
   if options.inputFilename:
     mapper = FileMapper(controller, options.inputFilename, options.rate)
   elif options.joystick:
-    mapper = JoystickMapper(controller, options.joystick)
+    if options.joystick in ['xbox', 'logitech']:
+      mapper = JoystickMapper(controller, options.joystick)
+    else:
+      parser.error("Unsupported joystick type '%s'" % (options.joystick))
   else:
     mapper = KeyboardMapper(controller)
 
   mapper.loop()
-
   rs.disable()
