@@ -278,6 +278,9 @@ class JoystickMapper(Mapper):
         return (self.changed() and (self.value == self.upVal))
 
     def createButtonChangedDict(*buttonNames):
+      """ Creates a dictionary holding the transition
+      objects  for each button
+      """
       btnDict = {}
       for name in buttonNames:
         btnDict[name] = ButtonTransition(self.controls,name)
@@ -481,7 +484,7 @@ class KeyboardMapper(Mapper):
     """create a function to increment a specific joint by a specific delta"""
     def commandFunction():
       try:
-        self.jointController.command({jointName: delta})
+        self.controller.command({jointName: delta})
       except OSError:
         print "joint %s not found; is the robot running?" % (jointName)
     commandFunction.__doc__ = "modify " + jointName + " by " + str(delta)
@@ -510,7 +513,7 @@ class KeyboardMapper(Mapper):
   def showHelp(self):
     """show binding help"""
     print "============ bindings for current mode " + str(self.mode) + " =================="
-    for key, cmds in self.bindings.iteritems():
+    for key, cmds in sorted(self.bindings.items()):
       i = self.mode % len(cmds)
       print "    " + str(key) + ": " + str(cmds[i].__doc__)
 
@@ -549,7 +552,7 @@ if __name__ == '__main__':
   controller = JointPositionBaxterController(options.outputFilename)
   if options.inputFilename:
     mapper = FileMapper(controller, options.inputFilename, options.rate)
-  elif options.joystick:
+  elif options.joystick and not options.joystick.lower() == 'none':
     if options.joystick in ['xbox', 'logitech']:
       mapper = JoystickMapper(controller, options.joystick)
     else:

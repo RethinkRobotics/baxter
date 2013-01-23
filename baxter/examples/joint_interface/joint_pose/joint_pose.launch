@@ -5,7 +5,7 @@
   <!-- where joystick arg is xbox|logitech -->
 
   <!-- declare arg to be passed in -->
-  <arg name="joystick"/>
+  <arg name="joystick" default="none"/>
 
   <!-- joy node -->
   <node respawn="true" pkg="joy" type="joy_node" name="rsdk_joy" >
@@ -14,5 +14,4 @@
   <!-- start joint pose node using arg passed-->
   <node pkg="joint_pose" type="joint_pose.py" name="joint_pose" args="-j $(arg joystick)" output="screen">
   </node>
-
 </launch>
