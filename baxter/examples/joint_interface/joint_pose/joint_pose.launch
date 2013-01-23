@@ -1,7 +1,7 @@
 <launch>
   <!-- This launch file will launch both joy_node and joint_pose together -->
   <!-- Use will need to pass in joystick param on command line like so: -->
-  <!-- roslaunch joint_pose joint_pose_teleop.launch joystick:="logitech" -->
+  <!-- roslaunch joint_pose joint_pose.launch joystick:="logitech" -->
   <!-- where joystick arg is xbox|logitech -->
 
   <!-- declare arg to be passed in -->
