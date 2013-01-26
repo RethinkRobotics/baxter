@@ -64,7 +64,7 @@ class JointPositionBaxterController(BaxterController):
     self.rightPosition = {}
     self.outputFilename = outputFilename
     self.newFile = True
-
+    self.startTime = rospy.Time.now()
 
   def setPositionMode(self):
     """  Set Baxter's joint command mode to Position Control
@@ -75,6 +75,9 @@ class JointPositionBaxterController(BaxterController):
     self.pubLeftMode.publish(msg)
     self.pubRightMode.publish(msg)
 
+  def timeStamp(self):
+    diff = rospy.Time.now() - self.startTime
+    return diff.to_sec()
 
   def record(self):
     """ Records the current joint positions to a csv file
@@ -87,11 +90,13 @@ class JointPositionBaxterController(BaxterController):
     if self.outputFilename:
       if self.newFile:
         with open(self.outputFilename, 'w') as f:
+          f.write('time,')
           f.write(','.join(self.leftPosition.keys()) + ',')
           f.write(','.join(self.rightPosition.keys()) + '\n')
         self.newFile = False
 
       with open(self.outputFilename, 'a') as f:
+        f.write("%f," % (self.timeStamp(),))
         f.write(','.join([str(x) for x in self.leftPosition.values()]) + ',')
         f.write(','.join([str(x) for x in self.rightPosition.values()]) + '\n')
 
@@ -185,12 +190,11 @@ class Mapper(object):
 
 class FileMapper(Mapper):
   """ CSV File mapper
-  Maps input read from a csv file at a fixed rate to
-  robot control
+  Maps input read from a csv file to robot control
   """
 
 
-  def __init__(self, controller, filename, rate):
+  def __init__(self, controller, filename):
     """ Maps csv file input to robot control
     Args:
       controller(BaxterController): a type of Baxter robot controller
@@ -199,7 +203,11 @@ class FileMapper(Mapper):
     """
     super(FileMapper, self).__init__(controller)
     self.filename = filename
-    self.rate = rate
+    self.startTime = rospy.Time.now()
+
+  def timeStamp(self):
+    diff = rospy.Time.now() - self.startTime
+    return diff.to_sec()
 
   def loop(self):
     """ Loops through csv file
@@ -207,16 +215,19 @@ class FileMapper(Mapper):
     and processed. Reads each line, split up in columns and
     formats each line into a controller command in the form of
     name/value pairs. Names come from the column headers
+    first column is the time stamp
     """
-    print("playing back %s @ %dHz" % (self.filename, self.rate))
+    print("playing back %s" % (self.filename))
     with open(self.filename, 'r') as f:
       lines = f.readlines()
     keys = lines[0].rstrip().split(',')
     for values in lines[1:]:
       print(values)
       values = [float(x) for x in values.rstrip().split(',')]
-      self.controller.command(dict(zip(keys, values)), False)
-      time.sleep(1.0/self.rate)
+      cmd = dict(zip(keys[1:], values[1:]))
+      while (self.timeStamp() < values[0]):
+        self.controller.command(cmd, False)
+        rospy.sleep(0.01)
 
 
 
@@ -302,7 +313,7 @@ class JoystickMapper(Mapper):
       def get(self, offset=0):
         return self.joints[(self.index+offset)%len(self.joints)]
 
-    buttons = createButtonChangedDict('rightBumper', 'leftBumper', 'start', 'leftTrigger', 'rightTrigger', 'btnDown')
+    buttons = createButtonChangedDict('rightBumper', 'leftBumper', 'function1', 'function2', 'leftTrigger', 'rightTrigger', 'btnDown')
     leftSelector = JointSelector('left_s0','left_s1','left_e0','left_e1','left_w0', 'left_w1', 'left_w2')
     rightSelector = JointSelector('right_s0','right_s1','right_e0','right_e1','right_w0', 'right_w1', 'right_w2')
 
@@ -337,7 +348,8 @@ class JoystickMapper(Mapper):
 
     self.bindings = {
       'btnDown':  createTransFunction(buttons, self.controller.record),
-      'start':  createTransFunction(buttons, self.stop),
+      'function1':  createTransFunction(buttons, self.stop),
+      'function2':  createTransFunction(buttons, self.stop),
       'rightBumper':  createTransFunction(buttons, leftSelector.inc),
       'rightTrigger': createTransFunction(buttons, leftSelector.dec),
       'leftBumper':   createTransFunction(buttons, rightSelector.inc),
@@ -387,7 +399,8 @@ class JoystickMapper(Mapper):
       self.controls['leftTrigger'] = (msg.axes[2] > 0.5)
       self.controls['rightTrigger'] = (msg.axes[5] > 0.5)
 
-      self.controls['start'] = (msg.buttons[6] == 1)
+      self.controls['function1'] = (msg.buttons[6] == 1)
+      self.controls['function2'] = (msg.buttons[10] == 1)
 
     elif self.padType == "logitech":
       self.controls['btnLeft'] = (msg.buttons[0] == 1)
@@ -407,10 +420,11 @@ class JoystickMapper(Mapper):
 
       self.controls['leftBumper'] = (msg.buttons[4] == 1)
       self.controls['rightBumper'] = (msg.buttons[5] == 1)
-      self.controls['leftTrigger'] = (msg.buttons[7] == 1)
-      self.controls['rightTrigger'] = (msg.buttons[8] == 1)
+      self.controls['leftTrigger'] = (msg.buttons[6] == 1)
+      self.controls['rightTrigger'] = (msg.buttons[7] == 1)
 
-      self.controls['start'] = (msg.buttons[6] == 1)
+      self.controls['function1'] = (msg.buttons[8] == 1)
+      self.controls['function2'] = (msg.buttons[9] == 1)
     else:
       print("no bindings for joystick type %s" % self.padType)
       self.done = True
@@ -539,7 +553,6 @@ if __name__ == '__main__':
   parser.add_option("-j", "--joystick", dest="joystick", help="specify the type of joystick to use; xbox or logitech")
   parser.add_option("-o", "--output",   dest="outputFilename", help="filename for output")
   parser.add_option("-i", "--input",   dest="inputFilename", help="filename for playback")
-  parser.add_option("-r", "--rate",   dest="rate", type="int", default=30,  help="rate for playback")
   (options, args) = parser.parse_args()
 
   print("Initializing node... ")
@@ -551,7 +564,7 @@ if __name__ == '__main__':
 
   controller = JointPositionBaxterController(options.outputFilename)
   if options.inputFilename:
-    mapper = FileMapper(controller, options.inputFilename, options.rate)
+    mapper = FileMapper(controller, options.inputFilename)
   elif options.joystick and not options.joystick.lower() == 'none':
     if options.joystick in ['xbox', 'logitech']:
       mapper = JoystickMapper(controller, options.joystick)
