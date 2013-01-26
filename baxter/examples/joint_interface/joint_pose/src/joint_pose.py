@@ -13,6 +13,8 @@ roslib.load_manifest('joint_pose')
 import rospy
 import enable_robot
 
+from std_msgs.msg import Empty
+from std_msgs.msg import Float32
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Joy
 from baxter_msgs.msg import JointCommandMode
@@ -37,12 +39,36 @@ class BaxterController(object):
     """
     raise NotImplementedError()
 
+class GripperBaxterController(BaxterController):
+  """ Controls a gripper on a Baxter Robot
+  """
+  def __init__(self, arm):
+    self.pubCalibrate = rospy.Publisher('/robot/limb/' + arm + '/accessory/gripper/command_calibrate', Empty)
+    self.pubGoto = rospy.Publisher('/robot/limb/' + arm + '/accessory/gripper/command_goto', Float32)
+    self.calibrated = rospy.Time() #assumption, should check gripper/state, but don't have access right now
+    self.position = 0.0 #assumption, should check gripper/state, but don't have access right now
+    self.arm = arm
 
+  def command(self, commands):
+    if not self.calibrated:
+      print("Calibrating %s gripper" % (self.arm,))
+      self.pubCalibrate.publish(Empty())
+      self.calibrated = rospy.Time.now()
+    elif rospy.Time.now() - self.calibrated < rospy.Duration.from_sec(5.0):
+      pass #still calibrating
+    else:
+      if 'position' in commands:
+        position = commands['position']
+        self.pubGoto.publish(Float32(position))
+        self.position = position
+      else:
+        print("gripper %s does not know how to handle command(s) '%s'. Ignored" % (self.arm, str(commands.keys())))
 
 class JointPositionBaxterController(BaxterController):
   """ Joint Position Controller for a Rethink Robotics Baxter RSDK Robot
   Controls a baxter robot by setting joint angles by combining joint angles
   read from the robot with user commands
+  TODO: would make sense to split this out per arm
   """
 
 
@@ -60,6 +86,8 @@ class JointPositionBaxterController(BaxterController):
     self.pubRight = rospy.Publisher('/robot/limb/right/command_joint_angles', JointPositions)
     self.subLeft = rospy.Subscriber('/robot/limb/left/joint_states', JointState, self.leftJointState)
     self.subRight = rospy.Subscriber('/robot/limb/right/joint_states', JointState, self.rightJointState)
+    self.gripperLeft = GripperBaxterController("left")
+    self.gripperRight = GripperBaxterController("right")
     self.leftPosition = {}
     self.rightPosition = {}
     self.outputFilename = outputFilename
@@ -92,13 +120,17 @@ class JointPositionBaxterController(BaxterController):
         with open(self.outputFilename, 'w') as f:
           f.write('time,')
           f.write(','.join(self.leftPosition.keys()) + ',')
-          f.write(','.join(self.rightPosition.keys()) + '\n')
+          f.write('left_gripper,')
+          f.write(','.join(self.rightPosition.keys()) + ',')
+          f.write('right_gripper\n')
         self.newFile = False
 
       with open(self.outputFilename, 'a') as f:
         f.write("%f," % (self.timeStamp(),))
         f.write(','.join([str(x) for x in self.leftPosition.values()]) + ',')
-        f.write(','.join([str(x) for x in self.rightPosition.values()]) + '\n')
+        f.write(str(self.gripperLeft.position) + ',')
+        f.write(','.join([str(x) for x in self.rightPosition.values()]) + ',')
+        f.write(str(self.gripperRight.position) + '\n')
 
 
   def leftJointState(self, data):
@@ -148,11 +180,14 @@ class JointPositionBaxterController(BaxterController):
           rightMsg.angles.append(self.rightPosition[jointName] + pos)
         else:
           rightMsg.angles.append(pos)
+      elif jointName == 'left_gripper':
+        self.gripperLeft.command({'position':pos})
+      elif jointName == 'right_gripper':
+        self.gripperRight.command({'position':pos})
 
     self.setPositionMode()
     self.pubLeft.publish(leftMsg)
     self.pubRight.publish(rightMsg)
-
 
 
 
@@ -265,8 +300,7 @@ class JoystickMapper(Mapper):
     """
     class ButtonTransition(object):
       """ local class to monitor transitions
-      The transition is measured when read, so
-      you can't miss them, but they could be stale
+      The transition is measured when read
       """
       def __init__(self, controls, name, downVal=1, upVal=0):
         self.controls = controls
@@ -313,15 +347,17 @@ class JoystickMapper(Mapper):
       def get(self, offset=0):
         return self.joints[(self.index+offset)%len(self.joints)]
 
-    buttons = createButtonChangedDict('rightBumper', 'leftBumper', 'function1', 'function2', 'leftTrigger', 'rightTrigger', 'btnDown')
+    buttons = createButtonChangedDict('rightBumper', 'leftBumper', 'function1', 'function2', 'leftTrigger', 'rightTrigger', 'btnDown', 'btnLeft', 'btnRight')
     leftSelector = JointSelector('left_s0','left_s1','left_e0','left_e1','left_w0', 'left_w1', 'left_w2')
     rightSelector = JointSelector('right_s0','right_s1','right_e0','right_e1','right_w0', 'right_w1', 'right_w2')
 
-    def createTransFunction(transitions, function):
+    def createTransFunction(transitions, function, useRetVal = False):
       def f(controlName):
         if transitions[controlName].down():
-          function()
-        return (None, None) #to appease caller expecting a tuple
+          retVal = function()
+          if useRetVal:
+            return retVal
+        return (None, None)#to appease caller expecting a tuple
       return f
 
     def createCommandFunction(selector, offset, scale):
@@ -345,7 +381,6 @@ class JoystickMapper(Mapper):
         return (selector.get(offset), self.controls[controlName] * scale)
       return f
 
-
     self.bindings = {
       'btnDown':  createTransFunction(buttons, self.controller.record),
       'function1':  createTransFunction(buttons, self.stop),
@@ -358,8 +393,23 @@ class JoystickMapper(Mapper):
       'rightStickVert': createCommandFunction(leftSelector,1,-1),
       'leftStickHorz':  createCommandFunction(rightSelector,0,-1),
       'leftStickVert':  createCommandFunction(rightSelector,1,-1),
+      'btnLeft':  createTransFunction(buttons, self.gripLeft, True),
+      'btnRight':  createTransFunction(buttons, self.gripRight, True),
     }
 
+  def gripRight(self):
+    """ ugly helper for gripping """
+    if self.controller.gripperRight.position > 0.5:
+      return ('right_gripper',0.0)
+    else:
+      return ('right_gripper',1.0)
+
+  def gripLeft(self):
+    """ ugly helper for gripping """
+    if self.controller.gripperLeft.position > 0.5:
+      return ('left_gripper',0.0)
+    else:
+      return ('left_gripper',1.0)
 
   def incoming(self, msg):
     """ callback for messages from joystick input
@@ -445,7 +495,7 @@ class JoystickMapper(Mapper):
           thus can leave joint_name 'None' to simply be executed
           """
           if joint_name:
-            commands[joint_name] = joint_pos
+             commands[joint_name] = joint_pos
         self.controller.command(commands)
 
 class KeyboardMapper(Mapper):
@@ -477,6 +527,11 @@ class KeyboardMapper(Mapper):
 
       'r': [jcf('left_w2',+0.1), jcf('right_w2',+0.1), jcf('right_w2',+0.1), jcf('right_w2',-0.1)],
       'y': [jcf('left_w2',-0.1), jcf('right_w2',-0.1), jcf('left_w2', +0.1), jcf('left_w2', -0.1)],
+
+      'o': [jcf('left_gripper', 1.0)],
+      '0': [jcf('left_gripper', 0.0)],
+      'q': [jcf('right_gripper', 1.0)],
+      '1': [jcf('right_gripper', 0.0)],
 
       'g': [self.incmode],
       ';': [self.decmode],
