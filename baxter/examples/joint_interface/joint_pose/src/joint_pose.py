@@ -80,6 +80,8 @@ class JointPositionBaxterController(BaxterController):
       positions
     """
     super(JointPositionBaxterController, self).__init__()
+    self.leftPosition = {}
+    self.rightPosition = {}
     self.pubLeftMode = rospy.Publisher('/robot/limb/left/joint_command_mode', JointCommandMode)
     self.pubRightMode = rospy.Publisher('/robot/limb/right/joint_command_mode', JointCommandMode)
     self.pubLeft = rospy.Publisher('/robot/limb/left/command_joint_angles', JointPositions)
@@ -88,8 +90,6 @@ class JointPositionBaxterController(BaxterController):
     self.subRight = rospy.Subscriber('/robot/limb/right/joint_states', JointState, self.rightJointState)
     self.gripperLeft = GripperBaxterController("left")
     self.gripperRight = GripperBaxterController("right")
-    self.leftPosition = {}
-    self.rightPosition = {}
     self.outputFilename = outputFilename
     self.newFile = True
     self.startTime = rospy.Time.now()
