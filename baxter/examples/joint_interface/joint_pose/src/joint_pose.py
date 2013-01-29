@@ -399,17 +399,17 @@ class JoystickMapper(Mapper):
 
   def gripRight(self):
     """ ugly helper for gripping """
-    if self.controller.gripperRight.position > 0.5:
+    if self.controller.gripperRight.position > 50.0:
       return ('right_gripper',0.0)
     else:
-      return ('right_gripper',1.0)
+      return ('right_gripper',100.0)
 
   def gripLeft(self):
     """ ugly helper for gripping """
-    if self.controller.gripperLeft.position > 0.5:
+    if self.controller.gripperLeft.position > 50.0:
       return ('left_gripper',0.0)
     else:
-      return ('left_gripper',1.0)
+      return ('left_gripper',100.0)
 
   def incoming(self, msg):
     """ callback for messages from joystick input
