@@ -236,7 +236,7 @@ class JoystickMapper(Mapper):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("joystick", help="specify the type of joystick to use; xbox or logitech")
-  args = parser.parse_args()
+  args, unknown = parser.parse_known_args()
 
   print("Initializing node... ")
   rospy.init_node("rethink_rsdk_joint_pose_joystick")
