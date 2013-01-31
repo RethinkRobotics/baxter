@@ -21,7 +21,7 @@ class FileMapper(Mapper):
     Args:
       controller(BaxterController): a type of Baxter robot controller
       filename(str): path to csv file to read from
-      rate(int): a rate in Hz to command each line of input at
+      loops(int): number of times to play back the file
     """
     super(FileMapper, self).__init__(controller)
     self.filename = filename

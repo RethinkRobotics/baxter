@@ -4,6 +4,7 @@ import rospy
 
 from std_msgs.msg import Empty
 from std_msgs.msg import Float32
+from baxter_msgs.msg import GripperState
 from BaxterController import BaxterController
 
 class GripperBaxterController(BaxterController):
@@ -12,18 +13,23 @@ class GripperBaxterController(BaxterController):
   def __init__(self, arm):
     self.pubCalibrate = rospy.Publisher('/robot/limb/' + arm + '/accessory/gripper/command_calibrate', Empty)
     self.pubGoto = rospy.Publisher('/robot/limb/' + arm + '/accessory/gripper/command_goto', Float32)
-    self.calibrated = rospy.Time() #assumption, should check gripper/state, but don't have access right now
-    self.position = 100.0 #assumption, should check gripper/state, but don't have access right now
+    self.subState = rospy.Subscriber('/robot/limb/' + arm + 'accessory/gripper/state', GripperState, self.gripperState)
     self.arm = arm
+    self.calibrated = False
+    self.position = 100.0 #open
+    self.force = 0.0
+
+  def gripperState(self, msg):
+    self.position = msg.position
+    self.force = msg.force
+    self.calibrated = msg.calibrated
 
   def command(self, commands):
     if not self.calibrated:
       print("Calibrating %s gripper" % (self.arm,))
       self.pubCalibrate.publish(Empty())
-      self.calibrated = rospy.Time.now()
-    elif rospy.Time.now() - self.calibrated < rospy.Duration.from_sec(5.0):
-      pass #still calibrating
     else:
+      self.calibrating = False
       if 'position' in commands:
         position = commands['position']
         self.pubGoto.publish(Float32(position))
