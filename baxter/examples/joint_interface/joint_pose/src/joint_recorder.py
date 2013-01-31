@@ -96,6 +96,8 @@ class JointRecorder(object):
     This function does not test to see if a file exists and
     will overwrite existing files.
     """
+    lGripPos = self._gripperLeft.position
+    rGripPos = self._gripperRight.position
     if self._filename:
       with open(self._filename, 'w') as f:
         f.write('time,')
@@ -107,12 +109,16 @@ class JointRecorder(object):
         while not self.done():
           lVals = self._leftPositionFiltered.values()
           rVals = self._rightPositionFiltered.values()
-          if any(lVals) or any(rVals):
+          lGripChange = abs(lGripPos - self._gripperLeft.position) > self._delta
+          rGripChange = abs(rGripPos - self._gripperRight.position) > self._delta
+          if any(lVals) or any(rVals) or lGripChange or rGripChange:
             f.write("%f," % (self.timeStamp(),))
             f.write(','.join([str(x) if x else "" for x in lVals]) + ',')
-            f.write(str(self._gripperLeft.position) + ',')
+            f.write(str(self._gripperLeft.position) + ',' if lGripChange else ',')
             f.write(','.join([str(x) if x else "" for x in rVals]) + ',')
-            f.write(str(self._gripperRight.position) + '\n')
+            f.write(str(self._gripperRight.position) + '\n' if rGripChange else '\n')
+            lGripPos = self._gripperLeft.position
+            rGripPos = self._gripperRight.position
           self._rate.sleep()
 
 if __name__ == '__main__':
