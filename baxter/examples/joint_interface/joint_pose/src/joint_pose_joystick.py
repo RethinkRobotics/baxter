@@ -117,7 +117,6 @@ class JoystickMapper(Mapper):
       return f
 
     self.bindings = {
-      'btnDown':  createTransFunction(buttons, self.controller.record),
       'function1':  createTransFunction(buttons, self.stop),
       'function2':  createTransFunction(buttons, self.stop),
       'rightBumper':  createTransFunction(buttons, leftSelector.inc),
