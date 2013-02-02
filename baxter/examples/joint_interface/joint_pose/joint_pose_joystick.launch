@@ -12,6 +12,6 @@
   </node>
 
   <!-- start joint pose node using arg passed-->
-  <node pkg="joint_pose" type="joint_pose_joystick.py" name="rsdk_joint_pose_joystick" args="$(arg joystick)" output="screen">
+  <node pkg="joint_pose" type="joystick" name="rsdk_joint_pose_joystick" args="$(arg joystick)" output="screen">
   </node>
 </launch>
