@@ -6,7 +6,7 @@ roslib.load_manifest('joint_pose')
 import rospy
 import enable_robot
 
-from JointPositionBaxterController import JointPositionBaxterController
+from controllers import JointPositionBaxterController
 from mappers import JoystickMapper
 
 if __name__ == '__main__':
@@ -24,7 +24,7 @@ if __name__ == '__main__':
   if args.joystick in ['xbox', 'logitech']:
     mapper = JoystickMapper(JointPositionBaxterController(), args.joystick)
   else:
-    parser.error("Unsupported joystick type '%s'" % (options.joystick))
+    parser.error("Unsupported joystick type '%s'" % (args.joystick))
 
   mapper.loop()
   rs.disable()

@@ -6,7 +6,8 @@ roslib.load_manifest('joint_pose')
 import rospy
 import enable_robot
 
-import JointPositionBaxterController
+from controllers import JointPositionBaxterController
+from mappers import FileMapper
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

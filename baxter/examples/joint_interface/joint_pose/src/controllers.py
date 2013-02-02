@@ -18,26 +18,26 @@ class BaxterController(object):
     """
     raise NotImplementedError()
 
+
 class GripperBaxterController(BaxterController):
   """ Controls a gripper on a Baxter Robot
   """
   def __init__(self, arm):
     self.pubCalibrate = rospy.Publisher('/robot/limb/' + arm + '/accessory/gripper/command_calibrate', Empty)
     self.pubGoto = rospy.Publisher('/robot/limb/' + arm + '/accessory/gripper/command_goto', Float32)
-    self.subState = rospy.Subscriber('/robot/limb/' + arm + 'accessory/gripper/state', GripperState, self.gripperState)
+    self.subState = rospy.Subscriber('/robot/limb/' + arm + 'accessory/gripper/state', GripperState, self._gripperState)
     self.arm = arm
     self.calibrated = False
     self.position = 100.0 #open
     self.force = 0.0
 
-  def gripperState(self, msg):
+  def _gripperState(self, msg):
     self.position = msg.position
     self.force = msg.force
     self.calibrated = msg.calibrated
 
   def command(self, commands):
     if not self.calibrated:
-      print("Calibrating %s gripper" % (self.arm,))
       self.pubCalibrate.publish(Empty())
     else:
       self.calibrating = False
