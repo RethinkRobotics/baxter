@@ -20,15 +20,15 @@ class JointRecorder(object):
     self._done = False
 
     #TODO: factor out arm interfaces and reuse in JointPositionBaxterController
-    self._subLeft = rospy.Subscriber('/robot/limb/left/joint_states', JointState, self.leftJointState)
-    self._subRight = rospy.Subscriber('/robot/limb/right/joint_states', JointState, self.rightJointState)
+    self._subLeft = rospy.Subscriber('/robot/limb/left/joint_states', JointState, self._left_joint_state)
+    self._subRight = rospy.Subscriber('/robot/limb/right/joint_states', JointState, self._right_joint_state)
     self._gripperLeft = GripperBaxterController('left')
     self._gripperRight = GripperBaxterController('right')
 
     signal.signal(signal.SIGINT, self.handleCtrlC)
-    self.waitForData()
+    self.wait_for_data()
 
-  def handleCtrlC(self, signum, frame):
+  def _handle_ctrl_c(self, signum, frame):
     """ ctrl-c handler
     """
     self.stop()
@@ -39,7 +39,7 @@ class JointRecorder(object):
   def done(self):
     return self._done or rospy.is_shutdown()
 
-  def leftJointState(self, data):
+  def _left_joint_state(self, data):
     """ callback function for the ROS subscriber of the left joint angles
     Args:
       data(sensor_msgs.msg.JointState): the ROS message containing the joint state
@@ -48,7 +48,7 @@ class JointRecorder(object):
       key = 'left_'+data.name[i]
       self._leftPosition[key] = data.position[i]
 
-  def rightJointState(self, data):
+  def _right_joint_state(self, data):
     """ callback function for the ROS subscriber of the right joint angles
     Args:
       data(sensor_msgs.msg.JointState): the ROS message containing the joint state
@@ -57,11 +57,11 @@ class JointRecorder(object):
       key = 'right_'+data.name[i]
       self._rightPosition[key] = data.position[i]
 
-  def timeStamp(self):
+  def _timeStamp(self):
     diff = rospy.Time.now() - self._startTime
     return diff.to_sec()
 
-  def waitForData(self):
+  def wait_for_data(self):
     rate = rospy.Rate(100)
     while not self.done():
       if len(self._leftPosition.keys()) and len(self._rightPosition.keys()):
