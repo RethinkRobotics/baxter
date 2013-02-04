@@ -65,8 +65,8 @@ class JointPositionBaxterController(BaxterController):
       positions
     """
     super(JointPositionBaxterController, self).__init__()
-    self.leftPosition = {}
-    self.rightPosition = {}
+    self.left_position = {}
+    self.right_position = {}
     self.pubLeftMode = rospy.Publisher('/robot/limb/left/joint_command_mode', JointCommandMode)
     self.pubRightMode = rospy.Publisher('/robot/limb/right/joint_command_mode', JointCommandMode)
     self.pubLeft = rospy.Publisher('/robot/limb/left/command_joint_angles', JointPositions)
@@ -93,7 +93,7 @@ class JointPositionBaxterController(BaxterController):
       data(sensor_msgs.msg.JointState): the ROS message containing the joint state
     """
     for i in range(len(data.name)):
-      self.leftPosition['left_'+data.name[i]] = data.position[i]
+      self.left_position[data.name[i]] = data.position[i]
 
 
   def rightJointState(self, data):
@@ -102,43 +102,43 @@ class JointPositionBaxterController(BaxterController):
       data(sensor_msgs.msg.JointState): the ROS message containing the joint state
     """
     for i in range(len(data.name)):
-      self.rightPosition['right_'+data.name[i]] = data.position[i]
+      self.right_position[data.name[i]] = data.position[i]
 
 
-  def command(self, jointPositions, posIsDelta=True):
+  def command(self, joint_positions, pos_is_delta=True):
     """ Joint command function
     Publishes new joint angles based on the supplied deltas
     and the most recently received joint angle state.
     Args:
-      jointPositions(dict{str:int}): a set of name/value pairs
+      joint_positions(dict{str:int}): a set of name/value pairs
         each representing a joint name and a joint position
         A subset of joints can be provided, but each joint must
         have appeared in a JointState msg (even for absolute cmds)
     Kwargs:
-      posIsDelta(bool): when defaulted to True, interpret the positions
+      pos_is_delta(bool): when defaulted to True, interpret the positions
         in jointPositions as deltas from the current position.
         when set to False, use the positions as absolute
     """
     leftMsg = JointPositions()
     rightMsg = JointPositions()
-    for jointName, pos in jointPositions.items():
+    for full_joint_name, pos in joint_positions.items():
       if not pos is None:
-        if jointName in self.leftPosition:
-          leftMsg.names.append(jointName)
-          if posIsDelta:
-            leftMsg.angles.append(self.leftPosition[jointName] + pos)
-          else:
-            leftMsg.angles.append(pos)
-        elif jointName in self.rightPosition:
-          rightMsg.names.append(jointName)
-          if posIsDelta:
-            rightMsg.angles.append(self.rightPosition[jointName] + pos)
-          else:
-            rightMsg.angles.append(pos)
-        elif jointName == 'left_gripper':
-          self.gripperLeft.command({'position':pos})
-        elif jointName == 'right_gripper':
-          self.gripperRight.command({'position':pos})
+        side, joint_name = full_joint_name.split('_')
+        if side == 'left' and joint_name in self.left_position:
+          if pos_is_delta:
+            pos += self.left_position[joint_name]
+          leftMsg.names.append(joint_name)
+          leftMsg.angles.append(pos)
+        elif side == 'right' and joint_name in self.right_position:
+          if pos_is_delta:
+            pos += self.right_position[joint_name]
+          rightMsg.names.append(joint_name)
+          rightMsg.angles.append(pos)
+        elif joint_name == 'gripper':
+          if side == 'left':
+            self.gripperLeft.command({'position':pos})
+          elif side == 'right':
+            self.gripperRight.command({'position':pos})
 
     self.setPositionMode()
     self.pubLeft.publish(leftMsg)
