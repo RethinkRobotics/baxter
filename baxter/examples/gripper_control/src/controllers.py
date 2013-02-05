@@ -79,15 +79,14 @@ class GripperController():
     self.pub_calibrate.publish(Empty())
 
   def _actuate_arg(self, key, current_val, args):
-    value = 1.0
-    if 'value' in args:
-      value = args['value']
     if key in args:
-      return args[key] * value
+      return args[key]
     elif key + '_inc' in args:
+      value = args['value'] if 'value' in args else 1.0
       return current_val + (args[key + '_inc'] * value)
-    elif key + '_dec' in args:
-      return current_val - (args[key + '_dec'] * value)
+    elif key + '_scale' in args:
+      value = args['value'] if 'value' in args else 1.0
+      return args[key + '_scale'] * value
     else:
       return current_val
 
@@ -100,7 +99,7 @@ class GripperController():
 
   def actuate(self, **args):
     self.command_msg.position = self._keep_gripper_arg_in_range(
-      self._actuate_arg('position', self.state_msg.position, args))
+      self._actuate_arg('position', self.command_msg.position, args))
     self.command_msg.force    = self._keep_gripper_arg_in_range(
       self._actuate_arg('moving_force', self.command_msg.force, args))
     self.command_msg.velocity = self._keep_gripper_arg_in_range(

@@ -24,16 +24,21 @@ class Joystick:
   """ Handles joystick input
   """
 
-  def __init__(self, pad_type, scale=1.0, deadband=0.01):
+  def __init__(self, pad_type, scale=0.5, offset= 0.5, deadband=0.01):
     """ Maps joystick input to robot control
     Sets up the bindings
     Args:
       pad_type(str): the type of controller used ('xbox' or 'logitech')
-      stick_unit(float): joystick increment
+      scale(float): scaling applied to joystick values.  
+                    raw joystick valuess are in [1.0...-1.0]
+      offset(float): offset applied to joystick values, post-scaling
+      deadband(float): deadband applied to scaled, offset values
+
     """
     self.sub = rospy.Subscriber("/joy", Joy, self.on_joy)
     self.pad_type = pad_type
     self.scale = scale
+    self.offset = offset
     self.deadband = deadband
     self.controls = {}
     self.new_data = False
@@ -43,17 +48,18 @@ class Joystick:
     Args:
        msg(Joy): a joystick input message
     """
-    def deadband(axis, scale, deadband):
-      """ Local function to create a deadband
+    def stick_value(value, deadband, scale, offset):
+      """ Local function to condition raw joystick values
       Args:
-        axis(float): the value of the to-be-deadbanded axis
-        size(float): the size of the deadband
+        value(float): the raw joystick axis value
+        deadband(float): deadband applied to the raw value
+        scale(float): scaling applied to raw value 
+        offset(float): offset applied to the scaled value
+
       Returns:
         the deadbanded value of the axis
       """
-      if axis > deadband or axis < -deadband:
-        return axis * scale
-      return 0
+      return (value * scale) + offset if (value > deadband or value < -deadband) else 0
 
     if self.pad_type == "xbox":
       self.controls['btnLeft'] = (msg.buttons[2] == 1)
@@ -66,10 +72,10 @@ class Joystick:
       self.controls['dPadLeft'] = (msg.axes[6] > 0.5)
       self.controls['dPadRight'] = (msg.axes[6] < -0.5)
 
-      self.controls['leftStickHorz'] = deadband(msg.axes[0], self.scale, self.deadband)
-      self.controls['leftStickVert'] = deadband(msg.axes[1], self.scale, self.deadband)
-      self.controls['rightStickHorz'] = deadband(msg.axes[3], self.scale, self.deadband)
-      self.controls['rightStickVert'] = deadband(msg.axes[4], self.scale, self.deadband)
+      self.controls['leftStickHorz']  = stick_value(msg.axes[0], self.deadband, self.scale, self.offset)
+      self.controls['leftStickVert']  = stick_value(msg.axes[1], self.deadband, self.scale, self.offset)
+      self.controls['rightStickHorz'] = stick_value(msg.axes[3], self.deadband, self.scale, self.offset)
+      self.controls['rightStickVert'] = stick_value(msg.axes[4], self.deadband, self.scale, self.offset)
 
       self.controls['leftBumper'] = (msg.buttons[4] == 1)
       self.controls['rightBumper'] = (msg.buttons[5] == 1)
@@ -90,10 +96,10 @@ class Joystick:
       self.controls['dPadLeft'] = (msg.axes[4] > 0.5)
       self.controls['dPadRight'] = (msg.axes[4] < -0.5)
 
-      self.controls['leftStickHorz'] = deadband(msg.axes[0], self.scale, self.deadband)
-      self.controls['leftStickVert'] = deadband(msg.axes[1], self.scale, self.deadband)
-      self.controls['rightStickHorz'] = deadband(msg.axes[2], self.scale, self.deadband)
-      self.controls['rightStickVert'] = deadband(msg.axes[3], self.scale, self.deadband)
+      self.controls['leftStickHorz']  = stick_value(msg.axes[0], self.deadband, self.scale, self.offset)
+      self.controls['leftStickVert']  = stick_value(msg.axes[1], self.deadband, self.scale, self.offset)
+      self.controls['rightStickHorz'] = stick_value(msg.axes[2], self.deadband, self.scale, self.offset)
+      self.controls['rightStickVert'] = stick_value(msg.axes[3], self.deadband, self.scale, self.offset)
 
       self.controls['leftBumper'] = (msg.buttons[4] == 1)
       self.controls['rightBumper'] = (msg.buttons[5] == 1)

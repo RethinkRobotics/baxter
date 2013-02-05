@@ -207,13 +207,14 @@ class JoystickMapper(Mapper):
                                               {'side': 'right', 'position' : 0.0, 'velocity': 100.0}),
 
       'rightStickHorz': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'left', 'position': 100.0, 'velocity_inc' : 1.0}),
-      'rightStickVert': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'left', 'position_inc': 1.0, 'velocity' : 100.0}),
+                                              {'side': 'left', 'position_scale': 100.0, 'velocity' : 30.0}),
       'leftStickHorz': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'right', 'position': 0.0, 'velocity_inc' : 1.0}),
+                                              {'side': 'right', 'position_scale': 100.0, 'velocity' : 30.0}),
+
+      'rightStickVert': create_joystick_function(sticks, self.joystick, 'actuate',
+                                              {'side': 'left', 'moving_force_inc': 2.0, 'holding_force_inc' : 2.0}),
       'leftStickVert': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'right', 'position_inc': 1.0, 'velocity' : 100.0}),
+                                              {'side': 'right', 'moving_force_inc': 2.0, 'holding_force_inc' : 2.0}),
 
       'btnLeft':   create_joybutton_function(buttons, self.joystick, 'reset', 
                                             {'side': 'left', 'reboot' : True}),
