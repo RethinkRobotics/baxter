@@ -31,7 +31,7 @@ class TareTester(baxter_interface.robustcontroller.RobustController):
         d.uid = 'tester'
 
         # Initialize RobustController, use 5 minute timeout for the Tare process
-        super(TareTester, self).__init__('/robustcontroller/%s/Tare' % (limb,), e, d, 5 * 60)
+        super(TareTester, self).__init__('/sdk/robustcontroller/%s/Tare' % (limb,), e, d, 5 * 60)
 
 def usage():
         print """
