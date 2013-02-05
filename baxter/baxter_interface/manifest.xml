@@ -1,0 +1,13 @@
+<package>
+  <description brief="baxter_interface">
+    baxter_interface
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/RethinkRobotics</url>
+  <depend package="rospy"/>
+  <depend package="baxter_msgs"/>
+</package>
+
+
