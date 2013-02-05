@@ -62,7 +62,7 @@ class RobustController(object):
     def _run_loop(self):
         # RobustControllers need messages at > 1Hz in order to continue
         # their current operation.
-        rate = rospy.Rate(1.1)
+        rate = rospy.Rate(2)
         start = rospy.Time.now()
 
         while not rospy.is_shutdown():
@@ -83,10 +83,9 @@ class RobustController(object):
             rate.sleep()
 
     def _on_shutdown(self):
-        rate = rospy.Rate(1.1)
+        rate = rospy.Rate(2)
 
         while not self._state == self.STATE_IDLE:
-            print "sending shutdown"
             self._command_pub.publish(self._disable_msg)
             rate.sleep()
 
