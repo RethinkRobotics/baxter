@@ -1,0 +1,7 @@
+<launch>
+  <!-- This launch file will launch both the gripper demo with keyboard control -->
+
+  <!-- start gripper example -->
+  <node pkg="gripper_control" type="gripper.py" name="gripper" args="" output="screen">
+  </node>
+</launch>

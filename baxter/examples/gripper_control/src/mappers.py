@@ -34,7 +34,7 @@ class Mapper(object):
     self.stop()
 
   def stop(self):
-    """ 
+    """
     Call stop to exit run().
     """
     print("Exiting...")
@@ -47,7 +47,7 @@ class Mapper(object):
     return self._done
 
   def loop(self):
-    """ 
+    """
       Timed loop.
       Calls self.update() to map input to control.
       Ends when self.stop() is called.
@@ -64,63 +64,10 @@ class Mapper(object):
     self.loop()
 
   def update(self):
-    """ 
+    """
     Virtual update function.
     Called from self.loop() to map input to control.
     """
-    raise NotImplementedError()
-
-
-
-class FileMapper(Mapper):
-  """ CSV File mapper
-  Maps input read from a csv file to robot control
-  """
-
-  def __init__(self, controller, filename):
-    """ Maps csv file input to robot control
-    Args:
-      controller(BaxterController): a type of Baxter robot controller
-      filename(str): path to csv file to read from
-      rate(int): a rate in Hz to command each line of input at
-    """
-    super(FileMapper, self).__init__(controller)
-    self.filename = filename
-    self.start_time = rospy.Time.now()
-
-  def time_stamp(self):
-    """
-    Returns the seconds elapsed since the start time.
-    """
-    diff = rospy.Time.now() - self.start_time
-    return diff.to_sec()
-
-  def loop(self):
-    """ Loops through csv file
-    Does not loop indefinitely, but only until the file is read
-    and processed. Reads each line, split up in columns and
-    formats each line into a controller command in the form of
-    name/value pairs. Names come from the column headers
-    first column is the time stamp
-    """
-    print("playing back %s" % (self.filename))
-    with open(self.filename, 'r') as f:
-      lines = f.readlines()
-    keys = lines[0].rstrip().split(',')
-    for values in lines[1:]:
-      print(values)
-      values = [float(x) for x in values.rstrip().split(',')]
-      cmd = dict(zip(keys[1:], values[1:]))
-      while (self.time_stamp() < values[0]):
-        self.controller.command(cmd, False)
-        rospy.sleep(0.01)
-
-  def update(self):
-    """ 
-    Virtual update function.
-    Called from self.loop() to map input to control.
-    """
-    # not used because loop is overridden
     raise NotImplementedError()
 
 
@@ -139,7 +86,11 @@ class JoystickMapper(Mapper):
     super(JoystickMapper, self).__init__(controller)
     self.joystick = joystick
     self.controls = {}
+    self.bindings = {}
+    JoystickMapper.show_help.__func__.__doc__ = "Show help"
+    JoystickMapper.stop.__func__.__doc__ = "Exit"
     self._setup_bindings()
+    self.show_help()
 
   def _setup_bindings(self):
     """ private function to setup the bindings
@@ -153,6 +104,7 @@ class JoystickMapper(Mapper):
       'function2',
       'leftTrigger',
       'rightTrigger',
+      'btnUp',
       'btnDown',
       'btnLeft',
       'btnRight',
@@ -168,104 +120,153 @@ class JoystickMapper(Mapper):
       'rightStickVert',
       )
 
-    def create_command_function(buttons, function):
+    def create_command_function(buttons, function, doc):
       """ function to create a joystick button command function
       Args: buttons
             function
+            doc(string)   Doc string
       Returns: a function that returns a joystick button response that takes no arguments
       """
       def command_function(control_name):
         """
-        Args:  control_name(string)  Name of the control to respond to. 
-        Returns: a the return value of a function executed in response to a joystick event
+        Args:  control_name(string)  Name of the control to respond to.
+        Returns: the return value of a function executed in response to a joystick event
         """
         ret = None
         if buttons[control_name].down():
           ret = function()
         return ret or (None, None)
+      command_function.__doc__ = doc
       return command_function
 
-    def create_joybutton_function(buttons, joystick, cmd_label, cmd_args):
+    def create_joybutton_function(buttons, joystick, cmd_label, cmd_args, cmd_doc):
       """ function to create a joystick button control function
       Args: buttons(dict)   joystick button-changed dict
             joystick(Joystick) Joystick
-            cmd_label(string) command label 
+            cmd_label(string) command label
             cmd_args(dict)    command arguments
+            cmd_doc(string)   doc string
       Returns: a function that returns a joystick button response
       """
       def joybutton_function(control_name):
         """
-        Args:  control_name(string)  Name of the control to respond to. 
+        Args:  control_name(string)  Name of the control to respond to.
         Returns: a tuple containing a command label and a dictionary of command arguments
         """
         ret = None
         if buttons[control_name].down():
           #print ("button %s pressed" % (control_name))
-          cmd_args.update({'value': self.joystick.controls[control_name]})
+          cmd_args.update({'value': joystick.controls[control_name]})
           ret = (cmd_label, cmd_args)
         return ret or (None, None)
+      joybutton_function.__doc__ = cmd_args['side'] + ":" + cmd_doc
       return joybutton_function
 
-    def create_joystick_function(sticks, joystick, cmd_label, cmd_args):
+    def create_joystick_function(sticks, joystick, cmd_label, cmd_args, cmd_doc):
       """ function to create a joystick stick control function
       Args: sticks(dict)   Joystick control-changed dict
             joystick(Joystick) Joystick
-            cmd_label(string) command label 
+            cmd_label(string) command label
             cmd_args(dict)    command arguments
+            cmd_doc(string)   doc string
       Returns: a function that returns a joystick response
       """
       def joystick_function(control_name):
         """
-        Args:  control_name(string)  Name of the control to respond to. 
+        Args:  control_name(string)  Name of the control to respond to.
         Returns: a tuple containing a command label and a dictionary of command arguments
         """
         ret = None
         if sticks[control_name].changed():
-          value = self.joystick.controls[control_name]
+          value = joystick.controls[control_name]
           #print ("joystick %s = %f" % (control_name, value))
           cmd_args.update({'value': value})
           ret = (cmd_label, cmd_args)
         return ret or (None, None)
+      joystick_function.__doc__ = cmd_args['side'] + ":" + cmd_doc
       return joystick_function
 
+    cjbf = create_joybutton_function
+    cjsf = create_joystick_function
+
+
     self.bindings = {
-      'function1':  create_command_function(buttons, self.stop),
-      'function2':  create_command_function(buttons, self.stop),
+      'function1':  create_command_function(buttons, self.stop, "Exit."),
+      'function2':  create_command_function(buttons, self.stop, "Exit."),
+      'btnUp'    :  create_command_function(buttons, self.show_help, "Show help."),
 
-      'rightBumper':  create_joybutton_function(buttons, self.joystick, 'actuate',
-                                              {'side': 'left', 'position' : 100.0, 'velocity': 100.0}),
-      'leftBumper':    create_joybutton_function(buttons, self.joystick, 'actuate',
-                                              {'side': 'right', 'position' : 100.0, 'velocity': 100.0}),
+      'rightBumper':  cjbf(buttons, self.joystick, 'actuate',
+                          {'side': 'left', 'position' : 100.0, 'velocity': 100.0}, 
+                           'Open'),
+      'leftBumper':   cjbf(buttons, self.joystick, 'actuate',
+                          {'side': 'right', 'position' : 100.0, 'velocity': 100.0}, 
+                           'Open'),
 
-      'rightTrigger':  create_joybutton_function(buttons, self.joystick, 'actuate',
-                                              {'side': 'left', 'position' : 0.0, 'velocity': 100.0}),
-      'leftTrigger':  create_joybutton_function(buttons, self.joystick, 'actuate',
-                                              {'side': 'right', 'position' : 0.0, 'velocity': 100.0}),
+      'rightTrigger': cjbf(buttons, self.joystick, 'actuate',
+                          {'side': 'left', 'position' : 0.0, 'velocity': 100.0}, 
+                           'Close'),
+      'leftTrigger':  cjbf(buttons, self.joystick, 'actuate',
+                          {'side': 'right', 'position' : 0.0, 'velocity': 100.0}, 
+                           'Close'),
 
-      'rightStickHorz': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'left', 'position_scale': 100.0, 'velocity' : 30.0}),
-      'leftStickHorz': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'right', 'position_scale': 100.0, 'velocity' : 30.0}),
+      'rightStickHorz': cjsf(sticks, self.joystick, 'actuate',
+                             {'side': 'left', 'position_scale': 100.0,
+                              'velocity' : 30.0}, 'Control position'),
+      'leftStickHorz': cjsf(sticks, self.joystick, 'actuate',
+                            {'side': 'right', 'position_scale': 100.0,
+                             'velocity' : 30.0}, 'Control position'),
 
-      'rightStickVert': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'left', 'moving_force_scale': 100.0, 'holding_force_scale' : 100.0}),
-      'leftStickVert': create_joystick_function(sticks, self.joystick, 'actuate',
-                                              {'side': 'right', 'moving_force_scale': 100.0, 'holding_force_scale' : 100.0}),
+      'rightStickVert': cjsf(sticks, self.joystick, 'actuate',
+                             {'side': 'left', 'moving_force_scale': 100.0,
+                              'holding_force_scale' : 100.0}, 
+                             'Control force'),
+      'leftStickVert': cjsf(sticks, self.joystick, 'actuate',
+                            {'side': 'right', 'moving_force_scale': 100.0,
+                             'holding_force_scale' : 100.0}, 
+                            'Control force'),
 
-      'btnLeft':   create_joybutton_function(buttons, self.joystick, 'reset', 
-                                            {'side': 'left', 'reboot' : True}),
-      'btnDown':   create_joybutton_function(buttons, self.joystick, 'calibrate', 
-                                            {'side': 'left'}),
-      'btnRight':   create_joybutton_function(buttons, self.joystick, 'actuate', 
-                                            {'side': 'left', 'velocity' : 0.0}),
+      'btnLeft':   cjbf(buttons, self.joystick, 'reset',
+                       {'side': 'left', 'reboot' : True}, 'Reset'),
+      'btnDown':   cjbf(buttons, self.joystick, 'calibrate',
+                       {'side': 'left'}, 'Calibrate'),
+      'btnRight':   cjbf(buttons, self.joystick, 'actuate',
+                        {'side': 'left', 'velocity' : 0.0}, 'Stop'),
 
-      'dPadLeft':   create_joybutton_function(buttons, self.joystick, 'reset', 
-                                            {'side': 'right', 'reboot' : True}),
-      'dPadDown':   create_joybutton_function(buttons, self.joystick, 'calibrate', 
-                                            {'side': 'right'}),
-      'dPadRight':   create_joybutton_function(buttons, self.joystick, 'actuate', 
-                                            {'side': 'right', 'velocity' : 0.0}),
-    }
+      'dPadLeft':   cjbf(buttons, self.joystick, 'reset',
+                        {'side': 'right', 'reboot' : True}, 'Reset'),
+      'dPadDown':   cjbf(buttons, self.joystick, 'calibrate',
+                        {'side': 'right'}, 'Calibrate'),
+      'dPadRight':   cjbf(buttons, self.joystick, 'actuate',
+                         {'side': 'right', 'velocity' : 0.0}, 'Stop'),
+      }
+
+  def show_help(self):
+    """show binding help"""
+    neither = []
+    left = []
+    right = []
+    for control_name, control_function in self.bindings.items():
+      side, _, doc = str(control_function.__doc__).partition(':')
+      hlp = "    %-14s:  %s" % ( str(control_name), (doc if doc else side))
+      if (side == 'left'):
+        left.append(hlp)
+      elif (side == 'right'):
+        right.append(hlp)
+      else:
+        neither.append(hlp)
+
+    print "*"*7 + "gripper game controller bindings " + "*"*7
+    for hlp in sorted(neither):
+      print hlp
+    print
+    print "Left Gripper:"
+    for hlp in sorted(left):
+      print hlp
+    print
+    print "Right Gripper:"
+    for hlp in sorted(right):
+      print hlp
+    print "*"*40
 
 
   def update(self):
@@ -288,71 +289,65 @@ class KeyboardMapper(Mapper):
     super(KeyboardMapper, self).__init__(controller)
     KeyboardMapper.show_help.__func__.__doc__ = "Show help."
     KeyboardMapper.stop.__func__.__doc__ = "(Esc) Exit."
-
+    ckf = self.create_key_function
     self.bindings = {
-      'r':   self.create_key_function('reset', {'side': 'left', 'reboot' : True},
-                                           'left gripper:  reset'),
-      'R':   self.create_key_function('reset', {'side': 'right', 'reboot' : True},
-                                           'right gripper:  reset'),
-      'c':   self.create_key_function('calibrate', {'side': 'left'}, 'left gripper:  calibrate'),
-      'C':   self.create_key_function('calibrate', {'side': 'right'}, 'right gripper:  calibrate'),
-      'q':   self.create_key_function('actuate', {'side': 'left',  
-                                             'position' : 0.0}, 'left gripper:  close'),
-      'Q':   self.create_key_function('actuate', {'side': 'right', 
-                                             'position' : 0.0},'right gripper:  close'),
-      'w':   self.create_key_function('actuate', {'side': 'left',  
-                                             'position' : 100.0}, 'left gripper:  open'),
-      'W':   self.create_key_function('actuate', {'side': 'right', 
-                                             'position' : 100.0}, 'right gripper:  open'),
-      '[':   self.create_key_function('actuate', {'side': 'left',  'velocity' : 100.0, 
-                                             'position' : 0.0}, 'left gripper:  close, 100% velocity'),
-      '{':   self.create_key_function('actuate', {'side': 'right', 'velocity' : 100.0, 
-                                             'position' : 0.0},'right gripper:  close, 100% velocity'),
-      ']':   self.create_key_function('actuate', {'side': 'left',  'velocity' : 100.0, 
-                                             'position' : 100.0}, 'left gripper:  open, 100% velocity'),
-      '}':   self.create_key_function('actuate', {'side': 'right', 'velocity' : 100.0, 
-                                             'position' : 100.0}, 'right gripper: open, 100% velocity'),
-      's':   self.create_key_function('actuate', {'side': 'left', 'velocity' : 0.0},
-                                             'left gripper:  stop'),
-      'S':   self.create_key_function('actuate', {'side': 'right', 'velocity' : 0.0},
-                                             'right gripper:  stop'),
-      'z':   self.create_key_function('actuate', {'side': 'left', 'dead_zone_inc' : -1.0},
-                                             'left gripper:  decrease dead zone'),
-      'Z':   self.create_key_function('actuate', {'side': 'right', 'dead_zone_inc' : -1.0},
-                                             'right gripper:  decrease dead zone'),
-      'x':   self.create_key_function('actuate', {'side': 'left', 'dead_zone_inc' : 1.0},
-                                             'left gripper:  increase dead zone'),
-      'X':   self.create_key_function('actuate', {'side': 'right', 'dead_zone_inc' : 1.0},
-                                             'right gripper:  increase dead zone'),
-      'f':   self.create_key_function('actuate', {'side': 'left', 'moving_force_inc' : -5.0},
-                                             'left gripper:  decrease moving force'),
-      'F':   self.create_key_function('actuate', {'side': 'right', 'moving_force_inc' : -5.0},
-                                             'right gripper:  decrease moving force'),
-      'g':   self.create_key_function('actuate', {'side': 'left', 'moving_force_inc' : 5.0},
-                                             'left gripper:  increase moving force'),
-      'G':   self.create_key_function('actuate', {'side': 'right', 'moving_force_inc' : 5.0},
-                                             'right gripper:  increase moving force'),
-      'h':   self.create_key_function('actuate', {'side': 'left', 'holding_force_inc' : -5.0},
-                                             'left gripper:  decrease holding force'),
-      'H':   self.create_key_function('actuate', {'side': 'right', 'holding_force_inc' : -5.0},
-                                             'right gripper:  decrease holding force'),
-      'j':   self.create_key_function('actuate', {'side': 'left', 'holding_force_inc' : 5.0},
-                                             'left gripper:  increase holding force'),
-      'J':   self.create_key_function('actuate', {'side': 'right', 'holding_force_inc' : 5.0},
-                                             'right gripper:  increase holding force'),
-      'v':   self.create_key_function('actuate', {'side': 'left', 'velocity_inc' : -5.0},
-                                             'left gripper:  decrease velocity'),
-      'V':   self.create_key_function('actuate', {'side': 'right', 'velocity_inc' : -5.0},
-                                             'right gripper:  decrease velocity'),
-      'b':   self.create_key_function('actuate', {'side': 'left', 'velocity_inc' : 5.0},
-                                             'left gripper:  increase velocity'),
-      'B':   self.create_key_function('actuate', {'side': 'right', 'velocity_inc' : 5.0},
-                                             'right gripper:  increase velocity'),
-
-
-
-      '?': self.show_help,
-      #' ': self.record,
+      'r':   ckf('reset', {'side': 'left', 'reboot' : True},
+                 'left:  reset'),
+      'R':   ckf('reset', {'side': 'right', 'reboot' : True},
+                 'right:  reset'),
+      'c':   ckf('calibrate', {'side': 'left'}, 'left:  calibrate'),
+      'C':   ckf('calibrate', {'side': 'right'}, 'right:  calibrate'),
+      'q':   ckf('actuate', {'side': 'left',
+                             'position' : 0.0}, 'left:  close'),
+      'Q':   ckf('actuate', {'side': 'right',
+                             'position' : 0.0},'right:  close'),
+      'w':   ckf('actuate', {'side': 'left',
+                             'position' : 100.0}, 'left:  open'),
+      'W':   ckf('actuate', {'side': 'right',
+                             'position' : 100.0}, 'right:  open'),
+      '[':   ckf('actuate', {'side': 'left',  'velocity' : 100.0,
+                             'position' : 0.0}, 'left:  close, 100% velocity'),
+      '{':   ckf('actuate', {'side': 'right', 'velocity' : 100.0,
+                             'position' : 0.0},'right:  close, 100% velocity'),
+      ']':   ckf('actuate', {'side': 'left',  'velocity' : 100.0,
+                             'position' : 100.0}, 'left:  open, 100% velocity'),
+      '}':   ckf('actuate', {'side': 'right', 'velocity' : 100.0,
+                             'position' : 100.0}, 'right:  open, 100% velocity'),
+      's':   ckf('actuate', {'side': 'left', 'velocity' : 0.0}, 'left:  stop'),
+      'S':   ckf('actuate', {'side': 'right', 'velocity' : 0.0}, 'right:  stop'),
+      'z':   ckf('actuate', {'side': 'left', 'dead_zone_inc' : -1.0},
+                 'left:  decrease dead zone'),
+      'Z':   ckf('actuate', {'side': 'right', 'dead_zone_inc' : -1.0},
+                 'right:  decrease dead zone'),
+      'x':   ckf('actuate', {'side': 'left', 'dead_zone_inc' : 1.0},
+                 'left:  increase dead zone'),
+      'X':   ckf('actuate', {'side': 'right', 'dead_zone_inc' : 1.0},
+                 'right:  increase dead zone'),
+      'f':   ckf('actuate', {'side': 'left', 'moving_force_inc' : -5.0},
+                 'left:  decrease moving force'),
+      'F':   ckf('actuate', {'side': 'right', 'moving_force_inc' : -5.0},
+                 'right:  decrease moving force'),
+      'g':   ckf('actuate', {'side': 'left', 'moving_force_inc' : 5.0},
+                 'left:  increase moving force'),
+      'G':   ckf('actuate', {'side': 'right', 'moving_force_inc' : 5.0},
+                 'right:  increase moving force'),
+      'h':   ckf('actuate', {'side': 'left', 'holding_force_inc' : -5.0},
+                 'left:  decrease holding force'),
+      'H':   ckf('actuate', {'side': 'right', 'holding_force_inc' : -5.0},
+                 'right:  decrease holding force'),
+      'j':   ckf('actuate', {'side': 'left', 'holding_force_inc' : 5.0},
+                 'left:  increase holding force'),
+      'J':   ckf('actuate', {'side': 'right', 'holding_force_inc' : 5.0},
+                 'right:  increase holding force'),
+      'v':   ckf('actuate', {'side': 'left', 'velocity_inc' : -5.0},
+                 'left:  decrease velocity'),
+      'V':   ckf('actuate', {'side': 'right', 'velocity_inc' : -5.0},
+                 'right:  decrease velocity'),
+      'b':   ckf('actuate', {'side': 'left', 'velocity_inc' : 5.0},
+                 'left:  increase velocity'),
+      'B':   ckf('actuate', {'side': 'right', 'velocity_inc' : 5.0},
+                 'right:  increase velocity'),
+      '?':   self.show_help,
       '\x1b': self.stop, #Escape... doesn't print.
     }
 
@@ -383,7 +378,7 @@ class KeyboardMapper(Mapper):
     key_function.__doc__ = cmd_doc
     return key_function
 
-  def getch(self, timeout=0.01):
+  def getch(timeout=0.01):
     """Non-blocking getch.
     Returns an empty string if no character is available within the timeout
     """
@@ -392,9 +387,9 @@ class KeyboardMapper(Mapper):
     try:
       tty.setraw(fileno)
       [i, _, _] = select([fileno], [], [], timeout)
-      if i: 
+      if i:
         chr_ = sys.stdin.read(1)
-      else: 
+      else:
         chr_ = ''
     except Exception as ex:
       print "getch", ex
@@ -402,12 +397,36 @@ class KeyboardMapper(Mapper):
     finally:
       termios.tcsetattr(fileno, termios.TCSADRAIN, old_settings)
     return chr_
+  getch = staticmethod(getch)
 
   def show_help(self):
     """show binding help"""
-    print "="*20 + "gripper keyboard bindings " + "="*20
-    for key, cmd in sorted(self.bindings.items(), key=lambda item: str.lower(item[0])):
-      print "    " + str(key) + ": " + str(cmd.__doc__)
+    neither = []
+    left = []
+    right = []
+    for key, cmd in sorted(self.bindings.items(), key=lambda item: item[1].__doc__[0]+str.lower(item[0])):
+      side, _, doc = str(cmd.__doc__).partition(':')
+      hlp = "    " + str(key) + ": " + (doc if doc else side)
+      if (side == 'left'):
+        left.append(hlp)
+      elif (side == 'right'):
+        right.append(hlp)
+      else:
+        neither.append(hlp)
+
+    print "*"*7 + "gripper keyboard bindings " + "*"*7
+    for hlp in neither:
+      print hlp
+    print
+    print "Left Gripper:"
+    for hlp in left:
+      print hlp
+    print
+    print "Right Gripper:"
+    print "    Shifted keys control the right gripper."
+    for hlp in right:
+      print hlp
+    print "*"*40
 
   def exec_binding(self, chr_):
     """ Execute the function bound to the given key.
@@ -428,5 +447,3 @@ class KeyboardMapper(Mapper):
     self.controller.report()
     chr_ = self.getch()
     self.exec_binding(chr_)
-
-

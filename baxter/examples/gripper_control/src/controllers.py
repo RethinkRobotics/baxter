@@ -12,7 +12,7 @@ from baxter_msgs.msg import GripperProperties
 from baxter_msgs.msg import GripperState
 from baxter_msgs.msg import GripperCommand
 
-class GripperController():
+class GripperController(object):
   """ Controls a gripper on a Baxter Robot
       Also publishes gripper status.
   """
@@ -20,15 +20,6 @@ class GripperController():
     self.arm = arm
     self.gripper_name = self.arm + " gripper"
     self.base_path = '/robot/limb/' + arm + '/accessory/gripper/'
-
-    self.pub_enable = rospy.Publisher(self.base_path + 'set_enabled', Bool)
-    self.pub_reset = rospy.Publisher(self.base_path + 'command_reset', Bool)
-    self.pub_calibrate = rospy.Publisher(self.base_path + 'command_calibrate', Empty)
-    self.pub_actuate = rospy.Publisher(self.base_path + 'command_set', GripperCommand)
-
-    self.sub_identity = rospy.Subscriber(self.base_path + 'identity', GripperIdentity, self.on_gripper_identity)
-    self.sub_properties = rospy.Subscriber(self.base_path + 'properties', GripperProperties, self.on_gripper_properties)
-    self.sub_state = rospy.Subscriber(self.base_path + 'state', GripperState, self.on_gripper_state)
 
     self.last_command = ""
     self.last_args = {}
@@ -48,6 +39,20 @@ class GripperController():
     self.state_report = ""
     self._format_identity_report(self.identity_msg)
 
+    self.pub_enable = rospy.Publisher(self.base_path + 'set_enabled', Bool)
+    self.pub_reset = rospy.Publisher(self.base_path + 'command_reset', Bool)
+    self.pub_calibrate = rospy.Publisher(
+      self.base_path + 'command_calibrate', Empty)
+    self.pub_actuate = rospy.Publisher(
+      self.base_path + 'command_set', GripperCommand)
+
+    self.sub_identity = rospy.Subscriber(
+      self.base_path + 'identity', GripperIdentity, self.on_gripper_identity)
+    self.sub_properties = rospy.Subscriber(
+      self.base_path + 'properties', GripperProperties, self.on_gripper_properties)
+    self.sub_state = rospy.Subscriber(
+      self.base_path + 'state', GripperState, self.on_gripper_state)
+
     self.status_val = {
       GripperState.STATE_FALSE: "False",
       GripperState.STATE_TRUE:  "True",
@@ -55,6 +60,9 @@ class GripperController():
       }
 
   def enable(self, **args):
+    """ Controller command to enable/disable the gripper.
+        Args:  args(dict)
+    """
     enable = True
     if 'enable' in args:
       enable = args['enable']
@@ -64,6 +72,9 @@ class GripperController():
     self.pub_enable.publish(Bool(enable))
 
   def reset(self, **args):
+    """ Controller command to reset the gripper.
+        Args:  args(dict)
+    """
     reboot = True
     if 'reboot' in args:
       reboot = args['reboot']
@@ -73,6 +84,9 @@ class GripperController():
     self.pub_reset.publish(Bool(reboot))
 
   def calibrate(self, **args):
+    """ Controller command to calibrate the gripper.
+        Args:  args(dict) -- not used
+    """
     if self.command_changed:
       if self.state_msg.calibrated:
         print "%s already calibrated!" % (self.gripper_name)
@@ -80,36 +94,41 @@ class GripperController():
         print "Calibrating", self.gripper_name
     self.pub_calibrate.publish(Empty())
 
-  def _actuate_arg(self, key, current_val, args):
-    if key in args:
-      return args[key]
-    elif key + '_inc' in args:
-      value = args['value'] if 'value' in args else 1.0
-      return current_val + (args[key + '_inc'] * value)
-    elif key + '_scale' in args:
-      value = args['value'] if 'value' in args else 1.0
-      return args[key + '_scale'] * value
-    else:
-      return current_val
-
-  def _keep_gripper_arg_in_range(self, arg, min_range=0.0, max_range=100.0):
-    if arg < min_range:
-      return  min_range
-    if arg > max_range:
-      return max_range
-    return arg
-
   def actuate(self, **args):
-    position = self._keep_gripper_arg_in_range(
-      self._actuate_arg('position', self.command_msg.position, args))
-    force    = self._keep_gripper_arg_in_range(
-      self._actuate_arg('moving_force', self.command_msg.force, args))
-    velocity = self._keep_gripper_arg_in_range(
-      self._actuate_arg('velocity', self.command_msg.velocity, args))
-    holding  = self._keep_gripper_arg_in_range(
-      self._actuate_arg('holding_force', self.command_msg.holding, args))
-    dead_zone = self._keep_gripper_arg_in_range(
-      self._actuate_arg('dead_zone', self.command_msg.deadZone, args))
+    """ Controller command to actuate the gripper.
+        Args:  args(dict) specify changes to the actuation:
+               position, velocity, holding_force, moving_force and dead_zone
+    """
+
+    def _actuate_arg(key, current_val, args):
+      if key in args:
+        return args[key]
+      elif key + '_inc' in args:
+        value = args['value'] if 'value' in args else 1.0
+        return current_val + (args[key + '_inc'] * value)
+      elif key + '_scale' in args:
+        value = args['value'] if 'value' in args else 1.0
+        return args[key + '_scale'] * value
+      else:
+        return current_val
+
+    def _keep_gripper_arg_in_range(arg, min_range=0.0, max_range=100.0):
+      if arg < min_range:
+        return  min_range
+      if arg > max_range:
+        return max_range
+      return arg
+
+    position = _keep_gripper_arg_in_range(
+      _actuate_arg('position', self.command_msg.position, args))
+    force    = _keep_gripper_arg_in_range(
+      _actuate_arg('moving_force', self.command_msg.force, args))
+    velocity = _keep_gripper_arg_in_range(
+      _actuate_arg('velocity', self.command_msg.velocity, args))
+    holding  = _keep_gripper_arg_in_range(
+      _actuate_arg('holding_force', self.command_msg.holding, args))
+    dead_zone = _keep_gripper_arg_in_range(
+      _actuate_arg('dead_zone', self.command_msg.deadZone, args))
 
     changed = \
         self.command_msg.position != position or \
@@ -150,7 +169,8 @@ class GripperController():
 
     try:
       if command in options:
-        self.command_changed = (self.last_command != command) or (self.last_args != args)
+        self.command_changed = \
+            (self.last_command != command) or (self.last_args != args)
         options[command](**args)
         self.last_command = command
         self.last_args = args
@@ -185,10 +205,12 @@ class GripperController():
 
   def _format_properties_report(self, properties_msg):
     self.properties_report = self.gripper_name
-    if self.properties_msg.hasForce    != properties_msg.hasForce:
-      self.properties_report += "\n  hasForce: %s" % (self.status_val[properties_msg.hasForce],)
-      if self.properties_msg.hasPosition    != properties_msg.hasPosition:
-        self.properties_report += "\n  hasPosition: %s" % (self.status_val[properties_msg.hasPosition],)
+    if self.properties_msg.hasForce != properties_msg.hasForce:
+      self.properties_report += \
+          "\n  hasForce: %s" % (self.status_val[properties_msg.hasForce],)
+      if self.properties_msg.hasPosition != properties_msg.hasPosition:
+        self.properties_report += \
+            "\n  hasPosition: %s" % (self.status_val[properties_msg.hasPosition],)
 
   def on_gripper_properties(self, properties_msg):
     """ callback function for the ROS subscriber of the gripper properties
@@ -205,12 +227,6 @@ class GripperController():
       self._format_properties_report(properties_msg)
 
     self.properties_msg = properties_msg
-
-  def _position_changed(self, old_pos, new_pos):
-    return abs(new_pos - old_pos) > 0.5
-
-  def _force_changed(self, old_force, new_force):
-    return abs(new_force - old_force) > 0.5
 
   def _format_state_report(self, state_msg):
     self.state_report = self.gripper_name
@@ -239,6 +255,13 @@ class GripperController():
       state(baxter_msgs.msg.GripperState): the ROS message containing the
       gripper state
     """
+
+    def _position_changed(old_pos, new_pos):
+      return abs(new_pos - old_pos) > 0.5
+
+    def _force_changed(old_force, new_force):
+      return abs(new_force - old_force) > 0.5
+
     self.state_changed = self.state_changed or (
       self.state_msg.enabled    != state_msg.enabled or
       self.state_msg.calibrated != state_msg.calibrated or
@@ -247,8 +270,8 @@ class GripperController():
       self.state_msg.gripping   != state_msg.gripping or
       self.state_msg.missed     != state_msg.missed or
       self.state_msg.error      != state_msg.error or
-      self._position_changed(self.state_msg.position, state_msg.position)  or
-      self._force_changed(self.state_msg.force, state_msg.force)
+      _position_changed(self.state_msg.position, state_msg.position)  or
+      _force_changed(self.state_msg.force, state_msg.force)
       )
 
     if self.state_changed:
@@ -260,12 +283,14 @@ class GripperController():
     """ Report changed identity, properties and status
     """
     if self.identity_changed:
-      print '-'*15, "Identity", '-'*15
+      print '='*15, "Identity", '='*15
       print self.identity_report
+      print '='*38
       self.identity_changed = False
     if self.properties_changed:
-      print '-'*14, "Properties", '-'*14
+      print '+'*14, "Properties", '+'*14
       print self.properties_report
+      print '+'*38
       self.properties_changed = False
     if self.state_changed:
       print '-'*16, "State" , '-'*17
@@ -281,11 +306,6 @@ class BaxterController(object):
     Args:
       commands(dict{str:int}): a set of name/value pairs
         that forms a robot command
-    """
-    raise NotImplementedError()
-
-  def record(self):
-    """ records the last issued command or robot state
     """
     raise NotImplementedError()
 
