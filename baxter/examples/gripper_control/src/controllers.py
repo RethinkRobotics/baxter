@@ -1,11 +1,12 @@
-
+"""
+Gripper controllers. 
+"""
 import roslib
 roslib.load_manifest('gripper_control')
 import rospy
 
 from std_msgs.msg import Bool
 from std_msgs.msg import Empty
-from std_msgs.msg import Float32
 from baxter_msgs.msg import GripperIdentity
 from baxter_msgs.msg import GripperProperties
 from baxter_msgs.msg import GripperState
@@ -13,6 +14,7 @@ from baxter_msgs.msg import GripperCommand
 
 class GripperController():
   """ Controls a gripper on a Baxter Robot
+      Also publishes gripper status.
   """
   def __init__(self, arm):
     self.arm = arm
@@ -98,18 +100,31 @@ class GripperController():
     return arg
 
   def actuate(self, **args):
-    self.command_msg.position = self._keep_gripper_arg_in_range(
+    position = self._keep_gripper_arg_in_range(
       self._actuate_arg('position', self.command_msg.position, args))
-    self.command_msg.force    = self._keep_gripper_arg_in_range(
+    force    = self._keep_gripper_arg_in_range(
       self._actuate_arg('moving_force', self.command_msg.force, args))
-    self.command_msg.velocity = self._keep_gripper_arg_in_range(
+    velocity = self._keep_gripper_arg_in_range(
       self._actuate_arg('velocity', self.command_msg.velocity, args))
-    self.command_msg.holding  = self._keep_gripper_arg_in_range(
+    holding  = self._keep_gripper_arg_in_range(
       self._actuate_arg('holding_force', self.command_msg.holding, args))
-    self.command_msg.deadZone = self._keep_gripper_arg_in_range(
+    dead_zone = self._keep_gripper_arg_in_range(
       self._actuate_arg('dead_zone', self.command_msg.deadZone, args))
 
-    if self.command_changed:
+    changed = \
+        self.command_msg.position != position or \
+        self.command_msg.force    != force  or \
+        self.command_msg.velocity != velocity  or \
+        self.command_msg.holding  != holding  or \
+        self.command_msg.deadZone != dead_zone
+
+    self.command_msg.position = position
+    self.command_msg.force    = force
+    self.command_msg.velocity = velocity
+    self.command_msg.holding  = holding
+    self.command_msg.deadZone = dead_zone
+
+    if self.command_changed or changed:
       print("Actuate %s: pos=%0.2f%%, mov=%0.2f%%, vel=%0.2f%%, hld=%0.2f%%, dzn=%0.2f%%" % (
           self.gripper_name, 
           self.command_msg.position, 
@@ -253,7 +268,7 @@ class GripperController():
       print self.properties_report
       self.properties_changed = False
     if self.state_changed:
-      print '-'*16, "State" ,'-'*17
+      print '-'*16, "State" , '-'*17
       print self.state_report
       self.state_changed = False
 
