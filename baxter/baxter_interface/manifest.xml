@@ -1,0 +1,15 @@
+<package>
+  <description brief="joint_pose">
+
+     baxter_interface: interface classes for a baxter robot
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/baxter_interface</url>
+  <depend package="rospy"/>
+
+</package>
+
+
