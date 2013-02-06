@@ -12,26 +12,24 @@ from baxter_msgs.msg import (
 
 import baxter_interface.robustcontroller
 
-class TareTester(baxter_interface.robustcontroller.RobustController):
+class Tare(baxter_interface.robustcontroller.RobustController):
     def __init__ (self, limb):
         """
         Wrapper to run the Tare RobustController.
 
         @param limb - Limb to run tare on [left/right]
         """
-        # Enable message
-        e = TareEnable()
-        e.data.tuneGravitySpring = True
-        e.isEnabled = True
-        e.uid = 'tester'
+        enable_msg = TareEnable(isEnabled = True, uid = 'sdk')
+        enable_msg.data.tuneGravitySpring = True
 
-        # Disable Message
-        d = TareEnable()
-        d.isEnabled = False
-        d.uid = 'tester'
+        disable_msg = TareEnable(isEnabled = False, uid = 'sdk')
 
         # Initialize RobustController, use 5 minute timeout for the Tare process
-        super(TareTester, self).__init__('/sdk/robustcontroller/%s/Tare' % (limb,), e, d, 5 * 60)
+        super(Tare, self).__init__(
+            '/sdk/robustcontroller/%s/Tare' % (limb,),
+            enable_msg,
+            disable_msg,
+            5 * 60)
 
 def usage():
         print """
@@ -63,12 +61,12 @@ def main():
         rospy.logerr("No limb specified")
         sys.exit(1)
 
-    rospy.init_node('tare_tester', anonymous=True)
-    tt = TareTester(limb)
+    rospy.init_node('tare_sdk', anonymous=True)
+    tt = Tare(limb)
     rospy.loginfo("Running tare on %s limb" % (limb,))
     ret, msg = tt.run()
 
-    if not ret:
+    if ret == 0:
         rospy.loginfo("Tare finished")
     else:
         rospy.logerr("Tare failed: %s" % (msg,))

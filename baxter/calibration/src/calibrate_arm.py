@@ -12,25 +12,23 @@ from baxter_msgs.msg import (
 
 import baxter_interface.robustcontroller
 
-class CalibrateArmTester(baxter_interface.robustcontroller.RobustController):
+class CalibrateArm(baxter_interface.robustcontroller.RobustController):
     def __init__ (self, limb):
         """
         Wrapper to run the CalibrateArm RobustController.
 
         @param limb - Limb to run CalibrateArm on [left/right]
         """
-        # Enable message
-        e = CalibrateArmEnable()
-        e.isEnabled = True
-        e.uid = 'tester'
+        enable_msg = CalibrateArmEnable(isEnabled = True, uid = 'sdk')
 
-        # Disable Message
-        d = CalibrateArmEnable()
-        d.isEnabled = False
-        d.uid = 'tester'
+        disable_msg = CalibrateArmEnable(isEnabled = False, uid = 'sdk')
 
         # Initialize RobustController, use 10 minute timeout for the CalibrateArm process
-        super(CalibrateArmTester, self).__init__('/robustcontroller/%s/CalibrateArm' % (limb,), e, d, 10 * 60)
+        super(CalibrateArm, self).__init__(
+            '/robustcontroller/%s/CalibrateArm' % (limb,),
+            enable_msg,
+            disable_msg,
+            10 * 60)
 
 def usage():
         print """
@@ -62,12 +60,12 @@ def main():
         rospy.logerr("No arm specified")
         sys.exit(1)
 
-    rospy.init_node('calibrate_arm_tester', anonymous=True)
-    cat = CalibrateArmTester(arm)
+    rospy.init_node('calibrate_arm_sdk', anonymous=True)
+    cat = CalibrateArm(arm)
     rospy.loginfo("Running calibrate on %s arm" % (arm,))
     ret, msg = cat.run()
 
-    if not ret:
+    if ret == 0:
         rospy.loginfo("Calibrate arm finished")
     else:
         rospy.logerr("Calibrate arm failed: %s" % (msg,))

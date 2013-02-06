@@ -40,8 +40,8 @@ class RobustController(object):
     def _callback(self, msg):
         if self._state == self.STATE_RUNNING:
             if msg.complete == RobustControllerStatus.COMPLETE_W_SUCCESS:
-                self._return = (0, "Success")
                 self._state = self.STATE_STOPPING
+                self._return = (0, "Success")
 
             elif msg.complete == RobustControllerStatus.COMPLETE_W_FAILURE:
                 self._state = self.STATE_STOPPING
@@ -60,7 +60,7 @@ class RobustController(object):
             self._state = self.STATE_RUNNING
 
     def _run_loop(self):
-        # RobustControllers need messages at > 1Hz in order to continue
+        # RobustControllers need messages at < 1Hz in order to continue
         # their current operation.
         rate = rospy.Rate(2)
         start = rospy.Time.now()
