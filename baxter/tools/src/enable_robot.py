@@ -4,7 +4,7 @@ import os
 import sys
 
 import roslib
-roslib.load_manifest('robot_control')
+roslib.load_manifest('tools')
 import rospy
 
 import baxter_interface
