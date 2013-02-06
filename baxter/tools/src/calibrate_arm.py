@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 import getopt
 import os
 import sys
@@ -10,6 +12,7 @@ from baxter_msgs.msg import (
     CalibrateArmEnable,
 )
 
+import baxter_interface
 import baxter_interface.robustcontroller
 
 class CalibrateArm(baxter_interface.robustcontroller.RobustController):
@@ -61,9 +64,12 @@ def main():
         sys.exit(1)
 
     rospy.init_node('calibrate_arm_sdk', anonymous=True)
+    rs = baxter_interface.RobotEnable()
+    rs.enable()
     cat = CalibrateArm(arm)
     rospy.loginfo("Running calibrate on %s arm" % (arm,))
     ret, msg = cat.run()
+    rs.disable()
 
     if ret == 0:
         rospy.loginfo("Calibrate arm finished")

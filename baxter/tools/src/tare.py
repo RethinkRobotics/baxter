@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 import getopt
 import os
 import sys
@@ -10,6 +12,7 @@ from baxter_msgs.msg import (
     TareEnable,
 )
 
+import baxter_interface
 import baxter_interface.robustcontroller
 
 class Tare(baxter_interface.robustcontroller.RobustController):
@@ -62,9 +65,12 @@ def main():
         sys.exit(1)
 
     rospy.init_node('tare_sdk', anonymous=True)
+    rs = baxter_interface.RobotEnable()
+    rs.enable()
     tt = Tare(limb)
     rospy.loginfo("Running tare on %s limb" % (limb,))
     ret, msg = tt.run()
+    rs.disable()
 
     if ret == 0:
         rospy.loginfo("Tare finished")
