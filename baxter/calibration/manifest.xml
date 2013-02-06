@@ -1,14 +1,13 @@
 <package>
-  <description brief="baxter_interface">
-     baxter_interface: interface classes for a baxter robot
-
+  <description brief="calibration">
+    calibration
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://github.com/RethinkRobotics</url>
   <depend package="rospy"/>
-  <depend package="baxter_msgs"/>
+  <depend package="baxter_interface"/>
 </package>
 
 
