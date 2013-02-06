@@ -2,7 +2,7 @@
 import argparse
 
 import roslib
-roslib.load_manifest('joint_pose')
+roslib.load_manifest('joint_position')
 import rospy
 import enable_robot
 
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_pose_file_playback")
+    rospy.init_node("rethink_rsdk_joint_position_file_playback")
     print("Getting robot state... ")
     rs = enable_robot.RobotState()
     print("Enabling robot... ")

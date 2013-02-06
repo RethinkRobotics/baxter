@@ -1,5 +1,5 @@
 import roslib
-roslib.load_manifest('joint_pose')
+roslib.load_manifest('joint_position')
 import rospy
 
 from controllers import GripperBaxterController

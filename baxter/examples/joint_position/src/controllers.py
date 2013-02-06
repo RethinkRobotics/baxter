@@ -1,5 +1,5 @@
 import roslib
-roslib.load_manifest('joint_pose')
+roslib.load_manifest('joint_position')
 import rospy
 
 from std_msgs.msg import (Empty, Float32,)
