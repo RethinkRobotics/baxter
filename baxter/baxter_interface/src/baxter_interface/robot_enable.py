@@ -4,7 +4,7 @@ import sys
 import time
 
 import roslib
-roslib.load_manifest('robot_control')
+roslib.load_manifest('baxter_interface')
 import rospy
 import baxter_msgs.msg
 import baxter_msgs.srv
