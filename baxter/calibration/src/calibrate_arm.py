@@ -25,7 +25,7 @@ class CalibrateArm(baxter_interface.robustcontroller.RobustController):
 
         # Initialize RobustController, use 10 minute timeout for the CalibrateArm process
         super(CalibrateArm, self).__init__(
-            '/robustcontroller/%s/CalibrateArm' % (limb,),
+            '/sdk/robustcontroller/%s/CalibrateArm' % (limb,),
             enable_msg,
             disable_msg,
             10 * 60)
