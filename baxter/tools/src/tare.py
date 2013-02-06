@@ -3,7 +3,7 @@ import os
 import sys
 
 import roslib
-roslib.load_manifest('calibration')
+roslib.load_manifest('tools')
 import rospy
 
 from baxter_msgs.msg import (
