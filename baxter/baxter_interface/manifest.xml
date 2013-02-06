@@ -1,6 +1,7 @@
 <package>
   <description brief="baxter_interface">
-    baxter_interface
+     baxter_interface: interface classes for a baxter robot
+
   </description>
   <author></author>
   <license>BSD</license>
