@@ -8,14 +8,14 @@ from controllers import JointPositionBaxterController
 from mappers import KeyboardMapper
 
 if __name__ == '__main__':
-  print("Initializing node... ")
-  rospy.init_node("rethink_rsdk_joint_pose_keyboard")
-  print("Getting robot state... ")
-  rs = enable_robot.RobotState()
-  print("Enabling robot... ")
-  rs.enable()
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_joint_pose_keyboard")
+    print("Getting robot state... ")
+    rs = enable_robot.RobotState()
+    print("Enabling robot... ")
+    rs.enable()
 
-  mapper = KeyboardMapper(JointPositionBaxterController())
+    mapper = KeyboardMapper(JointPositionBaxterController())
 
-  mapper.loop()
-  rs.disable()
+    mapper.loop()
+    rs.disable()

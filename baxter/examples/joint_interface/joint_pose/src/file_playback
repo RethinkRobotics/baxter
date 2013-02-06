@@ -10,19 +10,19 @@ from controllers import JointPositionBaxterController
 from mappers import FileMapper
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument("file", help="input file")
-  parser.add_argument("-l", "--loops", help="number of times to loop the input file. 0=infinite.")
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", help="input file")
+    parser.add_argument("-l", "--loops", help="number of times to loop the input file. 0=infinite.")
+    args = parser.parse_args()
 
-  print("Initializing node... ")
-  rospy.init_node("rethink_rsdk_joint_pose_file_playback")
-  print("Getting robot state... ")
-  rs = enable_robot.RobotState()
-  print("Enabling robot... ")
-  rs.enable()
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_joint_pose_file_playback")
+    print("Getting robot state... ")
+    rs = enable_robot.RobotState()
+    print("Enabling robot... ")
+    rs.enable()
 
-  mapper = FileMapper(JointPositionBaxterController(), args.file, args.loops)
+    mapper = FileMapper(JointPositionBaxterController(), args.file, args.loops)
 
-  mapper.loop()
-  rs.disable()
+    mapper.loop()
+    rs.disable()
