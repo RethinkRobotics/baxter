@@ -1,15 +1,18 @@
+#!/usr/bin/python2
+
 import getopt
 import os
 import sys
 
 import roslib
-roslib.load_manifest('calibration')
+roslib.load_manifest('tools')
 import rospy
 
 from baxter_msgs.msg import (
     CalibrateArmEnable,
 )
 
+import baxter_interface
 import baxter_interface.robustcontroller
 
 class CalibrateArm(baxter_interface.robustcontroller.RobustController):
@@ -25,7 +28,7 @@ class CalibrateArm(baxter_interface.robustcontroller.RobustController):
 
         # Initialize RobustController, use 10 minute timeout for the CalibrateArm process
         super(CalibrateArm, self).__init__(
-            '/robustcontroller/%s/CalibrateArm' % (limb,),
+            '/sdk/robustcontroller/%s/CalibrateArm' % (limb,),
             enable_msg,
             disable_msg,
             10 * 60)
@@ -61,9 +64,12 @@ def main():
         sys.exit(1)
 
     rospy.init_node('calibrate_arm_sdk', anonymous=True)
+    rs = baxter_interface.RobotEnable()
+    rs.enable()
     cat = CalibrateArm(arm)
     rospy.loginfo("Running calibrate on %s arm" % (arm,))
     ret, msg = cat.run()
+    rs.disable()
 
     if ret == 0:
         rospy.loginfo("Calibrate arm finished")

@@ -4,7 +4,7 @@ import argparse
 import roslib
 roslib.load_manifest('joint_position')
 import rospy
-import enable_robot
+import baxter_interface
 
 from controllers import JointPositionBaxterController
 from mappers import FileMapper
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_position_file_playback")
     print("Getting robot state... ")
-    rs = enable_robot.RobotState()
+    rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")
     rs.enable()
 
