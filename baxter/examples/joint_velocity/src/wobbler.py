@@ -40,12 +40,12 @@ class Wobbler():
         rate = rospy.Rate(1000);
         start = rospy.Time.now()
         def make_v_func():
-            period_factor = random.uniform(0.1, 0.3)
-            amplitude_factor = random.uniform(0.1, 0.3)
+            period_factor = random.uniform(0.3, 0.5)
+            amplitude_factor = random.uniform(0.1, 0.2)
             def v_func(elapsed):
                 return math.cos(period_factor * elapsed.to_sec() * math.pi * 2) * amplitude_factor
             return v_func
-        v_funcs = [make_v_func() for x in range(7)]
+        v_funcs = [make_v_func() for x in range(len(self.joint_names))]
         while not self.done:
             self.pub_rate.publish(1000)
             elapsed = rospy.Time.now() - start
@@ -55,9 +55,9 @@ class Wobbler():
 #                self.right_arm.joint_velocity('s0'),
 #                self.left_arm.state_rate(),
 #            ))
-            cmd = dict(zip(self.joint_names, [v_funcs[i](elapsed) for i in range(7)]))
+            cmd = dict(zip(self.joint_names, [v_funcs[i](elapsed) for i in range(len(self.joint_names))]))
             self.left_arm.set_velocities(cmd)
-            cmd = dict(zip(self.joint_names, [-v_funcs[i](elapsed) for i in range(7)]))
+            cmd = dict(zip(self.joint_names, [-v_funcs[i](elapsed) for i in range(len(self.joint_names))]))
             self.right_arm.set_velocities(cmd)
             rate.sleep()
         #return to normal
