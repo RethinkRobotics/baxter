@@ -6,8 +6,8 @@ import time
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
+import std_msgs.msg
 import baxter_msgs.msg
-import baxter_msgs.srv
 
 class RobotEnable(object):
     """
@@ -20,29 +20,23 @@ class RobotEnable(object):
 
     """
     def __init__(self):
-        self._initialized = False
         self._state = None
         self._state_sub = rospy.Subscriber(
             '/sdk/robot/state',
             baxter_msgs.msg.AssemblyState,
             self._state_callback)
-        self._get_state()
+
+        rate = rospy.Rate(10)
+        timeout = 10
+        waited = 0.0
+        while self._state == None and waited < timeout:
+            rate.sleep()
+
+        if self._state == None:
+            raise IOError(errno.ETIMEDOUT, "Failed to get current robot state from /sdk/robot/state")
 
     def _state_callback(self, msg):
-        self._initialized = True
         self._state = msg
-
-    def _get_state(self):
-        self._initialized = False
-
-        timeout = 10
-        waited = 0
-        while not self._initialized and waited < timeout:
-            time.sleep(0.25)
-            waited += 0.25
-
-        if not self._initialized:
-            raise IOError(errno.ETIMEDOUT, "Failed to get current robot state from /sdk/robot/state")
 
     def state(self):
         """
@@ -55,7 +49,7 @@ class RobotEnable(object):
         Enable all joints
         """
         if self._state.stopped:
-            raise IOError(errno.EINVAL, "Cannot enabled a robot that is in the 'stopped' state.  Reset it first.")
+            self.reset()
         self._toggle_enabled(True)
 
     def disable(self):
@@ -64,55 +58,67 @@ class RobotEnable(object):
         """
         self._toggle_enabled(False)
 
+    def _loop(self, test, publisher, *args):
+        """
+        Publish *args on publisher at 10 Hz until test passes or two seconds
+        has elapsed.
+
+        @param test     - function passed the current robot state, should return
+                          True if the state matches what is desired.
+        @parm publisher - Publisher to publish *args on.
+        @param *args    - Passed to publisher.
+        """
+        rate = rospy.Rate(10)
+        timeout = 2
+        waited = 0.0
+
+        while waited < timeout:
+            if test(self._state):
+                return True
+
+            publisher.publish(*args)
+            rate.sleep()
+            waited += 0.10
+
+        return False
+
     def _toggle_enabled(self, status):
-        if self._state.enabled == status:
+        test = lambda state: state.enabled == status
+        if test(self._state):
             return
 
-        sname = '/sdk/robot/set_super_enable'
-        rospy.wait_for_service(sname)
+        pub = rospy.Publisher('/robot/set_super_enable', std_msgs.msg.Bool)
 
-        svc = rospy.ServiceProxy(sname, baxter_msgs.srv.SetSupervisorEnable)
-
-        try:
-            resp = svc(status)
-        except rospy.ServiceException, e:
-            raise IOError(errno.EIO, "Could not call service %s (%s)" % (sname, str(status)))
-
-        if resp.is_enabled != status:
-            raise IOError(errno.EREMOTEIO, "Failed to set %sable robot" % ("en" if status else "dis",))
+        if not self._loop(test, pub, status):
+            raise IOError(errno.ETIMEDOUT, "Failed to %sable robot" % ('en' if status else 'dis',))
 
     def reset(self):
         """
         Reset all joints.  Trigger JRCP hardware to reset all faults.  Disable
         the robot.
         """
-        sname = '/sdk/robot/set_super_reset'
-        rospy.wait_for_service(sname)
-        svc = rospy.ServiceProxy(sname, baxter_msgs.srv.SetSupervisorReset)
+        test = lambda state: state.enabled == False\
+                and state.stopped == False \
+                and state.error == False \
+                and state.estop_button == 0 \
+                and state.estop_source == 0
 
-        try:
-            resp = svc(True)
-        except rospy.ServiceException, e:
-            raise IOError(errno.EIO, "Could not call service %s (True)" % (sname,))
+        if test(self._state):
+            return
 
-        if not resp.is_reset:
-            raise IOError(errno.EREMOTEIO, "Failed to reset robot")
+        pub = rospy.Publisher('/robot/set_super_reset', std_msgs.msg.Empty)
+
+        if not self._loop(test, pub):
+            raise IOError(errno.ETIMEDOUT, "Failed to reset robot")
 
     def stop(self):
         """
         Simulate an e-stop button being pressed.  Robot must be reset to clear
         the stopped state.
         """
-        sname = '/sdk/robot/set_super_stop'
-        rospy.wait_for_service(sname)
-        svc = rospy.ServiceProxy(sname, baxter_msgs.srv.SetSupervisorStop)
+        test = lambda state: state.stopped == True
 
-        try:
-            resp = svc(True)
-        except rospy.ServiceException, e:
-            raise IOError(errno.EIO, "Could not call service %s (True)" % (sname,))
-
-        if not resp.is_stopping:
-            raise IOError(errno.EREMOTEIO, "Failed to stop robot")
-
+        pub = rospy.Publisher('/robot/set_super_stop', std_msgs.msg.Empty)
+        if not self._loop(test, pub):
+            raise IOError(errno.ETIMEDOUT, "Failed to stop robot")
 
