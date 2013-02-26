@@ -42,17 +42,17 @@ class Limb(object):
             sensor_msgs.msg.JointState,
             self._joint_states_callback)
 
-        self._gc_torques_sub = rospy.Subscriber(
-            ns + 'gc_torques',
-            sensor_msgs.msg.JointState,
-            self._gc_torques_callback)
+#        self._gc_torques_sub = rospy.Subscriber(
+#            ns + 'gc_torques',
+#            sensor_msgs.msg.JointState,
+#            self._gc_torques_callback)
 
         self._last_state_time = None
         self._state_rate = 0
 
         rate = rospy.Rate(100)
         while not rospy.is_shutdown():
-            if len(self._joint_angle.keys()) and len(self._joint_gc_effort.keys()):
+            if len(self._joint_angle.keys()): #and len(self._joint_gc_effort.keys()):
                 break
             rate.sleep()
 
@@ -154,9 +154,12 @@ class Limb(object):
             for joint, angle in pose.items():
                 if not joint in self._joint_angle:
                   joint = "%s_%s" % (self.name, joint,)
-                if abs(angle - self._joint_angle[joint]) >= JOINT_ANGLE_TOLERANCE:
-                    good_enough = False
-                    rate.sleep()
-                    continue
+                if joint in self._joint_angle:
+                    if abs(angle - self._joint_angle[joint]) >= JOINT_ANGLE_TOLERANCE:
+                        good_enough = False
+                        rate.sleep()
+                        continue
+                else:
+                    print("unknown joint %s" %  (joint,))
 
 

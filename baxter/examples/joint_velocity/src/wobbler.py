@@ -60,11 +60,12 @@ class Wobbler():
             cmd = dict(zip(self.joint_names, [-v_funcs[i](elapsed) for i in range(len(self.joint_names))]))
             self.right_arm.set_velocities(cmd)
             rate.sleep()
+
         #return to normal
-        for i in range(1000):
+        self.set_neutral()
+        for i in range(100):
             self.pub_rate.publish(100)
             rate.sleep()
-        self.set_neutral()
 
 if __name__ == '__main__':
     print("Initializing node... ")
@@ -75,7 +76,9 @@ if __name__ == '__main__':
     rs.enable()
 
     wobbler = Wobbler()
+    print("Wobbling... ")
     wobbler.wobble()
 
+    print("Disabling robot... ")
     rs.disable()
     print("done.")
