@@ -42,17 +42,12 @@ class Limb(object):
             sensor_msgs.msg.JointState,
             self._joint_states_callback)
 
-#        self._gc_torques_sub = rospy.Subscriber(
-#            ns + 'gc_torques',
-#            sensor_msgs.msg.JointState,
-#            self._gc_torques_callback)
-
         self._last_state_time = None
         self._state_rate = 0
 
         rate = rospy.Rate(100)
         while not rospy.is_shutdown():
-            if len(self._joint_angle.keys()): #and len(self._joint_gc_effort.keys()):
+            if len(self._joint_angle.keys()):
                 break
             rate.sleep()
 
