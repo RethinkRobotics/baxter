@@ -1,3 +1,5 @@
+import errno
+
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -33,7 +35,7 @@ class RobustController(object):
         self._disable_msg = disable_msg
         self._timeout = timeout
         self._state = self.STATE_IDLE
-        self._return = (0, "Success")
+        self._return = 0
 
         rospy.on_shutdown(self._on_shutdown)
 
@@ -41,15 +43,15 @@ class RobustController(object):
         if self._state == self.STATE_RUNNING:
             if msg.complete == RobustControllerStatus.COMPLETE_W_SUCCESS:
                 self._state = self.STATE_STOPPING
-                self._return = (0, "Success")
+                self._return = 0
 
             elif msg.complete == RobustControllerStatus.COMPLETE_W_FAILURE:
                 self._state = self.STATE_STOPPING
-                self._return = (1, msg.errorMsg)
+                self._return = errno.EIO
 
             elif not msg.isEnabled:
                 self._state = self.STATE_IDLE
-                self._return = (1, msg.errorMsg)
+                self._return = errno.ENOMSG
 
         elif self._state == self.STATE_STOPPING and not msg.isEnabled:
             # Would be nice to use msg.state here, but it does not
@@ -69,7 +71,7 @@ class RobustController(object):
             if self._state == self.STATE_RUNNING and (rospy.Time.now() - start).to_sec() > self._timeout:
                 self._state = self.STATE_STOPPING
                 self._command_pub.publish(self._disable_msg)
-                self._return = (1, "RobustController did not finish after %d seconds" % (self._timeout,))
+                self._return = errno.ETIMEDOUT
 
             elif self._state in (self.STATE_STARTING, self.STATE_RUNNING):
                 self._command_pub.publish(self._enable_msg)
@@ -89,18 +91,24 @@ class RobustController(object):
             self._command_pub.publish(self._disable_msg)
             rate.sleep()
 
-        self._return = (1, "Operation cancelled by user")
+        self._return = errno.ECONNABORTED
 
     def run(self):
         """
         Enable the RobustController and run until completion or error.
-
-        @returns    - Tuple(int,str).  Returns the exit code and error string
-                      from the robust controller.
         """
         self._state = self.STATE_STARTING
         self._command_pub.publish(self._enable_msg)
         self._run_loop()
-        return self._return
-
+        if self._return != 0:
+            if self._return == errno.EIO:
+                raise IOError(self._return, "Robust controller failed")
+            elif self._return == errno.ENOMSG:
+                raise IOError(self._return, "Robust controller failed to enable")
+            elif self._return == errno.ETIMEDOUT:
+                raise IOError(self._return, "Robust controller timed out")
+            elif self._return == errno.ECONNABORTED:
+                raise IOError(self._return, "Robust controller interruped by user")
+            else:
+                raise IOError(self._return)
 
