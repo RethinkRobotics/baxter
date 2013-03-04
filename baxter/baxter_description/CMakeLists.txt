@@ -3,10 +3,8 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 rosbuild_init()
 
-set (MESH_DIR ${PROJECT_SOURCE_DIR})
-
-install(DIRECTORY meshes
-    DESTINATION ${MESH_DIR}
-    FILES_MATCHING PATTERN "*.STL"
-    PATTERN ".git" EXCLUDE)
+#set the default path for built executables to the "bin" directory
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set the default path for built libraries to the "lib" directory
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
