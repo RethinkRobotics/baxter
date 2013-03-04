@@ -73,10 +73,13 @@ def main():
     error = None
     try:
         tt.run()
-    except IOError, e:
-        error = e.strerror
-    else:
-        rs.disable()
+    except Exception, e: 
+        error = str(e)
+    finally:
+        try:
+            rs.disable()
+        except:
+            pass
 
     if error == None:
         rospy.loginfo("Tare finished")

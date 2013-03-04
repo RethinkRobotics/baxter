@@ -72,10 +72,13 @@ def main():
     error = None
     try:
         cat.run()
-    except IOError, e:
-        error = e.strerror
-    else:
-        rs.disable()
+    except Exception, e:
+        error = str(e)
+    finally:
+        try:
+            rs.disable()
+        except:
+            pass
 
     if error == None:
         rospy.loginfo("Calibrate arm finished")
