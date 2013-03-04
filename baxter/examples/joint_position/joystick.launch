@@ -12,6 +12,6 @@
   </node>
 
   <!-- start joint pose node using arg passed-->
-  <node pkg="joint_pose" type="joystick" name="rsdk_joint_pose_joystick" args="$(arg joystick)" output="screen">
+  <node pkg="joint_position" type="joystick" name="rsdk_joint_position_joystick" args="$(arg joystick)" output="screen">
   </node>
 </launch>

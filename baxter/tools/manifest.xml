@@ -1,0 +1,14 @@
+<package>
+  <description brief="tools">
+    tools
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/RethinkRobotics</url>
+  <depend package="baxter_interface"/>
+  <depend package="cv_bridge"/>
+  <depend package="rospy"/>
+</package>
+
+

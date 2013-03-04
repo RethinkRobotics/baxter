@@ -1,11 +1,12 @@
 <package>
-  <description brief="robot_control">
-     robot_control
+  <description brief="baxter_interface">
+     baxter_interface: interface classes for a baxter robot
+
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/baxter_joint_msgs</url>
+  <url>http://github.com/RethinkRobotics</url>
   <depend package="rospy"/>
   <depend package="baxter_msgs"/>
 </package>

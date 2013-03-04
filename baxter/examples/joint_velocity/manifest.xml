@@ -1,18 +1,18 @@
 <package>
-  <description brief="joint_pose">
+  <description brief="joint_velocity">
 
-     joint_pose
+     joint_velocity
 
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/joint_pose</url>
+  <url>http://github.com/RethinkRobotics</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
   <depend package="baxter_msgs"/>
-  <depend package="robot_control"/>
+  <depend package="baxter_interface"/>
 
 </package>
 

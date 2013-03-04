@@ -1,0 +1,19 @@
+<package>
+  <description brief="joint_position">
+
+     joint_position
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/joint_position</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="baxter_msgs"/>
+  <depend package="baxter_interface"/>
+
+</package>
+
+
