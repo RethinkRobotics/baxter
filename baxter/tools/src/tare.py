@@ -69,15 +69,24 @@ def main():
     rs.enable()
     tt = Tare(limb)
     rospy.loginfo("Running tare on %s limb" % (limb,))
-    ret, msg = tt.run()
-    rs.disable()
 
-    if ret == 0:
+    error = None
+    try:
+        tt.run()
+    except Exception, e: 
+        error = str(e)
+    finally:
+        try:
+            rs.disable()
+        except:
+            pass
+
+    if error == None:
         rospy.loginfo("Tare finished")
     else:
-        rospy.logerr("Tare failed: %s" % (msg,))
+        rospy.logerr("Tare failed: %s" % (error,))
 
-    sys.exit(ret)
+    sys.exit(0 if error == None else 1)
 
 if __name__ == '__main__':
     main()
