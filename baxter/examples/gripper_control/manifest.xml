@@ -12,7 +12,8 @@
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
   <depend package="baxter_msgs"/>
-  <depend package="robot_control"/>
+  <depend package="baxter_interface"/>
+  <depend package="utilities"/>
 
 </package>
 
