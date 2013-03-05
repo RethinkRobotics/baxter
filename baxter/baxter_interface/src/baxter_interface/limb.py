@@ -8,7 +8,7 @@ import rospy
 import baxter_msgs.msg
 import sensor_msgs.msg
 
-JOINT_ANGLE_TOLERANCE = 0.0872664626
+import settings
 
 class Limb(object):
     def __init__(self, limb):
@@ -150,7 +150,7 @@ class Limb(object):
                 if not joint in self._joint_angle:
                   joint = "%s_%s" % (self.name, joint,)
                 if joint in self._joint_angle:
-                    if abs(angle - self._joint_angle[joint]) >= JOINT_ANGLE_TOLERANCE:
+                    if abs(angle - self._joint_angle[joint]) >= settings.JOINT_ANGLE_TOLERANCE:
                         good_enough = False
                         rate.sleep()
                         continue
