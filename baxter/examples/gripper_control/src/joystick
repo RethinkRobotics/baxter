@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+"""
+Baxter RSDK Gripper Example: joystick
+"""
+import argparse
+
+import roslib
+roslib.load_manifest('gripper_control')
+import rospy
+
+from controllers import GripperBaxterController
+from mappers import JoystickMapper
+
+import baxter_interface
+import iodevices
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("joystick", help="specify the type of joystick to use; xbox or logitech")
+    args, unknown = parser.parse_known_args()
+
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_gripper_joystick")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
+
+    if args.joystick.lower() == 'xbox':
+        mapper = JoystickMapper(GripperBaxterController(), iodevices.XBoxController())
+    elif args.joystick.lower() == 'logitech':
+        mapper = JoystickMapper(GripperBaxterController(), iodevices.LogitechController())
+    else:
+        parser.error("Unsupported joystick type '%s'" % (args.joystick))
+
+    mapper.run()
+    rs.disable()
+
+if __name__ == '__main__':
+    ret = main()
+    exit(ret)
