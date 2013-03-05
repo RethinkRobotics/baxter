@@ -1,0 +1,20 @@
+<package>
+  <description brief="gripper">
+
+     gripper
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/gripper</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="baxter_msgs"/>
+  <depend package="baxter_interface"/>
+  <depend package="utilities"/>
+
+</package>
+
+
