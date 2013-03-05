@@ -68,15 +68,24 @@ def main():
     rs.enable()
     cat = CalibrateArm(arm)
     rospy.loginfo("Running calibrate on %s arm" % (arm,))
-    ret, msg = cat.run()
-    rs.disable()
 
-    if ret == 0:
+    error = None
+    try:
+        cat.run()
+    except Exception, e:
+        error = str(e)
+    finally:
+        try:
+            rs.disable()
+        except:
+            pass
+
+    if error == None:
         rospy.loginfo("Calibrate arm finished")
     else:
-        rospy.logerr("Calibrate arm failed: %s" % (msg,))
+        rospy.logerr("Calibrate arm failed: %s" % (error,))
 
-    sys.exit(ret)
+    sys.exit(0 if error == None else 1)
 
 if __name__ == '__main__':
     main()
