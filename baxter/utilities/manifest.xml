@@ -1,0 +1,13 @@
+<package>
+  <description brief="utilities">
+     utilities: utilities used across examples and/or baxter_interface
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/RethinkRobotics</url>
+  <depend package="rospy"/>
+</package>
+
+
