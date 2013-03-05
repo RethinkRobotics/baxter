@@ -9,16 +9,13 @@ import rospy
 import baxter_interface
 import iodevices
 
-
-from baxter_interface import Gripper
-
 def map_keyboard():
     left = baxter_interface.Gripper('left')
     right = baxter_interface.Gripper('right')
     bindings = {
     #   key: (function, args, description)
-        'r': (left.reboot, [], "left: reboot"),
-        'R': (right.reboot, [], "right: reboot"),
+        'r': (left.reboot, [], "left: reset"),
+        'R': (right.reboot, [], "right: reset"),
         'c': (left.calibrate, [], "left: calibrate"),
         'C': (right.calibrate, [], "right: calibrate"),
         'q': (left.close, [], "left: close"),
@@ -53,10 +50,10 @@ def map_keyboard():
         'I': (right.inc_position, [5.0], "right:  increase position"),
     }
     done = False
-    while not done:
+    while not done and not rospy.is_shutdown():
         c = iodevices.getch()
         if c:
-            if c in ['\x1b']:
+            if c in ['\x1b', '\x03']:
                 done = True
             elif c in bindings:
                 cmd = bindings[c]
@@ -65,6 +62,7 @@ def map_keyboard():
             else:
                 print("key bindings: ")
                 print("  Esc: Quit")
+                print("  ?: Help")
                 for key, val in sorted(bindings.items(), key=lambda x: x[1][2]):
                     print("  %s: %s" % (key, val[2]))
 

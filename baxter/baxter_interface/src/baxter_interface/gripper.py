@@ -67,11 +67,11 @@ class Gripper(object):
 
     def stop(self):
         cmd = baxmsg.GripperCommand()
-        cmd.position = self._position
+        cmd.position = self._state.position
         cmd.velocity = 0.0
         cmd.force = self._state.force
         cmd.holding = self._state.force
-        cmd.deadZone = self._command.dead_band
+        cmd.deadZone = self._command.deadZone
         self._pub_command.publish(cmd)
 
     def set_position(self, position):
