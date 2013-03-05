@@ -1,0 +1,12 @@
+<package>
+  <description brief="baxter_description">
+     baxter_description: mesh files for a baxter robot
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/RethinkRobotics</url>
+</package>
+
+

@@ -1,0 +1,12 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b baxter_description is a ros package containing meshes used in the robot URDF
+
+<!-- 
+Mesh files in baxter_description are referred-to by elements in the robot URDF.
+-->
+
+
+*/
