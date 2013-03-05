@@ -1,6 +1,3 @@
-import sys
-import time
-
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -148,7 +145,7 @@ class Limb(object):
             good_enough = True
             for joint, angle in pose.items():
                 if not joint in self._joint_angle:
-                  joint = "%s_%s" % (self.name, joint,)
+                    joint = "%s_%s" % (self.name, joint,)
                 if joint in self._joint_angle:
                     if abs(angle - self._joint_angle[joint]) >= settings.JOINT_ANGLE_TOLERANCE:
                         good_enough = False
