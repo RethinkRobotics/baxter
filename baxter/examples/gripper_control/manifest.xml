@@ -7,7 +7,7 @@
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/gripper</url>
+  <url>http://github.com/RethinkRobotics</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
