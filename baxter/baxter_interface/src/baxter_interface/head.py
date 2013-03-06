@@ -19,18 +19,18 @@ class Head(object):
         """
         self._state = {}
 
-        self._pan_pub = rospy.Publisher(
+        self._pub_pan = rospy.Publisher(
             '/robot/head/command_head_pan',
             baxter_msgs.msg.HeadPanCommand)
 
-        self._nod_pub = rospy.Publisher(
+        self._pub_nod = rospy.Publisher(
             '/robot/head/command_head_nod',
             std_msgs.msg.Bool)
 
-        self._state_sub = rospy.Subscriber(
+        self._sub_state = rospy.Subscriber(
             '/robot/head/head_state',
             baxter_msgs.msg.HeadState,
-            self._head_state_callback)
+            self._on_head_state)
 
         rate = rospy.Rate(100)
         while not rospy.is_shutdown():
@@ -38,7 +38,7 @@ class Head(object):
                 break
             rate.sleep()
 
-    def _head_state_callback(self, msg):
+    def _on_head_state(self, msg):
         self._state['pan'] = msg.pan
         self._state['panning'] = msg.isPanning
         self._state['nodding'] = msg.isNodding
@@ -79,7 +79,7 @@ class Head(object):
         """
         msg = baxter_msgs.msg.HeadPanCommand(angle, speed)
 
-        self._pan_pub.publish(msg)
+        self._pub_pan.publish(msg)
         if timeout == 0:
             return
 
@@ -90,7 +90,7 @@ class Head(object):
             if rospy.is_shutdown():
                 break
 
-            self._pan_pub.publish(msg)
+            self._pub_pan.publish(msg)
 
             if abs(self.pan() - angle) < settings.JOINT_ANGLE_TOLERANCE:
                 return
@@ -112,7 +112,7 @@ class Head(object):
             if rospy.is_shutdown():
                 break
 
-            self._nod_pub.publish(msg)
+            self._pub_nod.publish(msg)
             if self.nodding():
                 return
 
