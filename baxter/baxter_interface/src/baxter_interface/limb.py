@@ -1,6 +1,3 @@
-import sys
-import time
-
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -8,7 +5,7 @@ import rospy
 import baxter_msgs.msg
 import sensor_msgs.msg
 
-JOINT_ANGLE_TOLERANCE = 0.0872664626
+import settings
 
 class Limb(object):
     def __init__(self, limb):
@@ -152,7 +149,7 @@ class Limb(object):
         diffs = [genf(j,a) for j,a in pose.items() if j in self._joint_angle]
 
         rate = rospy.Rate(100)
-        while any(diff() >= JOINT_ANGLE_TOLERANCE for diff in diffs):
+        while any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs):
             self.set_positions(pose)
             rate.sleep()
             if rospy.is_shutdown():
