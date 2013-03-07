@@ -1,3 +1,5 @@
+import errno
+
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -21,7 +23,8 @@ class DigitalIO(object):
         """
         self._id = component_id
         self._component_type = 'digital_io'
-        self._is_output = None
+        self._can_output = False
+
         self._state = {}
 
         type_ns = '/sdk/robot/' + self._component_type
@@ -32,14 +35,13 @@ class DigitalIO(object):
             DigitalIOState,
             self._on_io_state)
 
-        rate = rospy.Rate(100)
         while not rospy.is_shutdown():
             if len(self._state):
                 break
-            rate.sleep()
+            rospy.sleep(0.01)
 
         # check if output-capable before creating publisher
-        if self._is_output:
+        if self._can_output:
             self._pub_output = rospy.Publisher(
                 type_ns + '/command',
                 DigitalOutputCommand)
@@ -48,8 +50,7 @@ class DigitalIO(object):
         """
         Updates the internally stored state of the Digital Input/Output.
         """
-        if self._is_output == None:
-            self._is_output = not msg.isInputOnly
+        self._can_output = not msg.isInputOnly
         self._state['state'] = (msg.state == DigitalIOState.PRESSED)
 
     def state(self):
@@ -64,10 +65,9 @@ class DigitalIO(object):
 
         @param value bool    - new state {True, False} of the Output.
         """
-        if not self._is_output:
-            rospy.logerr("Component is not an output [%s: %s]" % (
-                self._component_type, self._id))
-            return
+        if not self._can_output:
+            raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
+                (self._component_type, self._id))
         m_cmd = DigitalOutputCommand()
         m_cmd.name = self._id
         m_cmd.value = value
