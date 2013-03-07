@@ -61,7 +61,7 @@ class DigitalIO(object):
     def set_output(self, value):
         """
         Control the state of the Digital Output.
-        
+
         @param value bool    - new state {True, False} of the Output.
         """
         if not self._is_output:
