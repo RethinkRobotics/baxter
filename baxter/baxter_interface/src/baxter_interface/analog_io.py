@@ -35,10 +35,12 @@ class AnalogIO(object):
             AnalogIOState,
             self._on_io_state)
 
-        while not rospy.is_shutdown():
-            if len(self._state):
+        timeout = 200
+        while not rospy.is_shutdown() and timeout > 0:
+            if len(self._state.keys()):
                 break
             rospy.sleep(0.01)
+            timeout -= 1
 
         # check if output-capable before creating publisher
         if self._can_output:
