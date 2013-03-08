@@ -39,14 +39,20 @@ class AnalogIO(object):
         while not rospy.is_shutdown() and timeout > 0:
             if len(self._state.keys()):
                 break
-            rospy.sleep(0.01)
             timeout -= 1
+            rospy.sleep(0.01)
+        if not len(self._state.keys()):
+            raise IOError(errno.ETIMEDOUT, "Failed to connect to baxter")
 
         # check if output-capable before creating publisher
         if self._can_output:
             self._pub_output = rospy.Publisher(
                 type_ns + '/command',
-                AnalogOutputCommand)
+                AnalogOutputCommand, latch=True)
+        # Message is latched because there is a non-zero delay between
+        # publisher creation and subscriber connection, where messages could
+        # otherwise be lost.
+        # See also: http://answers.ros.org/question/32952/with-rospy-messages-dont-seem-to-be-recieved-if-published-soon-after-creating-the-publisher/
 
     def _on_io_state(self, msg):
         """
