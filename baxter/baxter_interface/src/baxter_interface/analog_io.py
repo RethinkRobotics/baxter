@@ -23,7 +23,7 @@ class AnalogIO(object):
         """
         self._id = component_id
         self._component_type = 'analog_io'
-        self._can_output = False
+        self._is_output = False
 
         self._state = {}
 
@@ -35,17 +35,17 @@ class AnalogIO(object):
             AnalogIOState,
             self._on_io_state)
 
-        timeout = 200
-        while not rospy.is_shutdown() and timeout > 0:
+        rate = rospy.Rate(10)
+        timeout = rospy.Time.now() + rospy.Duration(2)
+        while not rospy.is_shutdown() and timeout > rospy.Time.now():
             if len(self._state.keys()):
                 break
-            timeout -= 1
-            rospy.sleep(0.01)
+            rate.sleep()
         if not len(self._state.keys()):
             raise IOError(errno.ETIMEDOUT, "Failed to connect to baxter")
 
         # check if output-capable before creating publisher
-        if self._can_output:
+        if self._is_output:
             self._pub_output = rospy.Publisher(
                 type_ns + '/command',
                 AnalogOutputCommand, latch=True)
@@ -58,7 +58,7 @@ class AnalogIO(object):
         """
         Updates the internally stored state of the Analog Input/Output.
         """
-        self._can_output = not msg.isInputOnly
+        self._is_output = not msg.isInputOnly
         self._state['value'] = msg.value
 
     def state(self):
@@ -67,17 +67,23 @@ class AnalogIO(object):
         """
         return self._state['value']
 
+    def is_output(self):
+        """
+        Accessor to check if IO is capable of output.
+        """
+        return self._is_output
+
     def set_output(self, value):
         """
         Control the state of the Analog Output.
 
         @param value uint16    - new state of the Output.
         """
-        if not self._can_output:
+        if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
                 (self._component_type, self._id))
-        m_cmd = AnalogOutputCommand()
-        m_cmd.name = self._id
-        m_cmd.value = value
-        self._pub_output.publish(m_cmd)
+        cmd = AnalogOutputCommand()
+        cmd.name = self._id
+        cmd.value = value
+        self._pub_output.publish(cmd)
 

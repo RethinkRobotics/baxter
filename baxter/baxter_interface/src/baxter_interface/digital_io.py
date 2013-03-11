@@ -23,7 +23,7 @@ class DigitalIO(object):
         """
         self._id = component_id
         self._component_type = 'digital_io'
-        self._can_output = False
+        self._is_output = False
 
         self._state = {}
 
@@ -35,17 +35,17 @@ class DigitalIO(object):
             DigitalIOState,
             self._on_io_state)
 
-        timeout = 200
-        while not rospy.is_shutdown() and timeout > 0:
+        rate = rospy.Rate(10)
+        timeout = rospy.Time.now() + rospy.Duration(2)
+        while not rospy.is_shutdown() and timeout > rospy.Time.now():
             if len(self._state.keys()):
                 break
-            timeout -= 1
-            rospy.sleep(0.01)
+            rate.sleep()
         if not len(self._state.keys()):
             raise IOError(errno.ETIMEDOUT, "Failed to connect to baxter")
 
         # check if output-capable before creating publisher
-        if self._can_output:
+        if self._is_output:
             self._pub_output = rospy.Publisher(
                 type_ns + '/command',
                 DigitalOutputCommand, latch=True)
@@ -58,7 +58,7 @@ class DigitalIO(object):
         """
         Updates the internally stored state of the Digital Input/Output.
         """
-        self._can_output = not msg.isInputOnly
+        self._is_output = not msg.isInputOnly
         self._state['state'] = (msg.state == DigitalIOState.PRESSED)
 
     def state(self):
@@ -67,17 +67,23 @@ class DigitalIO(object):
         """
         return self._state['state']
 
+    def is_output(self):
+        """
+        Accessor to check if IO is capable of output.
+        """
+        return self._is_output
+
     def set_output(self, value):
         """
         Control the state of the Digital Output.
 
         @param value bool    - new state {True, False} of the Output.
         """
-        if not self._can_output:
+        if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
                 (self._component_type, self._id))
-        m_cmd = DigitalOutputCommand()
-        m_cmd.name = self._id
-        m_cmd.value = value
-        self._pub_output.publish(m_cmd)
+        cmd = DigitalOutputCommand()
+        cmd.name = self._id
+        cmd.value = value
+        self._pub_output.publish(cmd)
 
