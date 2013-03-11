@@ -27,8 +27,7 @@ def getch(timeout=0.01):
     finally:
         termios.tcsetattr(fileno, termios.TCSADRAIN, old_settings)
     return ch
-    
-    
+
 if __name__ == '__main__':
     print("getch test")
     print("blocking getch...")
