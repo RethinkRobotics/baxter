@@ -20,7 +20,7 @@ class Head(object):
         self._state = {}
 
         self._pub_pan = rospy.Publisher(
-            '/robot/head/command_head_pan',
+            '/sdk/robot/head/command_head_pan',
             baxter_msgs.msg.HeadPanCommand)
 
         self._pub_nod = rospy.Publisher(
@@ -28,7 +28,7 @@ class Head(object):
             std_msgs.msg.Bool)
 
         self._sub_state = rospy.Subscriber(
-            '/robot/head/head_state',
+            '/sdk/robot/head/head_state',
             baxter_msgs.msg.HeadState,
             self._on_head_state)
 
