@@ -68,16 +68,16 @@ class Wobbler():
         done = False
         print("Wobbling. Press any key to stop...")
         while not done and not rospy.is_shutdown():
-            c = iodevices.getch()
-            if c:
+            if iodevices.getch():
                 done = True
-            self._pub_rate.publish(1000)
-            elapsed = rospy.Time.now() - start
-            cmd = dict(zip(self._joint_names, [v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
-            self._left_arm.set_velocities(cmd)
-            cmd = dict(zip(self._joint_names, [-v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
-            self._right_arm.set_velocities(cmd)
-            rate.sleep()
+            else:
+                self._pub_rate.publish(1000)
+                elapsed = rospy.Time.now() - start
+                cmd = dict(zip(self._joint_names, [v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
+                self._left_arm.set_velocities(cmd)
+                cmd = dict(zip(self._joint_names, [-v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
+                self._right_arm.set_velocities(cmd)
+                rate.sleep()
 
         if not rospy.is_shutdown():
             #return to normal
