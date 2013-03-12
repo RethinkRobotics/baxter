@@ -6,14 +6,17 @@ import random
 import roslib
 roslib.load_manifest('joint_velocity')
 import rospy
-import baxter_interface
-import baxter_interface.limb
 
-from std_msgs.msg import (UInt16,)
-from sensor_msgs.msg import (JointState,)
-from baxter_msgs.msg import (JointVelocities,
-                             JointCommandMode,
-                            )
+from std_msgs.msg import (
+    UInt16,)
+from sensor_msgs.msg import (
+    JointState,)
+from baxter_msgs.msg import (
+    JointVelocities,
+    JointCommandMode,)
+
+import baxter_interface
+import iodevices
 
 class Wobbler():
 
@@ -29,18 +32,13 @@ class Wobbler():
 
         # set joint state publishing to 1000Hz
         self._pub_rate.publish(1000)
-        self._done = False
-        signal.signal(signal.SIGINT, self._handle_ctrl_c)
-
-    def _handle_ctrl_c(self, signum, frame):
-       print("stopping...")
-       self._done = True
 
     def set_neutral(self):
         """
         Sets both arms back into a neutral pose
 
         """
+        print("Moving to neutral pose...")
         angles = [0, -0.55, 0, 1.28, 0, 0.26, 0]
         cmd = dict(zip(self._joint_names, angles))
         self._left_arm.set_pose(cmd)
@@ -67,7 +65,12 @@ class Wobbler():
             return v_func
 
         v_funcs = [make_v_func() for x in range(len(self._joint_names))]
-        while not self._done:
+        done = False
+        print("Wobbling. Press any key to stop...")
+        while not done and not rospy.is_shutdown():
+            c = iodevices.getch()
+            if c:
+                done = True
             self._pub_rate.publish(1000)
             elapsed = rospy.Time.now() - start
             cmd = dict(zip(self._joint_names, [v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
@@ -76,11 +79,12 @@ class Wobbler():
             self._right_arm.set_velocities(cmd)
             rate.sleep()
 
-        #return to normal
-        self.set_neutral()
-        for i in range(100):
-            self._pub_rate.publish(100)
-            rate.sleep()
+        if not rospy.is_shutdown():
+            #return to normal
+            self.set_neutral()
+            for i in range(100):
+                self._pub_rate.publish(100)
+                rate.sleep()
 
 if __name__ == '__main__':
     print("Initializing node... ")
@@ -91,7 +95,6 @@ if __name__ == '__main__':
     rs.enable()
 
     wobbler = Wobbler()
-    print("Wobbling... ")
     wobbler.wobble()
 
     print("Disabling robot... ")
