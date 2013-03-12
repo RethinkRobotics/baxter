@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://github.com/RethinkRobotics</url>
   <depend package="rospy"/>
-  <depend package="roscpp"/>
+  <depend package="utilities"/>
   <depend package="sensor_msgs"/>
   <depend package="baxter_msgs"/>
   <depend package="baxter_interface"/>
