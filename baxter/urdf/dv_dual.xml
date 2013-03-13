@@ -131,7 +131,7 @@
   </link>
   <link name="screen">
     <visual>
-      <origin rpy="0 0 0" xyz="0 -.00953 -.0347"/>
+      <origin rpy="0 -1.571 0" xyz="0 -.00953 -.0347"/>
       <geometry>
         <!-- <box size=".11 0.08  0.01"/> -->
         <mesh filename="package://baxter_description/meshes/head/H1.STL"/>
