@@ -41,7 +41,8 @@ def map_file(filename, loops=1):
     keys = lines[0].rstrip().split(',')
     i = 0
     l = 0
-    while l != loops:
+    while loops < 1 or l < loops:
+        l = l+1
         for values in lines[1:]:
             i = i +1
             loopstr = str(loops) if loops > 0 else "forever"
@@ -76,7 +77,6 @@ def map_file(filename, loops=1):
                 if 'left_gripper' in cmd:
                     grip_right.set_position(cmd['right_gripper'])
                 rate.sleep()
-        l = l+1
     print
     return True
 
