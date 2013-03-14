@@ -1,199 +1,216 @@
 #!/usr/bin/env python
-import os.path
-import sys
 import roslib
 import rospy
-from errno import EINVAL
 
 from sensor_msgs.msg import Joy
 
-class Transition(object):
-    """ local base class to monitor transitions
-    The transition is measured when read
-    """
-    def __init__(self, joystick, name):
-        self._joystick = joystick
-        self._name = name
-    def changed(self):
-        raise NotImplementedError()
-
-class ButtonTransition(Transition):
+class ButtonTransition(object):
     """ monitor button transitions
     The transition is measured when read
     """
-    def __init__(self, joystick, name, down_val=1, up_val=0):
-        super(Joystick.ButtonTransition, self).__init__(joystick, name)
-        self._value = up_val
+    def __init__(self, val_func, down_val=True, up_val=False):
+        self._raw_value = val_func
         self._down_val = down_val
         self._up_val = up_val
-
-    def _changed(self):
-        new_value = self._joystick.get_value(self._name, self._value)
-        equal = (new_value == self._value)
-        self._value = new_value
-        return not equal
+        self._up_checked = True
+        self._down_checked = False
 
     def down(self):
-        if (self._changed() and (self._value == self._down_val)):
-            return True
+        val = self._raw_value()
+        if val == self._down_val:
+           if not self._down_checked:
+                self._down_checked = True
+                return True
+        else:
+            self._down_checked = False
         return False
 
     def up(self):
-        return (self._changed() and (self._value == self._up_val))
+        val = self._raw_value()
+        if val == self._up_val:
+           if not self._up_checked:
+                self._up_checked = True
+                return True
+        else:
+            self._up_checked = False
+        return False
 
-class StickTransition(Transition):
+class StickTransition(object):
     """ monitor transitions in stick movement
     The transition is measured when read
     """
-    def __init__(self, joystick, name, epsilon=0.001):
-        super(Joystick.StickTransition, self).__init__(joystick, name)
+    def __init__(self, val_func, epsilon=0.05):
+        self._raw_value = val_func
         self._epsilon = epsilon
-        self._value = self._get_value()
+        self._value = 0.0
 
-    def _get_value(self):
-        self.joystick.get_value(self._name, self._value)
-
-    def get_value(self):
-        if self._changed():
-            self._value = self._get_value()
+    def value(self):
+        self.changed()
         return self._value
 
-    def _changed(self):
-        return abs(self._get_value() - self._value) > self.epsilon
+    def changed(self):
+        value = self._raw_value()
+        if abs(value - self._value) > self._epsilon:
+            self._value = value
+            return True
+        return False
+
+    def increased(self):
+        value = self._raw_value()
+        if (value - self._value) > self._epsilon:
+            self._value = value
+            return True
+        return False
+
+    def decreased (self):
+        value = self._raw_value()
+        if (self._value - value) > self._epsilon:
+            self._value = value
+            return True
+        return False
 
 class Joystick(object):
     """ Abstract base class to handle joystick input
     """
 
-    def __init__(self, scale=0.5, offset= 0.5, deadband=0.01):
+    def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
         """ Maps joystick input to robot control
         Sets up the bindings
         Args:
-            pad_type(str): the type of controller used ('xbox' or 'logitech')
             scale(float): scaling applied to joystick values.
                                         raw joystick valuess are in [1.0...-1.0]
             offset(float): offset applied to joystick values, post-scaling
             deadband(float): deadband applied to scaled, offset values
 
         """
-        self.sub = rospy.Subscriber("/joy", Joy, self.on_joy)
-        self.scale = scale
-        self.offset = offset
-        self.deadband = deadband
-        self.controls = {}
-        self.new_data = False
+        sub = rospy.Subscriber("/joy", Joy, self._on_joy)
+        self._scale = scale
+        self._offset = offset
+        self._deadband = deadband
+        self._controls = {}
 
-    def _stick_value(value, deadband, scale, offset):
-        """ Local function to condition raw joystick values
-        Args:
-            value(float): the raw joystick axis value
-            deadband(float): deadband applied to the raw value
-            scale(float): scaling applied to raw value 
-            offset(float): offset applied to the scaled value
+        self._buttons = {}
+        self._sticks = {}
+        button_names = (
+            'btnLeft', 'btnUp', 'btnDown', 'btnRight',
+            'dPadUp', 'dPadDown', 'dPadLeft', 'dPadRight',
+            'leftBumper', 'rightBumper',
+            'leftTrigger', 'rightTrigger',
+            'function1', 'function2')
+        stick_names = (
+            'leftStickHorz', 'leftStickVert',
+            'rightStickHorz', 'rightStickVert')
 
-        Returns:
-            the deadbanded value of the axis
-        """
-        return (value * scale) + offset if (value > deadband or value < -deadband) else 0
+        #doing this with lambda won't work
+        def gen_val_func(name, type_name):
+            def val_func():
+                return type_name(
+                    name in self._controls and self._controls[name])
+            return val_func
 
-    def on_joy(self, msg):
+        for name in button_names:
+            self._buttons[name] = ButtonTransition(gen_val_func(name, bool))
+        for name in stick_names:
+            self._sticks[name] = StickTransition(gen_val_func(name, float))
+
+    def _on_joy(self, msg):
         """ callback for messages from joystick input
         Args:
               msg(Joy): a joystick input message
         """
         raise NotImplementedError()
 
-    def get_value(self, control, default=0):
-        if control in self.controls:
-            return self.controls[control]
-        return default
+    def button_up(self, name):
+        return self._buttons[name].up()
 
-    def create_button_changed_dict(self, *buttonNames):
-        """ Creates a dictionary holding the transition
-        objects  for each button
+    def button_down(self, name):
+        return self._buttons[name].down()
+
+    def stick_changed(self, name):
+        return self._sticks[name].changed()
+
+    def stick_inc(self, name):
+        return self._sticks[name].increased()
+
+    def stick_dec(self, name):
+        return self._sticks[name].decreased()
+
+    def stick_value(self, name):
         """
-        button_dict = {}
-        for name in buttonNames:
-            button_dict[name] = Joystick.ButtonTransition(self, name)
-        return button_dict
-
-    def create_stick_changed_dict(self, *stickNames):
-        """ Creates a dictionary holding the transition
-        objects  for each joystick
+        Returns:
+            the deadbanded, scaled and offset value of the axis
         """
-        stick_dict = {}
-        for name in stickNames:
-            stick_dict[name] = self.StickTransition(self, name)
-        return stick_dict
+        value = self._sticks[name].value()
+        if value > self._deadband or value < -self._deadband:
+            return (value * self._scale) + self._offset
+        return 0
 
-class XBoxController(Joystick):
+class XboxController(Joystick):
     """ Xbox specialization of Joystick
     """
-    def __init__(self, scale=0.5, offset= 0.5, deadband=0.01):
-        super(Joystick, self).__init__(scale, offset, deadband)
+    def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
+        super(XboxController, self).__init__(scale, offset, deadband)
 
-    def on_joy(self, msg):
+    def _on_joy(self, msg):
         """ callback for messages from joystick input
         Args:
               msg(Joy): a joystick input message
         """
 
-        self.controls['btnLeft'] = (msg.buttons[2] == 1)
-        self.controls['btnUp'] = (msg.buttons[3] == 1)
-        self.controls['btnDown'] = (msg.buttons[0] == 1)
-        self.controls['btnRight'] = (msg.buttons[1] == 1)
+        self._controls['btnLeft'] = (msg.buttons[2] == 1)
+        self._controls['btnUp'] = (msg.buttons[3] == 1)
+        self._controls['btnDown'] = (msg.buttons[0] == 1)
+        self._controls['btnRight'] = (msg.buttons[1] == 1)
 
-        self.controls['dPadUp'] = (msg.axes[7] > 0.5)
-        self.controls['dPadDown'] = (msg.axes[7] < -0.5)
-        self.controls['dPadLeft'] = (msg.axes[6] > 0.5)
-        self.controls['dPadRight'] = (msg.axes[6] < -0.5)
+        self._controls['dPadUp'] = (msg.axes[7] > 0.5)
+        self._controls['dPadDown'] = (msg.axes[7] < -0.5)
+        self._controls['dPadLeft'] = (msg.axes[6] > 0.5)
+        self._controls['dPadRight'] = (msg.axes[6] < -0.5)
 
-        self.controls['leftStickHorz']  = _stick_value(msg.axes[0], self.deadband, self.scale, self.offset)
-        self.controls['leftStickVert']  = _stick_value(msg.axes[1], self.deadband, self.scale, self.offset)
-        self.controls['rightStickHorz'] = _stick_value(msg.axes[3], self.deadband, self.scale, self.offset)
-        self.controls['rightStickVert'] = _stick_value(msg.axes[4], self.deadband, self.scale, self.offset)
+        self._controls['leftStickHorz']  = msg.axes[0]
+        self._controls['leftStickVert']  = msg.axes[1]
+        self._controls['rightStickHorz'] = msg.axes[3]
+        self._controls['rightStickVert'] = msg.axes[4]
 
-        self.controls['leftBumper'] = (msg.buttons[4] == 1)
-        self.controls['rightBumper'] = (msg.buttons[5] == 1)
-        self.controls['leftTrigger'] = (msg.axes[2] > 0.5)
-        self.controls['rightTrigger'] = (msg.axes[5] > 0.5)
+        self._controls['leftBumper'] = (msg.buttons[4] == 1)
+        self._controls['rightBumper'] = (msg.buttons[5] == 1)
+        self._controls['leftTrigger'] = (msg.axes[2] < 0.0)
+        self._controls['rightTrigger'] = (msg.axes[5] < 0.0)
 
-        self.controls['function1'] = (msg.buttons[6] == 1)
-        self.controls['function2'] = (msg.buttons[10] == 1)
-        self.new_data = True
+        self._controls['function1'] = (msg.buttons[6] == 1)
+        self._controls['function2'] = (msg.buttons[10] == 1)
 
 class LogitechController(Joystick):
     """ Logitech specialization of Joystick
     """
-    def __init__(self, scale=0.5, offset= 0.5, deadband=0.01):
-        super(Joystick, self).__init__(scale, offset, deadband)
+    def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
+        super(LogitechController, self).__init__(scale, offset, deadband)
 
-    def on_joy(self, msg):
+    def _on_joy(self, msg):
         """ callback for messages from joystick input
         Args:
               msg(Joy): a joystick input message
         """
 
-        self.controls['btnLeft'] = (msg.buttons[0] == 1)
-        self.controls['btnUp'] = (msg.buttons[3] == 1)
-        self.controls['btnDown'] = (msg.buttons[1] == 1)
-        self.controls['btnRight'] = (msg.buttons[2] == 1)
+        self._controls['btnLeft'] = (msg.buttons[0] == 1)
+        self._controls['btnUp'] = (msg.buttons[3] == 1)
+        self._controls['btnDown'] = (msg.buttons[1] == 1)
+        self._controls['btnRight'] = (msg.buttons[2] == 1)
 
-        self.controls['dPadUp'] = (msg.axes[5] > 0.5)
-        self.controls['dPadDown'] = (msg.axes[5] < -0.5)
-        self.controls['dPadLeft'] = (msg.axes[4] > 0.5)
-        self.controls['dPadRight'] = (msg.axes[4] < -0.5)
+        self._controls['dPadUp'] = (msg.axes[5] > 0.5)
+        self._controls['dPadDown'] = (msg.axes[5] < -0.5)
+        self._controls['dPadLeft'] = (msg.axes[4] > 0.5)
+        self._controls['dPadRight'] = (msg.axes[4] < -0.5)
 
-        self.controls['leftStickHorz']  = _stick_value(msg.axes[0], self.deadband, self.scale, self.offset)
-        self.controls['leftStickVert']  = _stick_value(msg.axes[1], self.deadband, self.scale, self.offset)
-        self.controls['rightStickHorz'] = _stick_value(msg.axes[2], self.deadband, self.scale, self.offset)
-        self.controls['rightStickVert'] = _stick_value(msg.axes[3], self.deadband, self.scale, self.offset)
+        self._controls['leftStickHorz']  = msg.axes[0]
+        self._controls['leftStickVert']  = msg.axes[1]
+        self._controls['rightStickHorz'] = msg.axes[2]
+        self._controls['rightStickVert'] = msg.axes[3]
 
-        self.controls['leftBumper'] = (msg.buttons[4] == 1)
-        self.controls['rightBumper'] = (msg.buttons[5] == 1)
-        self.controls['leftTrigger'] = (msg.buttons[6] == 1)
-        self.controls['rightTrigger'] = (msg.buttons[7] == 1)
+        self._controls['leftBumper'] = (msg.buttons[4] == 1)
+        self._controls['rightBumper'] = (msg.buttons[5] == 1)
+        self._controls['leftTrigger'] = (msg.buttons[6] == 1)
+        self._controls['rightTrigger'] = (msg.buttons[7] == 1)
 
-        self.controls['function1'] = (msg.buttons[8] == 1)
-        self.controls['function2'] = (msg.buttons[9] == 1)
-        self.new_data = True
+        self._controls['function1'] = (msg.buttons[8] == 1)
+        self._controls['function2'] = (msg.buttons[9] == 1)
