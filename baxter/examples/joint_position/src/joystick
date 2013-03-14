@@ -11,23 +11,28 @@ import rospy
 import baxter_interface
 import iodevices
 
+def rotate(l):
+    v = l[0]
+    l[:-1] = l[1:]
+    l[-1] = v
+
 def map_joystick(joystick):
     left = baxter_interface.Limb('left')
     right = baxter_interface.Limb('right')
     grip_left = baxter_interface.Gripper('left')
     grip_right = baxter_interface.Gripper('right')
+    lcmd = {}
+    rcmd = {}
 
     #available joints
     lj = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
     rj = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
 
-    def rotate(l):
-        v = l[0]
-        l[:-1] = l[1:]
-        l[-1] = v
-
     #function to set the selected joint to current pos + delta
-    set_j = lambda l,j,k,d: l.set_positions({j[k]: d + l.joint_angle(j[k])})
+    def set_j(cmd, limb, joints, index, delta):
+        joint = joints[index]
+        cmd[joint] = delta + limb.joint_angle(joint)
+
     #abbreviations
     jhi = lambda s: joystick.stick_value(s) > 0
     jlo = lambda s: joystick.stick_value(s) < 0
@@ -39,17 +44,20 @@ def map_joystick(joystick):
         ((bup, ['rightTrigger']), (grip_left.open,   []), "left: gripper open"),
         ((bdn, ['leftTrigger']),  (grip_right.close, []), "right: gripper close"),
         ((bup, ['leftTrigger']),  (grip_right.open,  []), "right: gripper open"),
-        ((jhi, ['leftStickHorz']),  (set_j, [right, rj, 0,  0.1]), lambda i=0:"right inc "+rj[i]),
-        ((jlo, ['leftStickHorz']),  (set_j, [right, rj, 0, -0.1]), lambda i=0:"right dec "+rj[i]),
-        ((jhi, ['rightStickHorz']), (set_j, [left,  lj, 0,  0.1]), lambda i=0:"left inc "+lj[i]),
-        ((jlo, ['rightStickHorz']), (set_j, [left,  lj, 0, -0.1]), lambda i=0:"left dec "+lj[i]),
-        ((jhi, ['leftStickVert']),  (set_j, [right, rj, 1,  0.1]), lambda i=1:"right inc "+rj[i]),
-        ((jlo, ['leftStickVert']),  (set_j, [right, rj, 1, -0.1]), lambda i=1:"right dec "+rj[i]),
-        ((jhi, ['rightStickVert']), (set_j, [left,  lj, 1,  0.1]), lambda i=1:"left inc "+lj[i]),
-        ((jlo, ['rightStickVert']), (set_j, [left,  lj, 1, -0.1]), lambda i=1:"left dec "+lj[i]),
+        ((jhi, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0,  0.1]), lambda i=0:"right inc "+rj[i]),
+        ((jlo, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0, -0.1]), lambda i=0:"right dec "+rj[i]),
+        ((jhi, ['rightStickHorz']), (set_j, [lcmd, left,  lj, 0,  0.1]), lambda i=0:"left inc "+lj[i]),
+        ((jlo, ['rightStickHorz']), (set_j, [lcmd, left,  lj, 0, -0.1]), lambda i=0:"left dec "+lj[i]),
+        ((jhi, ['leftStickVert']),  (set_j, [rcmd, right, rj, 1,  0.1]), lambda i=1:"right inc "+rj[i]),
+        ((jlo, ['leftStickVert']),  (set_j, [rcmd, right, rj, 1, -0.1]), lambda i=1:"right dec "+rj[i]),
+        ((jhi, ['rightStickVert']), (set_j, [lcmd, left,  lj, 1,  0.1]), lambda i=1:"left inc "+lj[i]),
+        ((jlo, ['rightStickVert']), (set_j, [lcmd, left,  lj, 1, -0.1]), lambda i=1:"left dec "+lj[i]),
         ((bdn, ['rightBumper']), (rotate, [lj]), "left: cycle joint"),
         ((bdn, ['leftBumper']),  (rotate, [rj]), "right: cycle joint"),
     )
+
+    rate = rospy.Rate(100)
+    print("press any key to stop...")
     while not rospy.is_shutdown():
         if iodevices.getch():
             return True
@@ -60,6 +68,13 @@ def map_joystick(joystick):
                     print(doc())
                 else:
                     print(doc)
+        if len(lcmd):
+            left.set_positions(lcmd)
+            lcmd.clear()
+        if len(rcmd):
+            right.set_positions(rcmd)
+            rcmd.clear()
+        rate.sleep()
     return False
 
 if __name__ == '__main__':

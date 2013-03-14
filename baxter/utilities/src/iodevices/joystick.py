@@ -148,7 +148,7 @@ class Joystick(object):
 class XboxController(Joystick):
     """ Xbox specialization of Joystick
     """
-    def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
+    def __init__(self, scale=1.0, offset=0.0, deadband=0.5):
         super(XboxController, self).__init__(scale, offset, deadband)
 
     def _on_joy(self, msg):
