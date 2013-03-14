@@ -81,7 +81,7 @@ def map_joystick(joystick):
         for (test, cmd, doc) in bindings:
             if test[0](*test[1]):
                 cmd[0](*cmd[1])
-                if type(doc) == type(lambda:0):
+                if callable(doc):
                     print(doc())
                 else:
                     print(doc)

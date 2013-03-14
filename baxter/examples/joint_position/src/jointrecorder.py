@@ -3,7 +3,7 @@ roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface
-import signal
+import iodevices
 
 
 class JointRecorder(object):
@@ -22,11 +22,6 @@ class JointRecorder(object):
         self._gripper_left = baxter_interface.Gripper("left")
         self._gripper_right = baxter_interface.Gripper("right")
 
-        signal.signal(signal.SIGINT, self._handle_ctrl_c)
-
-    def _handle_ctrl_c(self, signum, frame):
-        self.stop()
-
     def _time_stamp(self):
         return rospy.get_time() - self._start_time
 
@@ -41,6 +36,8 @@ class JointRecorder(object):
         Return whether or not recording is done
         """
         if rospy.is_shutdown():
+            self.stop()
+        elif iodevices.getch():
             self.stop()
         return self._done
 
@@ -69,10 +66,10 @@ class JointRecorder(object):
                     f.write("%f," % (self._time_stamp(),))
 
                     f.write(','.join([str(x) for x in angles_left]) + ',')
-                    f.write(str(self._gripperLeft.position) + ',')
+                    f.write(str(self._gripper_left.position()) + ',')
 
                     f.write(','.join([str(x) for x in angles_right]) + ',')
-                    f.write(str(self._gripperRight.position) + '\n')
+                    f.write(str(self._gripper_right.position()) + '\n')
 
                     self._rate.sleep()
 
