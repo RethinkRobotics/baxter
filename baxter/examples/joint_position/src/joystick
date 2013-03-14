@@ -12,11 +12,33 @@ import baxter_interface
 import iodevices
 
 def rotate(l):
-    v = l[0]
-    l[:-1] = l[1:]
-    l[-1] = v
+    """
+    rotates a list left
+    @param l - the list
+    """
+    if len(l):
+        v = l[0]
+        l[:-1] = l[1:]
+        l[-1] = v
+
+def set_j(cmd, limb, joints, index, delta):
+    """
+    set the selected joint to current pos + delta
+    joint/index is to make this work in the bindings
+    @param cmd - the joint command dictionary
+    @param limb - the limb to get the pos from
+    @param joints - a list of joint names
+    @param index - the index in the list of names
+    @param delta - delta to update the joint by
+    """
+    joint = joints[index]
+    cmd[joint] = delta + limb.joint_angle(joint)
 
 def map_joystick(joystick):
+    """
+    maps joystick input to joint position commands
+    @param joystick - an instance of a Joystick
+    """
     left = baxter_interface.Limb('left')
     right = baxter_interface.Limb('right')
     grip_left = baxter_interface.Gripper('left')
@@ -27,11 +49,6 @@ def map_joystick(joystick):
     #available joints
     lj = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
     rj = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
-
-    #function to set the selected joint to current pos + delta
-    def set_j(cmd, limb, joints, index, delta):
-        joint = joints[index]
-        cmd[joint] = delta + limb.joint_angle(joint)
 
     #abbreviations
     jhi = lambda s: joystick.stick_value(s) > 0
