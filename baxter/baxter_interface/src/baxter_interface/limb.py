@@ -132,6 +132,21 @@ class Limb(object):
         self.set_velocity_mode()
         self._pub_velocity.publish(msg)
 
+    def set_neutral_pose(self):
+        angles = {}
+        if self.name == 'right':
+            angles = dict(zip(
+                ['e0', 'e1', 's0', 's1', 'w0', 'w1', 'w2'],
+                [1.15, 1.09, 0.20, -0.66, 2.53, -1.56, 2.34]))
+        elif self.name == 'left':
+            angles = dict(zip(
+                ['e0', 'e1', 's0', 's1', 'w0', 'w1', 'w2'],
+                [-1.15, 1.32, -0.11, -0.62, 0.80, 1.27, 2.39]))
+        else:
+            raise NameError("Invalid limb name %s" % (self.name,))
+
+        return self.set_pose(angles)
+
     def set_pose(self, pose):
         """
         @param pose dict({str:float})   - dictionary of joint_name:angle
