@@ -1,0 +1,17 @@
+<launch>
+  <!-- This launch file will launch both joy_node and gripper together -->
+  <!-- Use will need to pass in joystick param on command line like so: -->
+  <!-- roslaunch gripper_control joystick.launch joystick:="logitech" -->
+  <!-- where joystick arg is xbox|logitech -->
+
+  <!-- declare arg to be passed in -->
+  <arg name="joystick"/>
+
+  <!-- joy node -->
+  <node respawn="true" pkg="joy" type="joy_node" name="rsdk_joy" >
+  </node>
+
+  <!-- start gripper_control node using arg passed-->
+  <node pkg="gripper_control" type="joystick.py" name="rsdk_gripper_control_joystick" args="$(arg joystick)" output="screen">
+  </node>
+</launch>

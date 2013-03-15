@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Baxter RSDK Joint Position Example: keyboard
+Baxter RSDK Joint Position Example: joystick
 """
 import argparse
 
