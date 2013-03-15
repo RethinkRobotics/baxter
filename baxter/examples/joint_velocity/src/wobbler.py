@@ -39,10 +39,8 @@ class Wobbler():
 
         """
         print("Moving to neutral pose...")
-        angles = [0, -0.55, 0, 1.28, 0, 0.26, 0]
-        cmd = dict(zip(self._joint_names, angles))
-        self._left_arm.set_pose(cmd)
-        self._right_arm.set_pose(cmd)
+        self._left_arm.set_neutral_pose()
+        self._right_arm.set_neutral_pose()
 
     def wobble(self):
         self.set_neutral()
@@ -79,12 +77,18 @@ class Wobbler():
                 self._right_arm.set_velocities(cmd)
                 rate.sleep()
 
+        rate = rospy.Rate(100);
         if not rospy.is_shutdown():
-            #return to normal
-            self.set_neutral()
             for i in range(100):
+                if rospy.is_shutdown():
+                    return False
+                self._left_arm.set_position_mode()
+                self._right_arm.set_position_mode()
                 self._pub_rate.publish(100)
                 rate.sleep()
+            #return to normal
+            self.set_neutral()
+            return True
 
 if __name__ == '__main__':
     print("Initializing node... ")
