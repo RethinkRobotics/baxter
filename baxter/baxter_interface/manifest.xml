@@ -9,6 +9,7 @@
   <url>http://github.com/RethinkRobotics</url>
   <depend package="rospy"/>
   <depend package="baxter_msgs"/>
+  <depend package="utilities"/>
   <depend package="sensor_msgs"/>
   <depend package="std_msgs"/>
 </package>
