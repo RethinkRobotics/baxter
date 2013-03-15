@@ -6,6 +6,7 @@ import baxter_msgs.msg
 import sensor_msgs.msg
 
 import settings
+import dataflow
 
 class Limb(object):
     def __init__(self, limb):
@@ -18,7 +19,6 @@ class Limb(object):
         self._joint_angle = {}
         self._joint_velocity = {}
         self._joint_effort = {}
-        self._joint_gc_effort = {}
 
         ns = '/robot/limb/' + limb + '/'
 
@@ -34,43 +34,33 @@ class Limb(object):
             ns + 'command_joint_velocities',
             baxter_msgs.msg.JointVelocities)
 
-        self._sub_joint_states = rospy.Subscriber(
+        sub = rospy.Subscriber(
             ns + 'joint_states',
             sensor_msgs.msg.JointState,
-            self._callback_joint_states)
+            self._on_joint_states)
 
         self._last_state_time = None
         self._state_rate = 0
 
-        rate = rospy.Rate(100)
-        while not rospy.is_shutdown():
-            if len(self._joint_angle.keys()):
-                break
-            rate.sleep()
+        dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0)
 
-    def _callback_joint_states(self, msg):
+    def _on_joint_states(self, msg):
         now = rospy.Time.now()
         if self._last_state_time:
-            self._state_rate = (1.0 / (now - self._last_state_time).to_sec())
+            #cheap low pass
+            rate = (1.0 / (now - self._last_state_time).to_sec())
+            self._state_rate = ((99 * self._state_rate) + rate)/100
         self._last_state_time = now
         for i in range(len(msg.name)):
             self._joint_angle[msg.name[i]] = msg.position[i]
             self._joint_velocity[msg.name[i]] = msg.velocity[i]
             self._joint_effort[msg.name[i]] = msg.effort[i]
 
-    def _callback_gc_torques(self, msg):
-        for i in range(len(msg.name)):
-            self._joint_gc_effort[msg.name[i]] = msg.effort[i]
-
-    def set_position_mode(self):
-        msg = baxter_msgs.msg.JointCommandMode()
-        msg.mode = baxter_msgs.msg.JointCommandMode.POSITION
-        self._pub_mode.publish(msg)
-
-    def set_velocity_mode(self):
-        msg = baxter_msgs.msg.JointCommandMode()
-        msg.mode = baxter_msgs.msg.JointCommandMode.VELOCITY
-        self._pub_mode.publish(msg)
+    def joints(self):
+        """
+        Return the names of the joints for which data has been received
+        """
+        return self._joint_angle.keys()
 
     def state_rate(self):
         """
@@ -102,25 +92,21 @@ class Limb(object):
         """
         return self._joint_effort[joint]
 
-    def joint_gc_effort(self, joint):
+    def set_position_mode(self):
         """
-        Return the requested joint gravity comp effort.
+        Set the joint controller in position mode
+        """
+        msg = baxter_msgs.msg.JointCommandMode()
+        msg.mode = baxter_msgs.msg.JointCommandMode.POSITION
+        self._pub_mode.publish(msg)
 
-        @param joint    - name of a joint
+    def set_velocity_mode(self):
         """
-        return self._joint_gc_effort[joint]
-
-    def set_velocities(self, velocities):
+        Set the joint controller in velocity mode
         """
-        @param velocities dict({str:float})   - dictionary of joint_name:velocity
-
-        Commands the joints of this limb to the specified velocities
-        """
-        msg = baxter_msgs.msg.JointVelocities()
-        msg.names = velocities.keys()
-        msg.velocities = velocities.values()
-        self.set_velocity_mode()
-        self._pub_velocity.publish(msg)
+        msg = baxter_msgs.msg.JointCommandMode()
+        msg.mode = baxter_msgs.msg.JointCommandMode.VELOCITY
+        self._pub_mode.publish(msg)
 
     def set_positions(self, positions):
         """
@@ -133,6 +119,18 @@ class Limb(object):
         msg.angles = positions.values()
         self.set_position_mode()
         self._pub_position.publish(msg)
+
+    def set_velocities(self, velocities):
+        """
+        @param velocities dict({str:float})   - dictionary of joint_name:velocity
+
+        Commands the joints of this limb to the specified velocities
+        """
+        msg = baxter_msgs.msg.JointVelocities()
+        msg.names = velocities.keys()
+        msg.velocities = velocities.values()
+        self.set_velocity_mode()
+        self._pub_velocity.publish(msg)
 
     def set_pose(self, pose):
         """

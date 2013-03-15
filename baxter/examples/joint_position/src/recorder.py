@@ -4,7 +4,7 @@ import roslib
 roslib.load_manifest('joint_position')
 import rospy
 
-from recorders import JointRecorder
+from jointrecorder import JointRecorder
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -15,6 +15,6 @@ if __name__ == '__main__':
   print("Initializing node... ")
   rospy.init_node("rethink_rsdk_joint_recorder")
   recorder = JointRecorder(args.filename, args.recordRate)
-  print("recording...")
+  print("Recording. Press any key to stop.")
   recorder.record()
   print("done.")
