@@ -80,6 +80,7 @@ def map_keyboard():
         'c': (grip_right.open, [], "right: gripper open"),
      }
     done = False
+    print("Controlling joints. Press ? for help, Esc to quit.")
     while not done and not rospy.is_shutdown():
         c = iodevices.getch()
         if c:
