@@ -84,11 +84,20 @@ def map_joystick(joystick):
     bdn = joystick.button_down
     bup = joystick.button_up
 
+    def print_help(bindings_list):
+        print("press any keyboard key to quit.")
+        for bindings in bindings_list:
+            for (test, cmd, doc) in bindings:
+                if callable(doc):
+                    doc = doc()
+                print("%s: %s" % (str(test[1][0]), doc))
+
+    bindings_list = []
     bindings = (
-        ((bdn, ['rightTrigger']), (grip_left.close,  []), "left: gripper close"),
-        ((bup, ['rightTrigger']), (grip_left.open,   []), "left: gripper open"),
-        ((bdn, ['leftTrigger']),  (grip_right.close, []), "right: gripper close"),
-        ((bup, ['leftTrigger']),  (grip_right.open,  []), "right: gripper open"),
+        ((bdn, ['rightTrigger']), (grip_left.close,  []), "left gripper close"),
+        ((bup, ['rightTrigger']), (grip_left.open,   []), "left gripper open"),
+        ((bdn, ['leftTrigger']),  (grip_right.close, []), "right gripper close"),
+        ((bup, ['leftTrigger']),  (grip_right.open,  []), "right gripper open"),
         ((jhi, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0,  0.1]), lambda i=0:"right inc "+rj[i]),
         ((jlo, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0, -0.1]), lambda i=0:"right dec "+rj[i]),
         ((jhi, ['rightStickHorz']), (set_j, [lcmd, left,  lj, 0,  0.1]), lambda i=0:"left inc "+lj[i]),
@@ -99,10 +108,14 @@ def map_joystick(joystick):
         ((jlo, ['rightStickVert']), (set_j, [lcmd, left,  lj, 1, -0.1]), lambda i=1:"left dec "+lj[i]),
         ((bdn, ['rightBumper']), (rotate, [lj]), "left: cycle joint"),
         ((bdn, ['leftBumper']),  (rotate, [rj]), "right: cycle joint"),
+        ((bdn, ['function1']), (print_help, [bindings_list]), "help"),
+        ((bdn, ['function2']), (print_help, [bindings_list]), "help"),
     )
+    bindings_list.append(bindings)
 
     rate = rospy.Rate(100)
-    print("press any key to stop...")
+    print_help(bindings_list)
+    print("press any key to stop. ")
     while not rospy.is_shutdown():
         if iodevices.getch():
             return True
