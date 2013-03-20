@@ -90,14 +90,14 @@ def map_joystick(joystick):
             for (test, cmd, doc) in bindings:
                 if callable(doc):
                     doc = doc()
-                print("%s %s: %s" % (test[0].__name__, str(test[1]), doc))
+                print("%s: %s" % (str(test[1][0]), doc))
 
     bindings_list = []
     bindings = (
-        ((bdn, ['rightTrigger']), (grip_left.close,  []), "left: gripper close"),
-        ((bup, ['rightTrigger']), (grip_left.open,   []), "left: gripper open"),
-        ((bdn, ['leftTrigger']),  (grip_right.close, []), "right: gripper close"),
-        ((bup, ['leftTrigger']),  (grip_right.open,  []), "right: gripper open"),
+        ((bdn, ['rightTrigger']), (grip_left.close,  []), "left gripper close"),
+        ((bup, ['rightTrigger']), (grip_left.open,   []), "left gripper open"),
+        ((bdn, ['leftTrigger']),  (grip_right.close, []), "right gripper close"),
+        ((bup, ['leftTrigger']),  (grip_right.open,  []), "right gripper open"),
         ((jhi, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0,  0.1]), lambda i=0:"right inc "+rj[i]),
         ((jlo, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0, -0.1]), lambda i=0:"right dec "+rj[i]),
         ((jhi, ['rightStickHorz']), (set_j, [lcmd, left,  lj, 0,  0.1]), lambda i=0:"left inc "+lj[i]),
@@ -114,7 +114,8 @@ def map_joystick(joystick):
     bindings_list.append(bindings)
 
     rate = rospy.Rate(100)
-    print("press any key to stop...")
+    print_help(bindings_list)
+    print("press any key to stop. ")
     while not rospy.is_shutdown():
         if iodevices.getch():
             return True
