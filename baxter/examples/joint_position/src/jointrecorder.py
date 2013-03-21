@@ -67,7 +67,6 @@ class JointRecorder(object):
             self.stop()
         elif iodevices.getch(0.9 / self._raw_rate):
             self.stop()
-            print ("keypress!")
         return self._done
 
     def record(self):
