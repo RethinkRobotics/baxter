@@ -40,6 +40,7 @@ class JointRecorder(object):
 
         """
         self._filename = filename
+        self._raw_rate = rate
         self._rate = rospy.Rate(rate)
         self._start_time = rospy.get_time()
         self._done = False
@@ -64,8 +65,9 @@ class JointRecorder(object):
         """
         if rospy.is_shutdown():
             self.stop()
-        elif iodevices.getch():
+        elif iodevices.getch(0.9 / self._raw_rate):
             self.stop()
+            print ("keypress!")
         return self._done
 
     def record(self):
