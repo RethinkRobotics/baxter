@@ -33,7 +33,7 @@ import os
 import sys
 
 import roslib
-roslib.load_manifest('tools')
+roslib.load_manifest('head_control')
 import rospy
 
 import cv
