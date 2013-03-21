@@ -84,7 +84,7 @@ def map_joystick(joystick):
         ((bdn, ['dPadDown']), (left.inc_velocity, [-5.0]), "left:  decrease velocity"),
         ((bdn, ['dPadLeft']), (right.inc_velocity, [-5.0]), "right:  decrease velocity"),
         ((bdn, ['dPadRight']), (left.inc_velocity, [5.0]), "left:  increase velocity"),
-        ((bdn, ['dPadUp']), (left.inc_velocity, [5.0]), "right:  increase velocity"),
+        ((bdn, ['dPadUp']), (right.inc_velocity, [5.0]), "right:  increase velocity"),
         ((bdn, ['function1']), (print_help, [bindings_list]), "help"),
         ((bdn, ['function2']), (print_help, [bindings_list]), "help"),
     )
