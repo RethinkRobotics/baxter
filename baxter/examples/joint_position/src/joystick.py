@@ -108,6 +108,8 @@ def map_joystick(joystick):
         ((jhi, ['rightStickVert']), (set_j, [lcmd, left,  lj, 1, -0.1]), lambda i=1:"left dec "+lj[i]),
         ((bdn, ['rightBumper']), (rotate, [lj]), "left: cycle joint"),
         ((bdn, ['leftBumper']),  (rotate, [rj]), "right: cycle joint"),
+        ((bdn, ['btnRight']), (grip_left.calibrate, []), "left calibrate"),
+        ((bdn, ['btnLeft']), (grip_right.calibrate, []), "right calibrate"),
         ((bdn, ['function1']), (print_help, [bindings_list]), "help"),
         ((bdn, ['function2']), (print_help, [bindings_list]), "help"),
     )
