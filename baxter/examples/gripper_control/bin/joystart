@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rosrun joy joy_node &
+JOYPID=$!
+rosrun gripper_control joystick.py ${1}
+kill ${JOYPID}
