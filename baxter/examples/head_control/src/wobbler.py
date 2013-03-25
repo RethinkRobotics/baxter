@@ -70,6 +70,7 @@ class Wobbler():
         while (rospy.get_time() - start < 5.0):
             angle = random.uniform(-1.5, 1.5)
             self._head.set_pan(angle)
+            rate.sleep();
 
         #return to normal
         self.set_neutral()
