@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rosrun joy joy_node &
+JOYPID=$!
+rosrun joint_position joystick.py ${1}
+kill ${JOYPID}
