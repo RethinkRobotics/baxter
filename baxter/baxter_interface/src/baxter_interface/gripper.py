@@ -36,6 +36,8 @@ import rospy
 import baxter_msgs.msg as baxmsg
 import std_msgs.msg as stdmsg
 
+import dataflow
+
 class Gripper(object):
     def __init__(self, gripper):
         """
@@ -103,11 +105,12 @@ class Gripper(object):
         return max(min(val, 100.0), 0.0)
 
 
-    def enable(self):
+    def enable(self, timeout=2.0):
         """
         Enable the gripper
         """
         self._pub_enable.publish(True)
+        dataflow.wait_for(lambda: self.enabled, timeout)
 
     def disable(self):
         """
@@ -127,11 +130,12 @@ class Gripper(object):
         """
         self._pub_reset.publish(True)
 
-    def calibrate(self):
+    def calibrate(self, timeout=5.0):
         """
         Calibrate the gripper
         """
         self._pub_calibrate.publish(stdmsg.Empty())
+        dataflow.wait_for(lambda: self.calibrated, timeout)
 
     def stop(self):
         """
@@ -241,4 +245,61 @@ class Gripper(object):
     def close(self, timeout=0):
         self.set_position(0.0)
 
+    def enabled(self):
+        return self._state.enabled == baxmsg.GripperState.STATE_TRUE
+
+    def calibrated(self):
+        return self._state.calibrated == baxmsg.GripperState.STATE_TRUE
+
+    def ready(self):
+        return self._state.ready == baxmsg.GripperState.STATE_TRUE
+
+    def moving(self):
+        return self._state.moving == baxmsg.GripperState.STATE_TRUE
+
+    def gripping(self):
+        return self._state.gripping == baxmsg.GripperState.STATE_TRUE
+
+    def missed(self):
+        return self._state.missed == baxmsg.GripperState.STATE_TRUE
+
+    def error(self):
+        return self._state.error == baxmsg.GripperState.STATE_TRUE
+
+    def position(self):
+        return self._state.position
+
+    def force(self):
+        return self._state.force
+
+    def has_force(self):
+        return self._properties.hasForce
+
+    def has_position(self):
+        return self._properties.hasPosition
+
+    def is_reverse(self):
+        return self._properties.isReverse
+
+    def name(self):
+        return self._identity.name
+
+    def type(self):
+        if self._identity.type == baxmsg.GripperIdentity.SUCTION_CUP_GRIPPER:
+            return 'suction'
+        elif self._identity.type == baxmsg.GripperIdentity.PNEUMATIC_GRIPPER:
+            return 'pneumatic'
+        elif self._identity.type == baxmsg.GripperIdentity.ELECTRIC_GRIPPER:
+            return 'electric'
+        else:
+            return None
+
+    def hardware_id(self):
+        return self._identity.hardware_id
+
+    def version(self):
+        return "%d.%d.%d" % (
+            self._identity.version_major,
+            self._identity.version_minor,
+            self._identity.revision_lsb)
 

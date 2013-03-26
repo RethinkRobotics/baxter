@@ -26,3 +26,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from getch import getch
+from joystick import (
+    XboxController,
+    LogitechController)

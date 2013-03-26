@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, Rethink Robotics
 # All rights reserved.
 #
@@ -27,30 +25,5 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
+from wait_for import wait_for
 
-import roslib
-roslib.load_manifest('joint_position')
-import rospy
-import baxter_interface
-
-from controllers import JointPositionBaxterController
-from mappers import FileMapper
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("file", help="input file")
-    parser.add_argument("-l", "--loops", help="number of times to loop the input file. 0=infinite.")
-    args = parser.parse_args()
-
-    print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_position_file_playback")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
-
-    mapper = FileMapper(JointPositionBaxterController(), args.file, args.loops)
-
-    mapper.loop()
-    rs.disable()
