@@ -31,29 +31,33 @@ import roslib
 roslib.load_manifest('utilities')
 import rospy
 
-def wait_for(func_it, timeout=1.0, raise_on_error=True, rate=100):
+def wait_for(test, timeout=1.0, raise_on_error=True, rate=100, timeout_msg="timeout expired", body=None):
     """
     waits until some condition evaluates to True
-    @param func_it - zero param function to be evaluated
-    @param timeout - max amount of time to wait
+    @param test - zero param function to be evaluated
+    @param timeout - max amount of time to wait. negative value means indefinitely
     @param raise_on_error - raise or just return False
     @param rate - the rate at which to check
+    @param timout_msg - message to supply to the timeout exception
+    @param body - optional function to execute while waiting
     """
     end_time = rospy.get_time() + timeout
     rate = rospy.Rate(rate)
-    while not func_it():
+    while not test():
         if rospy.is_shutdown():
             if raise_on_error:
                 raise OSError(errno.ESHUTDOWN, "ROS shutdown")
             return False
-        elif rospy.get_time() >= end_time:
+        elif timeout >= 0 and rospy.get_time() >= end_time:
             if raise_on_error:
-                raise OSError(errno.ETIMEDOUT, "timeout expired")
+                raise OSError(errno.ETIMEDOUT, timeout_msg)
             return False
+        if callable(body):
+            body()
         rate.sleep()
     return True
 
-if __name__ == '__main__':
+def test():
     import sys
     rospy.init_node("wait_for_test")
     x = [0]
@@ -72,3 +76,6 @@ if __name__ == '__main__':
     except OSError as e:
         print e.strerror
     print("done.")
+
+if __name__ == '__main__':
+    test()
