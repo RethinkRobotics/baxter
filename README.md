@@ -42,3 +42,8 @@ use `rosrun tools enable_robot.py -e` to enable Baxter (see help with `-h`)
 - **baxter_interface:** Only for use in other code. The python classes in here are generic and not runnable.
 - **examples:** These are all of the level "this is how you can make baxter do stuff (using baxter_interface)".
 - **tools:** These are executable tools intended for regular use by the user.  You will likely be using `enable_robot.py` throughout normal operation.
+
+
+See our wiki for more information:
+
+https://github.com/RethinkRobotics/sdk-docs/wiki/
