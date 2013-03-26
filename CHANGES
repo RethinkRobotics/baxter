@@ -1,14 +1,17 @@
-Baxter Research Robot 0.5.0 Release Notes
-=========================================
+Rethink Robotics Research SDK 0.5.2 Release Notes
+=================================================
 
 Date: 3/26/2013
 
 Overview
 ========
 
-The Research SDK provides a platform for roboticists to develop custom applications to run on the Baxter hardware platform.
+The Research SDK provides a platform for roboticists to develop custom 
+applications to run on the Baxter hardware platform.
 
-It is designed for high level AI researchers, and those who work at the controls level, interested in kinematics, dynamics, force-based algorithms, and controlling redundant systems.
+It is designed for high level AI researchers, and those who work at the controls 
+level, interested in kinematics, dynamics, force-based algorithms, and 
+controlling redundant systems.
 
 See our wiki for more information:
 
@@ -51,10 +54,13 @@ Fixes
 
 Issues
 ======
+                                          
+-Calibration and Tare scripts will not run if there is a joint error at the head. 
+Joint errors can be found in the robot monitor. 
+https://github.com/RethinkRobotics/sdk-docs/wiki/Tools---robot_monitor
 
--Calibration and Tare scripts will not run if there is a joint error at the head. Joint errors can be found in the robot monitor. https://github.com/RethinkRobotics/sdk-docs/wiki/Tools---robot_monitor
-
--When exiting joystick examples, hitting any key will exit example but not the joy_node which requires Ctrl-C to exit.
+-When exiting joystick examples, hitting any key will exit example but not the 
+joy_node which requires Ctrl-C to exit.
 
 -Wobbler periodically exits with 'failed to disable robot'
 
