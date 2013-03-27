@@ -7,6 +7,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/baxter_joint_msgs</url>
   <depend package="rospy"/>
+  <depend package="std_msgs"/>
 </package>
 
 
