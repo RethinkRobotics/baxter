@@ -8,6 +8,7 @@
   <url>http://github.com/RethinkRobotics</url>
   <depend package="baxter_interface"/>
   <depend package="rospy"/>
+  <depend package="utilities"/>
 </package>
 
 
