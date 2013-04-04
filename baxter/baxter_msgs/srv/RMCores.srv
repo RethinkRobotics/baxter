@@ -1,0 +1,4 @@
+string  core
+---
+int32   err
+string  err_str
