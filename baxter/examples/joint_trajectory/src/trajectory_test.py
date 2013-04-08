@@ -81,24 +81,27 @@ class Trajectory(object):
 
     def clear(self):
         self._goal = FollowJointTrajectoryGoal()
-        self._goal.trajectory.joint_names = ['s1', 's2', 'e0', 'e1', 'w0', 'w1', 'w2']
+        self._goal.trajectory.joint_names = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
 
-def main(ns):
+def main(limb):
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_controller_test")
     print("Running. Ctrl-c to quit")
-    traj = Trajectory(ns)
-    p1 = [0.20, -0.66, 1.15, 1.09, 2.53, -1.56, 2.34]
+    positions = {
+        'left':  [-0.11, -0.62, -1.15, 1.32, 0.80,  1.27, 2.39],
+        'right': [ 0.20, -0.66,  1.15, 1.09, 2.53, -1.56, 2.34],
+    }
+    p1 = positions[limb]
+    traj = Trajectory(limb)
     traj.add_point(p1, 2.0)
     traj.add_point([x * 0.9 for x in p1], 4.0)
     traj.add_point([x * 1.1 for x in p1], 7.0)
     traj.start()
     traj.wait()
-    rospy.spin()
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        ns = sys.argv[1]
-        main(ns)
+        limb = sys.argv[1]
+        main(limb)
     else:
         usage(sys.argv)

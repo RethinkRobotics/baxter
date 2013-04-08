@@ -55,14 +55,20 @@ class FJTAS(object):
             lambda: rospy.get_time() >= start_time,
             timeout=float("inf")
         )
-
+        rate = rospy.Rate(1000)
         for point in trajectory.points:
             arrive_at = point.time_from_start.to_sec()
-            time_left = (rospy.get_time() - start_time) - arrive_at
+            time_left = arrive_at - (rospy.get_time() - start_time)
             while time_left > 0:
-                current = [self._limb.joint_angle(j) for j in trajectory.joint_names]
-                velocities = [(tgt-cur) for tgt,cur in zip(point.positions, current)]
+                try:
+                    current = [self._limb.joint_angle(j) for j in trajectory.joint_names]
+                except KeyError as e:
+                    rospy.logerr("unable to execute trajectory: ", e.strerror)
+                    return
+                deltas = [(tgt-cur) for tgt,cur in zip(point.positions, current)]
+                velocities = [d / time_left for d in deltas]
                 cmd = dict(zip(trajectory.joint_names, velocities))
                 self._limb.set_velocities(cmd)
-                time_left = (rospy.get_time() - start_time) - arrive_at
+                rate.sleep()
+                time_left = arrive_at - (rospy.get_time() - start_time)
         self._server.set_succeeded()

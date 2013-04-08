@@ -1,0 +1,21 @@
+<package>
+  <description brief="joint_trajectory">
+
+     joint_trajectory
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/RethinkRobotics</url>
+  <depend package="rospy"/>
+  <depend package="actionlib"/>
+  <depend package="baxter_msgs"/>
+  <depend package="baxter_interface"/>
+  <depend package="control_msgs"/>
+  <depend package="trajectory_msgs"/>
+  <depend package="utilities"/>
+
+</package>
+
+

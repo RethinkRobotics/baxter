@@ -48,17 +48,17 @@ from joint_trajectory import (
 def usage(argv):
     print "usage: " + argv[0] + " <namespace>"
 
-def main(ns):
+def main(limb):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_trajectory_controller")
+    rospy.init_node("rethink_rsdk_joint_trajectory_controller_" + limb)
     print("Initializing trajectory interfaces...")
-    fjtas = FJTAS(ns)
+    fjtas = FJTAS(limb)
     print("Running. Ctrl-c to quit")
     rospy.spin()
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        ns = sys.argv[1]
-        main(ns)
+        limb = sys.argv[1]
+        main(limb)
     else:
         usage(sys.argv)
