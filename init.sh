@@ -47,12 +47,26 @@ cat <<-EOF > ${tf}
 		source "\${HOME}"/.bash_profile
 	fi
 
-	if [ ! -s /opt/ros/electric/setup.bash -a ! -s /opt/ros/electric/setup.sh ]; then
-		echo "Failed to find environment script for ROS electric"
+	if [ -z "${ROS_ROOT}" ]; then
+		echo "Failed to find the ROS_ROOT environment variable."
 		exit 1
 	fi
 
-	source /opt/ros/electric/setup.bash 2>/dev/null || source /opt/ros/electric/setup.sh
+	if [ "$(basename $(dirname ${ROS_ROOT}))/$(basename ${ROS_ROOT})" == "share/ros" ];then
+		ros_setup=${ROS_ROOT%/share/ros}
+	elif [ "$(basename ${ROS_ROOT})" == "ros" ]; then
+		ros_setup="${ROS_ROOT%/ros}"
+	else
+		echo "Unrecognized ROS_ROOT path: ${ROS_ROOT}"
+		exit 1
+	fi
+
+	if [ ! -s "\${ros_setup}"/setup.sh ]; then
+		echo "Failed to find the ROS environment script: "\${ros_setup}"/setup.bash"
+		exit 1
+	fi
+
+	source \${ros_setup}/setup.bash 2>/dev/null || source \${ros_setup}/setup.sh
 
 	export ROS_PACKAGE_PATH=${topdir}:\${ROS_PACKAGE_PATH}
 	[[ -n "${master_uri}" ]] && export ROS_MASTER_URI="http://${master_uri}:11311"
