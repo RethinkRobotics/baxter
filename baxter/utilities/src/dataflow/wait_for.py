@@ -35,7 +35,7 @@ def wait_for(test, timeout=1.0, raise_on_error=True, rate=100, timeout_msg="time
     """
     waits until some condition evaluates to True
     @param test - zero param function to be evaluated
-    @param timeout - max amount of time to wait. negative value means indefinitely
+    @param timeout - max amount of time to wait. negative or inf means indefinitely
     @param raise_on_error - raise or just return False
     @param rate - the rate at which to check
     @param timout_msg - message to supply to the timeout exception
@@ -43,12 +43,13 @@ def wait_for(test, timeout=1.0, raise_on_error=True, rate=100, timeout_msg="time
     """
     end_time = rospy.get_time() + timeout
     rate = rospy.Rate(rate)
+    notimeout = (timeout < 0.0) or timeout == float("inf")
     while not test():
         if rospy.is_shutdown():
             if raise_on_error:
                 raise OSError(errno.ESHUTDOWN, "ROS shutdown")
             return False
-        elif timeout >= 0 and rospy.get_time() >= end_time:
+        elif (not notimeout) and (rospy.get_time() >= end_time):
             if raise_on_error:
                 raise OSError(errno.ETIMEDOUT, timeout_msg)
             return False
