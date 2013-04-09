@@ -47,18 +47,18 @@ cat <<-EOF > ${tf}
 		source "\${HOME}"/.bash_profile
 	fi
 
-	if [ -z "${ROS_ROOT}" ]; then
-		echo "Failed to find the ROS_ROOT environment variable."
-		exit 1
-	fi
-
-	if [ "$(basename $(dirname ${ROS_ROOT}))/$(basename ${ROS_ROOT})" == "share/ros" ];then
-		ros_setup=${ROS_ROOT%/share/ros}
-	elif [ "$(basename ${ROS_ROOT})" == "ros" ]; then
-		ros_setup="${ROS_ROOT%/ros}"
+	eval release=${2}
+	if [ -z "\${release}" ]; then
+		auto=$(ls -1 /opt/ros | tail -n 1)
+		if [ -z "\${auto}" ]; then
+			echo "No ROS installation found in /opt/ros/"
+			exit 1
+		fi
+		ros_setup="/opt/ros/\${auto}"
+	elif [ "\${release:0:1}" == "/" ]; then
+		ros_setup="\${release}"
 	else
-		echo "Unrecognized ROS_ROOT path: ${ROS_ROOT}"
-		exit 1
+		ros_setup="/opt/ros/\${release}"
 	fi
 
 	if [ ! -s "\${ros_setup}"/setup.sh ]; then
