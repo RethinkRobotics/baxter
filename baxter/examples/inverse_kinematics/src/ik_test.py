@@ -50,66 +50,6 @@ from std_msgs.msg import Header
 from baxter_msgs.srv import SolvePositionIK
 from baxter_msgs.srv import SolvePositionIKRequest
 
-"""
-def talker():
-    # declare shared endpoint data
-    global endpoint;
-
-    # select which arm to use
-    limb = 'right'
-
-    # a variable to mimic Rethink "travel height", some height above current endpt state
-    travel_height = 0.18
-
-    # wait for the IK service to be available
-    rospy.wait_for_service("/ExternalTools/" + limb + "/PositionIKNode/IKService")
-
-    # create a service caller object
-    computeIK = rospy.ServiceProxy("/ExternalTools/" + limb + "/PositionIKNode/IKService",
-                                    SolvePositionIK)
-
-    rospy.init_node('talker')
-
-    # allocate space for the IK request
-    ikref = SolvePositionIKRequest()
-    ikref.pose_stamp.append(PoseStamped())
-    ikref.pose_stamp.append(PoseStamped())
-
-    # loop until ctrl-c
-    while not rospy.is_shutdown():
-        # fill in the IK request
-        ikref.pose_stamp[0].header.seq = 0
-        ikref.pose_stamp[0].header.stamp = rospy.Time.now()
-        ikref.pose_stamp[0].header.frame_id = 'base'
-        # copy over the current endpoint pose as the pose we'd like to to IK at
-        ikref.pose_stamp[0].pose = copy.deepcopy(endpoint.pose)
-
-        # check a new pose that is translated up to "travel height"
-        ikref.pose_stamp[1] = copy.deepcopy(ikref.pose_stamp[0])
-        ikref.pose_stamp[1].pose.position.z =  ikref.pose_stamp[1].pose.position.z + travel_height
-
-        start = rospy.get_rostime()
-        # compute IK
-        try:
-          resp = computeIK(ikref)
-        except rospy.ServiceException,e :
-          rospy.loginfo("Service call failed: %s"%e)
-        stop = rospy.get_rostime()
-
-        # output to the user if we were successful or not
-        if resp.isValid[0]:
-          rospy.loginfo("IK found valid result for current pose.")
-        else:
-          rospy.loginfo("Current pose invalid.")
-        if resp.isValid[1]:
-          rospy.loginfo("IK found valid result for travel pose.")
-        else:
-          rospy.loginfo("Travel height invalid.")
-        rospy.sleep(1.0)
-
-        rospy.loginfo("IK call took %f seconds." % (stop-start).to_sec())
-"""
-
 def main(limb):
     rospy.init_node("rethink_rsdk_inverse_kinematics_test")
     ns = "/sdk/robot/limb/" + limb + "/solve_ik_position"
