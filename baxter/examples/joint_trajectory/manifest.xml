@@ -1,6 +1,7 @@
 <package>
-  <description brief="baxter_interface">
-     baxter_interface: interface classes for a baxter robot
+  <description brief="joint_trajectory">
+
+     joint_trajectory
 
   </description>
   <author></author>
@@ -10,11 +11,11 @@
   <depend package="rospy"/>
   <depend package="actionlib"/>
   <depend package="baxter_msgs"/>
-  <depend package="utilities"/>
-  <depend package="sensor_msgs"/>
-  <depend package="std_msgs"/>
+  <depend package="baxter_interface"/>
   <depend package="control_msgs"/>
   <depend package="trajectory_msgs"/>
+  <depend package="utilities"/>
+
 </package>
 
 
