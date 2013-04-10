@@ -47,12 +47,26 @@ cat <<-EOF > ${tf}
 		source "\${HOME}"/.bash_profile
 	fi
 
-	if [ ! -s /opt/ros/electric/setup.bash -a ! -s /opt/ros/electric/setup.sh ]; then
-		echo "Failed to find environment script for ROS electric"
+	eval version=${2}
+	if [ -z "\${version}" ]; then
+		auto=$(ls -1 /opt/ros | tail -n 1)
+		if [ -z "\${auto}" ]; then
+			echo "No ROS installation found in /opt/ros/"
+			exit 1
+		fi
+		ros_setup="/opt/ros/\${auto}"
+	elif [ "\${version:0:1}" == "/" ]; then
+		ros_setup="\${version}"
+	else
+		ros_setup="/opt/ros/\${version}"
+	fi
+
+	if [ ! -s "\${ros_setup}"/setup.sh ]; then
+		echo "Failed to find the ROS environment script: "\${ros_setup}"/setup.bash"
 		exit 1
 	fi
 
-	source /opt/ros/electric/setup.bash 2>/dev/null || source /opt/ros/electric/setup.sh
+	source \${ros_setup}/setup.bash 2>/dev/null || source \${ros_setup}/setup.sh
 
 	export ROS_PACKAGE_PATH=${topdir}:\${ROS_PACKAGE_PATH}
 	[[ -n "${master_uri}" ]] && export ROS_MASTER_URI="http://${master_uri}:11311"
