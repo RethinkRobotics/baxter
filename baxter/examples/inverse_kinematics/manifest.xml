@@ -1,0 +1,18 @@
+<package>
+  <description brief="inverse_kinematics">
+
+     inverse_kinematics
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/RethinkRobotics</url>
+  <depend package="rospy"/>
+  <depend package="baxter_msgs"/>
+  <depend package="baxter_interface"/>
+  <depend package="utilities"/>
+
+</package>
+
+
