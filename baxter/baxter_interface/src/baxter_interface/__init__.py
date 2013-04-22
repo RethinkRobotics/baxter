@@ -31,6 +31,7 @@ from head import Head
 from limb import Limb
 from digital_io import DigitalIO
 from analog_io import AnalogIO
+from navigator import Navigator
 from settings import (
     JOINT_ANGLE_TOLERANCE,
 )
