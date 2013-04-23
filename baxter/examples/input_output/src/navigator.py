@@ -67,7 +67,7 @@ def echo_input():
     def b1_pressed(v):
         print ("Button 1: %s" % (v,))
     def b2_pressed(v):
-        print ("Button 0: %s" % (v,))
+        print ("Button 2: %s" % (v,))
     def wheel_moved(v):
         print ("Wheel: %d" % (v,))
 
