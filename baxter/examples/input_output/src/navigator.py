@@ -55,11 +55,13 @@ def blink():
 
     print ("Blinking LED's for 10 seconds")
     rate = rospy.Rate(10)
-    for _ in range(10 * 10):
+    i = 0
+    while not rospy.is_shutdown() and i < 100:
         for nav in navs:
             nav.inner_led = not nav.inner_led
             nav.outer_led = not nav.outer_led
         rate.sleep()
+        i += 1
 
 def echo_input():
     def b0_pressed(v):
@@ -71,7 +73,7 @@ def echo_input():
     def wheel_moved(v):
         print ("Wheel: %d" % (v,))
 
-    print ("Echoing input from the left navigator")
+    print ("Press input buttons on the left navigator, input will be echoed here.")
     nav = baxter_interface.Navigator('left')
     nav.button0_changed.connect(b0_pressed)
     nav.button1_changed.connect(b1_pressed)
@@ -79,8 +81,10 @@ def echo_input():
     nav.wheel_changed.connect(wheel_moved)
 
     rate = rospy.Rate(1)
-    for _ in range(10):
+    i = 0
+    while not rospy.is_shutdown() and i < 10
         rate.sleep()
+        i += 1
 
 def main():
     try:

@@ -41,12 +41,12 @@ class Navigator(object):
     Inputs:
         Button 0        - press wheel
         Button 1        - above wheel
-        button 2        - below wheel
+        Button 2        - below wheel
         Scroll wheel    - 0-255
 
     Outputs:
         Inner LED
-        Outter LED
+        Outer LED
 
     Signals:
         button0_changed     - True/False
@@ -62,7 +62,7 @@ class Navigator(object):
 
     def __init__(self, location):
         if not location in self.__LOCATIONS:
-            raise AttributeError("Invalid ITB name '%s'" % (location,))
+            raise AttributeError("Invalid Navigator name '%s'" % (location,))
         self._id = location
         self._state = None
         self.button0_changed = dataflow.Signal()
