@@ -206,7 +206,7 @@ class XboxController(Joystick):
         self._controls['rightTrigger'] = (msg.axes[5] < 0.0)
 
         self._controls['function1'] = (msg.buttons[6] == 1)
-        self._controls['function2'] = (msg.buttons[10] == 1)
+        self._controls['function2'] = (msg.buttons[7] == 1)
 
 class LogitechController(Joystick):
     """ Logitech specialization of Joystick
