@@ -550,7 +550,7 @@
     </inertial>
   </link>
   <link name="right_hand_camera_axis">
-    <visual>
+    <!--visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <cylinder length="0.01" radius="0.02"/>
@@ -558,7 +558,7 @@
       <material name="blue">
         <color rgba="0 0 1 0.8"/>
       </material>
-    </visual>
+    </visual-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0"/>
@@ -1011,7 +1011,7 @@
     </inertial>
   </link>
   <link name="left_hand_camera_axis">
-    <visual>
+    <!--visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <cylinder length="0.01" radius="0.02"/>
@@ -1019,7 +1019,7 @@
       <material name="blue">
         <color rgba="0 0 1 0.8"/>
       </material>
-    </visual>
+    </visual-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0"/>
