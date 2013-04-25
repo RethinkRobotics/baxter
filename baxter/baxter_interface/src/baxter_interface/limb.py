@@ -160,23 +160,19 @@ class Limb(object):
         self._pub_velocity.publish(msg)
 
     def set_neutral_pose(self):
-        angles = {}
-        if self.name == 'right':
-            angles = dict(zip(
-                ['e0', 'e1', 's0', 's1', 'w0', 'w1', 'w2'],
-                [1.15, 1.09, 0.20, -0.66, 2.53, -1.56, 2.34]))
-        elif self.name == 'left':
-            angles = dict(zip(
-                ['e0', 'e1', 's0', 's1', 'w0', 'w1', 'w2'],
-                [-1.15, 1.32, -0.11, -0.62, 0.80, 1.27, 2.39]))
-        else:
-            raise NameError("Invalid limb name %s" % (self.name,))
+        """
+        Command the joints to the center of their joint ranges
+        """
+        angles = dict(zip(
+            ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2'],
+            [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]))
 
         return self.set_pose(angles)
 
-    def set_pose(self, pose):
+    def set_pose(self, pose, timeout=15.0):
         """
         @param pose dict({str:float})   - dictionary of joint_name:angle
+        @param timeout    - seconds to wait for move to finish [10]
 
         Commands the limb to the provided pose.  Waits until the reported
         joint state matches that specified.
@@ -187,10 +183,10 @@ class Limb(object):
             return joint_diff
 
         diffs = [genf(j,a) for j,a in pose.items() if j in self._joint_angle]
-
-        rate = rospy.Rate(100)
-        while any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs):
-            self.set_positions(pose)
-            rate.sleep()
-            if rospy.is_shutdown():
-                return
+        
+        dataflow.wait_for(
+            lambda: not any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs),
+            timeout=timeout,
+            rate=100,
+            body=lambda: self.set_positions(pose) 
+            )
