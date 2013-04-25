@@ -25,8 +25,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import errno
-
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -185,14 +183,10 @@ class Limb(object):
             return joint_diff
 
         diffs = [genf(j,a) for j,a in pose.items() if j in self._joint_angle]
-
-        rate = rospy.Rate(100)
-        start = rospy.Time.now()
-        while any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs):
-            self.set_positions(pose)
-            rate.sleep()
-            if ((rospy.Time.now() - start).to_sec() > timeout):
-                raise OSError(errno.ETIMEDOUT, "Timeout could not achieve commanded position.")
-                return
-            if rospy.is_shutdown():
-                return
+        
+        dataflow.wait_for(
+            lambda: not any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs),
+            timeout=timeout,
+            rate=100,
+            body=lambda: self.set_positions(pose) 
+            )
