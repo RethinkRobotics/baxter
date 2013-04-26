@@ -85,7 +85,7 @@ class Puppeteer(object):
                 cmd = {}
                 for name in self._joint_names:
                     v = self._other_arm.joint_velocity(name)
-                    if name in ('s1', 'e1'):
+                    if name in ('s0', 'e0', 'w0', 'w2'):
                         v = -v
                     cmd[name] = v * self._amp
                 self._this_arm.set_velocities(cmd)
