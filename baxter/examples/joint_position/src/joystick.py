@@ -119,8 +119,12 @@ def map_joystick(joystick):
     print_help(bindings_list)
     print("press any key to stop. ")
     while not rospy.is_shutdown():
-        if iodevices.getch():
-            return True
+        c = iodevices.getch()
+        if c:
+            if c == '?':
+                print_help(bindings_list)
+            else:
+                return True
         for (test, cmd, doc) in bindings:
             if test[0](*test[1]):
                 cmd[0](*cmd[1])
