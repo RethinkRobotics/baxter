@@ -12,6 +12,8 @@ uint8   missed              # true if GRIP/GOTO/SET was commanded and the grippe
 uint8   error               # true if the gripper is in an error state
 #
 uint8   command             # current gripper command, one of the following:
+  # Note that while these have the same as values as the gripper opcodes they
+  # are not used that way.
   uint8   CMD_IDLE            = 0 
   uint8   CMD_GET_ID          = 1
   uint8   CMD_RESET_ALL       = 2
@@ -23,6 +25,7 @@ uint8   command             # current gripper command, one of the following:
   uint8   CMD_GOTO            = 8
   uint8   CMD_STOP            = 9
   uint8   CMD_SET             = 10
+  uint8   CMD_CLEAR_CALIBRATION = 11
 #
 float32 position            # position as a percentage of the max position;      0=closed - 100=open
 #
