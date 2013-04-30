@@ -90,7 +90,13 @@ class Gripper(object):
 
         self._identity = baxmsg.GripperIdentity()
         self._properties = baxmsg.GripperProperties()
-        self._state = baxmsg.GripperState()
+        self._state = None
+
+        dataflow.wait_for(
+            lambda: not self._state is None,
+            timeout=5.0,
+            timeout_msg="Failed to get current gripper state from %s" % (sdkns + 'state'),
+        )
 
     def _on_gripper_state(self, state):
         self._state = copy.deepcopy(state)
@@ -104,44 +110,59 @@ class Gripper(object):
     def _clip(self, val):
         return max(min(val, 100.0), 0.0)
 
-
     def enable(self, timeout=2.0):
         """
         Enable the gripper
         """
         self._pub_enable.publish(True)
         dataflow.wait_for(
-            test=self.enabled, 
-            timeout=timeout, 
+            test=lambda: self.enabled(),
+            timeout=timeout,
             body=lambda: self._pub_enable.publish(True)
             )
 
-    def disable(self):
+    def disable(self, timeout=2.0):
         """
         Disable the gripper
         """
         self._pub_enable.publish(False)
+        dataflow.wait_for(
+            test=lambda: not self.enabled(),
+            timeout=timeout,
+            body=lambda: self._pub_enable.publish(False)
+            )
 
-    def reset(self):
+    def reset(self, timeout=2.0):
         """
         Reset the gripper
         """
         self._pub_reset.publish(False)
+        dataflow.wait_for(
+            test=lambda: not self.error(),
+            timeout=timeout,
+            body=lambda: self._pub_reset.publish(False)
+            )
 
-    def reboot(self):
+    def reboot(self, timeout=2.0):
         """
         Reboot the gripper
         """
         self._pub_reset.publish(True)
+        dataflow.wait_for(
+            test=lambda: not self.calibrated(),
+            timeout=timeout,
+            body=lambda: self._pub_reset.publish(True)
+            )
 
     def calibrate(self, timeout=5.0):
         """
         Calibrate the gripper
         """
         self._pub_calibrate.publish(stdmsg.Empty())
+        self.enable()
         dataflow.wait_for(
-            test=self.calibrated, 
-            timeout=timeout, 
+            test=lambda: self.calibrated(),
+            timeout=timeout,
             body=lambda: self._pub_calibrate.publish(stdmsg.Empty())
             )
 
@@ -247,10 +268,10 @@ class Gripper(object):
         self._command.deadZone = self._clip(dead_band + self._command.deadZone)
         self._pub_command.publish(self._command)
 
-    def open(self, timeout=0):
+    def open(self):
         self.set_position(100.0)
 
-    def close(self, timeout=0):
+    def close(self):
         self.set_position(0.0)
 
     def enabled(self):
