@@ -139,7 +139,7 @@ def map_joystick(joystick):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("joystick", help="specify the type of joystick to use; xbox or logitech")
+    parser.add_argument("joystick", help="specify the type of joystick to use; xbox | logitech | ps3")
     args, unknown = parser.parse_known_args()
 
     print("Initializing node... ")
@@ -154,6 +154,8 @@ if __name__ == '__main__':
         joystick = iodevices.joystick.XboxController()
     elif args.joystick == 'logitech':
         joystick = iodevices.joystick.LogitechController()
+    elif args.joystick == 'ps3':
+        joystick = iodevices.joystick.PS3Controller()
     else:
         parser.error("Unsupported joystick type '%s'" % (args.joystick))
 
