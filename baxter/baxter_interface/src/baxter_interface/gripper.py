@@ -110,7 +110,11 @@ class Gripper(object):
         Enable the gripper
         """
         self._pub_enable.publish(True)
-        dataflow.wait_for(lambda: self.enabled, timeout)
+        dataflow.wait_for(
+            test=self.enabled, 
+            timeout=timeout, 
+            body=lambda: self._pub_enable.publish(True)
+            )
 
     def disable(self):
         """
@@ -135,7 +139,11 @@ class Gripper(object):
         Calibrate the gripper
         """
         self._pub_calibrate.publish(stdmsg.Empty())
-        dataflow.wait_for(lambda: self.calibrated, timeout)
+        dataflow.wait_for(
+            test=self.calibrated, 
+            timeout=timeout, 
+            body=lambda: self._pub_calibrate.publish(stdmsg.Empty())
+            )
 
     def stop(self):
         """
