@@ -242,3 +242,39 @@ class LogitechController(Joystick):
 
         self._controls['function1'] = (msg.buttons[8] == 1)
         self._controls['function2'] = (msg.buttons[9] == 1)
+
+class PS3Controller(Joystick):
+    """ PS3 specialization of Joystick
+    """
+    def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
+        super(PS3Controller, self).__init__(scale, offset, deadband)
+
+    def _on_joy(self, msg):
+        """ callback for messages from joystick input
+        Args:
+              msg(Joy): a joystick input message
+        """
+
+        self._controls['btnLeft'] = (msg.buttons[15] == 1)
+        self._controls['btnUp'] = (msg.buttons[12] == 1)
+        self._controls['btnDown'] = (msg.buttons[14] == 1)
+        self._controls['btnRight'] = (msg.buttons[13] == 1)
+
+        self._controls['dPadUp'] = (msg.axes[4] > 0.5)
+        self._controls['dPadDown'] = (msg.axes[6] < -0.5)
+        self._controls['dPadLeft'] = (msg.axes[7] > 0.5)
+        self._controls['dPadRight'] = (msg.axes[5] < -0.5)
+
+        self._controls['leftStickHorz']  = msg.axes[0]
+        self._controls['leftStickVert']  = msg.axes[1]
+        self._controls['rightStickHorz'] = msg.axes[2]
+        self._controls['rightStickVert'] = msg.axes[3]
+
+        self._controls['leftBumper'] = (msg.buttons[10] == 1)
+        self._controls['rightBumper'] = (msg.buttons[11] == 1)
+        self._controls['leftTrigger'] = (msg.buttons[8] == 1)
+        self._controls['rightTrigger'] = (msg.buttons[9] == 1)
+
+        self._controls['function1'] = (msg.buttons[0] == 1)
+        self._controls['function2'] = (msg.buttons[3] == 1)
+
