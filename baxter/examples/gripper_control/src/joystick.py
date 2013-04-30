@@ -91,6 +91,7 @@ def map_joystick(joystick):
     bindings_list.append(bindings)
 
     rate = rospy.Rate(100)
+    print_help(bindings_list)
     print("press any key to stop...")
     while not rospy.is_shutdown():
         if iodevices.getch():
