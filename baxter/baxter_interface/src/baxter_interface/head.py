@@ -61,7 +61,7 @@ class Head(object):
             self._on_head_state)
 
         dataflow.wait_for(
-            lambda: not len(self._state) == 0,
+            lambda: len(self._state) != 0,
             timeout=5.0,
             timeout_msg="Failed to get current head state from /sdk/robot/head/head_state",
         )
