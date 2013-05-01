@@ -113,6 +113,7 @@ class Head(object):
                 lambda: abs(self.pan()-angle) <= settings.JOINT_ANGLE_TOLERANCE,
                 timeout=timeout,
                 rate=100,
+                timeout_msg="Failed to move head to pan command %f" % angle,
                 body=lambda: self._pub_pan.publish(msg)
                 )
 
@@ -125,18 +126,21 @@ class Head(object):
         """
         self._pub_nod.publish(True)
 
-        # Wait for nod to initiate
-        dataflow.wait_for(
-            test=lambda: self.nodding(),
-            timeout=timeout,
-            rate=100,
-            body=lambda: self._pub_nod.publish(True)
-            )
-
         if not timeout == 0:
+            # Wait for nod to initiate
+            dataflow.wait_for(
+                test=lambda: self.nodding(),
+                timeout=timeout,
+                rate=100,
+                timeout_msg="Failed to initiate head nod command",
+                body=lambda: self._pub_nod.publish(True)
+                )
+
+            # Wait for nod to complete
             dataflow.wait_for(
                 test=lambda: not self.nodding(),
                 timeout=timeout,
                 rate=100,
+                timeout_msg="Failed to complete head nod command",
                 body=lambda: self._pub_nod.publish(True)
                 )
