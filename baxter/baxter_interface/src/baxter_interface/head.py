@@ -35,6 +35,7 @@ import baxter_msgs.msg
 import std_msgs.msg
 
 import settings
+import dataflow
 
 class Head(object):
     def __init__(self):
@@ -59,11 +60,11 @@ class Head(object):
             baxter_msgs.msg.HeadState,
             self._on_head_state)
 
-        rate = rospy.Rate(100)
-        while not rospy.is_shutdown():
-            if len(self._state.keys()):
-                break
-            rate.sleep()
+        dataflow.wait_for(
+            lambda: not len(self._state) == 0,
+            timeout=5.0,
+            timeout_msg="Failed to get current head state from /sdk/robot/head/head_state",
+        )
 
     def _on_head_state(self, msg):
         self._state['pan'] = msg.pan
@@ -95,7 +96,7 @@ class Head(object):
         return self._state['panning']
 
 
-    def set_pan(self, angle, speed = 100, timeout = 0):
+    def set_pan(self, angle, speed=100, timeout=10.0):
         """
         Pan at the given speed to the desired angle.
 
@@ -105,45 +106,37 @@ class Head(object):
                                   angle.  If 0, just command once and return.  [0]
         """
         msg = baxter_msgs.msg.HeadPanCommand(angle, speed)
-
         self._pub_pan.publish(msg)
-        if timeout == 0:
-            return
 
-        hz = 100
-        rate = rospy.Rate(100)
+        if not timeout == 0:
+            dataflow.wait_for(
+                lambda: abs(self.pan()-angle) <= settings.JOINT_ANGLE_TOLERANCE,
+                timeout=timeout,
+                rate=100,
+                body=lambda: self._pub_pan.publish(msg)
+                )
 
-        for _ in range(int(hz * timeout)):
-            if rospy.is_shutdown():
-                break
-
-            self._pub_pan.publish(msg)
-
-            if abs(self.pan() - angle) < settings.JOINT_ANGLE_TOLERANCE:
-                return
-
-            rate.sleep()
-
-        raise OSError(errno.ETIMEDOUT, "Timeout waiting for head pan")
-
-    def command_nod(self):
+    def command_nod(self, timeout=5.0):
         """
         Command the head to nod once.
+
+        @param timeout (float)  - Seconds to wait for the head to nod.
+                                  If 0, just command once and return.  [0]
         """
-        msg = std_msgs.msg.Bool(True)
+        self._pub_nod.publish(True)
 
-        hz = 100
-        rate = rospy.Rate(hz)
+        # Wait for nod to initiate
+        dataflow.wait_for(
+            test=lambda: self.nodding(),
+            timeout=timeout,
+            rate=100,
+            body=lambda: self._pub_nod.publish(True)
+            )
 
-        for _ in range(hz):
-            if rospy.is_shutdown():
-                break
-
-            self._pub_nod.publish(msg)
-            if self.nodding():
-                return
-
-            rate.sleep()
-
-        raise OSError(errno.ETIMEDOUT, "Timeout commanding head to nod")
-
+        if not timeout == 0:
+            dataflow.wait_for(
+                test=lambda: not self.nodding(),
+                timeout=timeout,
+                rate=100,
+                body=lambda: self._pub_nod.publish(True)
+                )
