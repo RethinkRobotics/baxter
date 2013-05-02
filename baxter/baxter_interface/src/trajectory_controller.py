@@ -51,7 +51,7 @@ def usage(argv):
 
 def main(limb):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_trajectory_controller%s" % ("" if limb == 'both' else "_" + limb))
+    rospy.init_node("rethink_rsdk_joint_trajectory_controller%s" % ("" if limb == 'both' else "_" + limb,))
     print("Initializing trajectory interface...")
     if limb == 'both':
         fjtas = FJTAS('right')
