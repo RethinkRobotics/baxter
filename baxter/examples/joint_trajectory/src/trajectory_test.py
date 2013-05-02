@@ -86,6 +86,10 @@ class Trajectory(object):
 def main(limb):
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_controller_test")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
     print("Running. Ctrl-c to quit")
     positions = {
         'left':  [-0.11, -0.62, -1.15, 1.32,  0.80, 1.27,  2.39],
