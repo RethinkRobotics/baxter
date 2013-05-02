@@ -57,8 +57,9 @@ def usage(argv):
 class Trajectory(object):
     def __init__(self, limb):
         limbns = {'left':'l_arm_controller', 'right':'r_arm_controller'}
+        sdkns = '/sdk/robot/limb/' + limb + '/'
         self._client = actionlib.SimpleActionClient(
-            limbns[limb] + "/follow_joint_trajectory",
+            sdkns + "follow_joint_trajectory",
             FollowJointTrajectoryAction,
         )
         self._client.wait_for_server()
