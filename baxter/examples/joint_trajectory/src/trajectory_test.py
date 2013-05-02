@@ -88,8 +88,8 @@ def main(limb):
     rospy.init_node("rethink_rsdk_joint_trajectory_controller_test")
     print("Running. Ctrl-c to quit")
     positions = {
-        'left':  [-0.11, -0.62, -1.15, 1.32, 0.80,  1.27, 2.39],
-        'right': [ 0.20, -0.66,  1.15, 1.09, 2.53, -1.56, 2.34],
+        'left':  [-0.11, -0.62, -1.15, 1.32,  0.80, 1.27,  2.39],
+        'right': [ 0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
     }
     p1 = positions[limb]
     traj = Trajectory(limb)
