@@ -32,6 +32,7 @@ Baxter RSDK Joint Trajectory Controller Test
 """
 import sys
 from copy import copy
+import argparse
 
 import roslib
 roslib.load_manifest('baxter_interface')
@@ -104,8 +105,7 @@ def main(limb):
     traj.wait()
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        limb = sys.argv[1]
-        main(limb)
-    else:
-        usage(sys.argv)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--limb", dest="limb", required=True, help="send joint trajectory to which limb [left | right]")
+    args = parser.parse_args()
+    main(args.limb)
