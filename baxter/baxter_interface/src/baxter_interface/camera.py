@@ -56,7 +56,11 @@ class CameraController(object):
     def __init__(self, name):
         """
         @param name -   camera identifier.  You can get a list of valid identifiers
-                        by calling the ROS service /cameras/list
+                        by calling the ROS service /cameras/list.
+
+                        Typical names are right_hand_camera, left_hand_camera and
+                        head_camera.  However if the cameras are not identified via
+                        the parameter server, they are simply indexed starting at 0.
         """
         self._id = name
 
