@@ -32,6 +32,7 @@ Baxter RSDK Joint Trajectory Controller Test
 """
 import sys
 from copy import copy
+import argparse
 
 import roslib
 roslib.load_manifest('baxter_interface')
@@ -56,8 +57,9 @@ def usage(argv):
 class Trajectory(object):
     def __init__(self, limb):
         limbns = {'left':'l_arm_controller', 'right':'r_arm_controller'}
+        sdkns = '/sdk/robot/limb/' + limb + '/'
         self._client = actionlib.SimpleActionClient(
-            limbns[limb] + "/follow_joint_trajectory",
+            sdkns + "follow_joint_trajectory",
             FollowJointTrajectoryAction,
         )
         self._client.wait_for_server()
@@ -86,10 +88,14 @@ class Trajectory(object):
 def main(limb):
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_controller_test")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
     print("Running. Ctrl-c to quit")
     positions = {
-        'left':  [-0.11, -0.62, -1.15, 1.32, 0.80,  1.27, 2.39],
-        'right': [ 0.20, -0.66,  1.15, 1.09, 2.53, -1.56, 2.34],
+        'left':  [-0.11, -0.62, -1.15, 1.32,  0.80, 1.27,  2.39],
+        'right': [ 0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
     }
     p1 = positions[limb]
     traj = Trajectory(limb)
@@ -100,8 +106,7 @@ def main(limb):
     traj.wait()
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        limb = sys.argv[1]
-        main(limb)
-    else:
-        usage(sys.argv)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--limb", dest="limb", required=True, help="send joint trajectory to which limb [left | right]")
+    args = parser.parse_args()
+    main(args.limb)
