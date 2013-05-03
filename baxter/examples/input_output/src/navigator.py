@@ -82,7 +82,7 @@ def echo_input():
 
     rate = rospy.Rate(1)
     i = 0
-    while not rospy.is_shutdown() and i < 10
+    while not rospy.is_shutdown() and i < 10:
         rate.sleep()
         i += 1
 
