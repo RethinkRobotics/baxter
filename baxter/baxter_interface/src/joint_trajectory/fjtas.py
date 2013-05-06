@@ -40,8 +40,9 @@ import baxter_interface
 class FJTAS(object):
     def __init__(self, limb):
         limbns = {'left':'l_arm_controller', 'right':'r_arm_controller'}
+        sdkns = '/sdk/robot/limb/' + limb + '/'
         self._server = actionlib.SimpleActionServer(
-            limbns[limb] + "/follow_joint_trajectory",
+            sdkns + "follow_joint_trajectory",
             FollowJointTrajectoryAction,
             execute_cb=self._on_fjta,
             auto_start=False)
