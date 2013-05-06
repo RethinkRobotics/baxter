@@ -42,74 +42,93 @@ import rospy
 
 import smoketests
 
-class TestDict():
-    """Create structure to hold releases with assosciated tests. Load and run the tests.
+def run_test(tname, fname, proceed):
+    """Execution of the tests where starting, finishing and error
+    handeling occurs.
     """
-    def __init__(self, version):
-        self._version = version
-        self._valid_tests = {}
-        self._valid_tests.update({'1.1.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', 'Grippers', 'BlinkLEDs', 'Cameras']})
+    try:
+        cur_test = getattr(smoketests, tname)(tname)
+    except AttributeError:
+        print("Exiting: %s is not a valid smoke test." % tname)
+        sys.exit(1)
+    except:
+        print("Exiting: failed during intialization.")
+        traceback.print_exc()
+        sys.exit(1)
 
-    def validate(self):
-        return self._version in self._valid_tests
-
-    def run_test(self, tname, fname, proceed):
-        try:
-            cur_test = getattr(smoketests, tname)(tname)
-        except AttributeError:
-            print("Exiting: %s is not a valid smoke test." % tname)
-            sys.exit(1)
-        except:
-            print("Exiting: failed during intialization.")
-            traceback.print_exc()
-            sys.exit(1)
-
-        cur_test.start_test()
-        cur_test.finish_test(fname)
-        if not proceed and cur_test._result[0][0] == 'F' or 'KeyboardInterrupt' in cur_test._result[1]:
-           print("Exiting: Failed Test %s" % tname)
-           sys.exit(1)
+    cur_test.start_test()
+    cur_test.finish_test(fname)
+    if not proceed \
+    and cur_test.result[0] == False \
+    or 'KeyboardInterrupt' in cur_test.result[1]:
+        print("Exiting: Failed Test %s" % tname)
+        sys.exit(1)
 
 def test_help():
+    """Help text for argparse describing available sdk tests
+    """
     return """Specify an individual test for execution
     TESTS:
-    Enable     - Verify ability to enable, check state and disable baxter.
-    Messages   - Verify messages being published and ability to subscribe.
-    Services   - Verify services available and ability to make calls as client.
+    Enable     - Verify ability to enable, check state and disable baxter
+    Messages   - Verify messages being published and ability to subscribe
+    Services   - Verify services available and ability to make calls as client
     Head       - Move the head pan and tilt, display image to screen
-    MoveArms   - Move both arms through entire joint range.
-    Grippers   - Calibrate and move grippers using position and velocity control.
-    BlinkLEDs  - Blink Navigator LEDs.
-    Cameras    - Verify camera publishing and visualization.
+    MoveArms   - Move both arms through entire joint range
+    Grippers   - Calibrate and move grippers using position and velocity control
+    BlinkLEDs  - Blink Navigator LEDs
+    Cameras    - Verify camera publishing and visualization
     """
 
 def get_version():
     """Get current software version number from param server
     """
     try:
-        v = rospy.get_param('/rethink/software_version').split('_')[0]
+        version_param = \
+        rospy.get_param('/rethink/software_version').split('_')[0]
     except socket.error:
-        print("Exiting: Could not communicate with ROS Master to determine SW version")
+        print(
+            "Exiting: Could not communicate with ROS Master to determine" \
+            "Software version"
+            )
         sys.exit(1)
     except:
-        print("Exiting: Could not determine SW version from param '/rethink/software_version'")
+        print("Exiting: Could not determine SW version from param " \
+            "'/rethink/software_version'"
+            )
         sys.exit(1)
-    return v
+    return version_param
 
 def ros_init():
+    """Initialize rsdk_smoke_test ros node
+    """
     print("Initializing node 'rsdk_smoke_test'\n")
     rospy.init_node('rsdk_smoke_test', disable_signals=True)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-p', '--proceed', action='store_true', help="Continue testing after a failed test until all tests complete")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter
+        )
+    parser.add_argument(
+        '-p', 
+        '--proceed', 
+        action='store_true', 
+        help="Continue testing after a failed test until all tests complete")
     parser.add_argument('-t', '--test', help=test_help())
     args = parser.parse_args()
 
-    version = get_version()
-    test = TestDict(version)
-    if not test.validate():
-        print("Exiting: No tests specified for your software version: %s" % version)
+    test_dict = {
+        'version': None,
+        'valid_tests': {
+            '1.1.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+                'Grippers', 'BlinkLEDs', 'Cameras'],
+            }
+        }
+
+    test_dict['version'] = get_version()
+    if not test_dict['version'] in test_dict['valid_tests'].keys():
+        print("Exiting: No tests specified for your software version: %s" % \
+            (test_dict['version'])
+            )
         sys.exit(1)
 
     try:
@@ -119,15 +138,19 @@ if __name__ == '__main__':
         sys.exit(1)
 
     cur_time = time.localtime()
-    filename = ("rsdk-smoke_%s_%s.%s.%s" % (version, cur_time.tm_mday, cur_time.tm_mon, cur_time.tm_year))
+    filename = (
+                "rsdk-smoke_%s_%s.%s.%s" % \
+                (test_dict['version'], cur_time.tm_mday, cur_time.tm_mon, \
+                 cur_time.tm_year)
+                )
     if args.test == None:
         print 'Performing All Tests'
         ros_init()
-        for t in test._valid_tests[version]:
-            test.run_test(t, filename, args.proceed)
-    elif args.test in test._valid_tests[version]:
+        for t in test_dict['valid_tests'][test_dict['version']]:
+            run_test(t, filename, args.proceed)
+    elif args.test in test_dict['valid_tests'][test_dict['version']]:
         ros_init()
-        test.run_test(args.test, filename, args.proceed)
+        run_test(args.test, filename, args.proceed)
     else:
         print("Exiting: Invalid test provided: %s" % args.test)
         parser.print_help()
