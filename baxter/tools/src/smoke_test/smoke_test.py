@@ -92,7 +92,7 @@ def get_version():
         print("Exiting: Could not communicate with ROS Master to determine SW version")
         sys.exit(1)
     except:
-        print("Exiting: Could not determine SW version from param '/jrcp/version'")
+        print("Exiting: Could not determine SW version from param '/rethink/software_version'")
         sys.exit(1)
     return v
 
