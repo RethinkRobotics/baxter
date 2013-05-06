@@ -35,6 +35,7 @@ from baxter_msgs.msg import (
     DigitalIOState,
     DigitalOutputCommand,
 )
+import dataflow
 
 class DigitalIO(object):
     """
@@ -100,11 +101,13 @@ class DigitalIO(object):
         """
         return self._is_output
 
-    def set_output(self, value):
+    def set_output(self, value, timeout=2.0):
         """
         Control the state of the Digital Output.
 
         @param value bool    - new state {True, False} of the Output.
+        @param timeout (float)  - Seconds to wait for the io to reflect command.
+                                  If 0, just command once and return.  [0]
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
@@ -113,4 +116,13 @@ class DigitalIO(object):
         cmd.name = self._id
         cmd.value = value
         self._pub_output.publish(cmd)
+
+        if not timeout == 0:
+            dataflow.wait_for(
+                test=lambda: self._state['state'] == value,
+                timeout=timeout,
+                rate=100,
+                timeout_msg=("Failed to command digital io to: %r" % value),
+                body=lambda: self._pub_output.publish(cmd)
+                )
 
