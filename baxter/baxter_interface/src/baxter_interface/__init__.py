@@ -32,6 +32,7 @@ from limb import Limb
 from digital_io import DigitalIO
 from analog_io import AnalogIO
 from navigator import Navigator
+from camera import CameraController
 from settings import (
     JOINT_ANGLE_TOLERANCE,
 )
