@@ -29,10 +29,11 @@
 
 """
 Baxter RSDK Joint Trajectory Controller
-    Unlike pr2, this is not an Motor Controller plugin, but
+    Unlike the PR2, this is not a Motor Controller plugin, but
     a regular node running SDK side.
 """
 import sys
+import argparse
 
 import roslib
 roslib.load_manifest('baxter_interface')
@@ -50,15 +51,18 @@ def usage(argv):
 
 def main(limb):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_trajectory_controller_" + limb)
-    print("Initializing trajectory interfaces...")
-    fjtas = FJTAS(limb)
+    rospy.init_node("rethink_rsdk_joint_trajectory_controller%s" % ("" if limb == 'both' else "_" + limb,))
+    print("Initializing trajectory interface...")
+    if limb == 'both':
+        fjtas = FJTAS('right')
+        fjtas = FJTAS('left')
+    else:
+        fjtas = FJTAS(limb)
     print("Running. Ctrl-c to quit")
     rospy.spin()
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        limb = sys.argv[1]
-        main(limb)
-    else:
-        usage(sys.argv)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--limb", dest="limb", default="both", help="trajectory controller limb [both | left | right]")
+    args = parser.parse_args()
+    main(args.limb)
