@@ -35,6 +35,7 @@ from baxter_msgs.msg import (
     AnalogIOState,
     AnalogOutputCommand,
 )
+import dataflow
 
 class AnalogIO(object):
     """
@@ -62,24 +63,18 @@ class AnalogIO(object):
             AnalogIOState,
             self._on_io_state)
 
-        rate = rospy.Rate(10)
-        timeout = rospy.Time.now() + rospy.Duration(2)
-        while not rospy.is_shutdown() and timeout > rospy.Time.now():
-            if len(self._state.keys()):
-                break
-            rate.sleep()
-        if not len(self._state.keys()):
-            raise IOError(errno.ETIMEDOUT, "Failed to connect to baxter")
+        dataflow.wait_for(
+            lambda: len(self._state.keys()) != 0,
+            timeout=2.0,
+            timeout_msg="Failed to get current analog_io state from %s" \
+            % (topic_base,),
+            )
 
         # check if output-capable before creating publisher
         if self._is_output:
             self._pub_output = rospy.Publisher(
                 type_ns + '/command',
-                AnalogOutputCommand, latch=True)
-        # Message is latched because there is a non-zero delay between
-        # publisher creation and subscriber connection, where messages could
-        # otherwise be lost.
-        # See also: http://answers.ros.org/question/32952/with-rospy-messages-dont-seem-to-be-recieved-if-published-soon-after-creating-the-publisher/
+                AnalogOutputCommand)
 
     def _on_io_state(self, msg):
         """
@@ -100,11 +95,13 @@ class AnalogIO(object):
         """
         return self._is_output
 
-    def set_output(self, value):
+    def set_output(self, value, timeout=2.0):
         """
         Control the state of the Analog Output.
 
         @param value uint16    - new state of the Output.
+        @param timeout (float)  - Seconds to wait for the io to reflect command.
+                                  If 0, just command once and return.  [0]
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
@@ -114,3 +111,11 @@ class AnalogIO(object):
         cmd.value = value
         self._pub_output.publish(cmd)
 
+        if not timeout == 0:
+            dataflow.wait_for(
+                test=lambda: self.state() == value,
+                timeout=timeout,
+                rate=100,
+                timeout_msg=("Failed to command analog io to: %d" % (value,)),
+                body=lambda: self._pub_output.publish(cmd)
+                )
