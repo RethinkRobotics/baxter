@@ -35,6 +35,7 @@ from baxter_msgs.msg import (
     AnalogIOState,
     AnalogOutputCommand,
 )
+import dataflow
 
 class AnalogIO(object):
     """
@@ -94,7 +95,7 @@ class AnalogIO(object):
         """
         return self._is_output
 
-    def set_output(self, value):
+    def set_output(self, value, timeout=2.0):
         """
         Control the state of the Analog Output.
 
