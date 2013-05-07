@@ -119,7 +119,7 @@ if __name__ == '__main__':
     test_dict = {
         'version': None,
         'valid_tests': {
-            '1.1.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+            '0.6.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
                 'Grippers', 'BlinkLEDs', 'Cameras'],
             }
         }
