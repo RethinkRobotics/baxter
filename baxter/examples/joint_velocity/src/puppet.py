@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+import sys
 
 import roslib
 roslib.load_manifest('joint_velocity')
@@ -104,11 +105,18 @@ class Puppeteer(object):
             return True
 
 if __name__ == '__main__':
+    max_gain = 3.0
+    min_gain = 0.1
+
     parser = argparse.ArgumentParser()
     parser.add_argument("limb", help="specify the limb to puppet: left or right")
-    parser.add_argument("-a", "--amplification", dest="amplification", type=float, default=1.0, help="amplification to apply to the puppeted arm")
+    parser.add_argument("-a", "--amplification", dest="amplification", type=float,
+        default=1.0, help=("amplification to apply to the puppeted arm [%g, %g]" % (min_gain, max_gain)))
     args, unknown = parser.parse_known_args()
-
+    if (args.amplification < min_gain or max_gain < args.amplification):
+        print("Exiting: Amplication must be between: [%g, %g]" % (min_gain, max_gain))
+        sys.exit(1)
+    
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_velocity_puppet", anonymous=True)
     print("Getting robot state... ")
