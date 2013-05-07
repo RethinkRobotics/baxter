@@ -114,9 +114,9 @@ if __name__ == '__main__':
         default=1.0, help=("amplification to apply to the puppeted arm [%g, %g]" % (min_gain, max_gain)))
     args, unknown = parser.parse_known_args()
     if (args.amplification < min_gain or max_gain < args.amplification):
-        print("Exiting: Amplication must be between: [%g, %g]" % (min_gain, max_gain))
+        print("Exiting: Amplification must be between: [%g, %g]" % (min_gain, max_gain))
         sys.exit(1)
-    
+
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_velocity_puppet", anonymous=True)
     print("Getting robot state... ")
