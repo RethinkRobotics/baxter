@@ -93,9 +93,9 @@ class Limb(object):
             self._joint_effort[msg.name[i]] = msg.effort[i]
 
     def _on_endpoint_states(self, msg):
-        self._cartesian_pose = msg.Pose
-        self._cartesian_velocity = msg.Twist
-        self._cartesian_effort = msg.Wrench
+        self._cartesian_pose = msg.pose
+        self._cartesian_velocity = msg.twist
+        self._cartesian_effort = msg.wrench
 
     def joints(self):
         """
