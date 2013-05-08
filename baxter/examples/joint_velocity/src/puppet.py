@@ -89,7 +89,7 @@ class Puppeteer(object):
                     if name in ('s0', 'e0', 'w0', 'w2'):
                         v = -v
                     cmd[name] = v * self._amp
-                self._this_arm.set_velocities(cmd)
+                self._this_arm.set_joint_velocities(cmd)
                 rate.sleep()
 
         rate = rospy.Rate(100);
@@ -97,8 +97,8 @@ class Puppeteer(object):
             for i in range(100):
                 if rospy.is_shutdown():
                     return False
-                self._this_arm.set_position_mode()
-                self._other_arm.set_position_mode()
+                self._this_arm.set_joint_position_mode()
+                self._other_arm.set_joint_position_mode()
                 rate.sleep()
             #return to normal
             self.set_neutral()

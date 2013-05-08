@@ -239,7 +239,7 @@ class MoveArms(SmokeTest):
             """Threaded joint movement allowing for simultaneous joint moves
             """
             try:
-                limb.set_pose(angle, timeout)
+                limb.move_to_joint_positions(angle, timeout)
                 queue.put(None)
             except Exception, exception:
                 queue.put(traceback.format_exc())
