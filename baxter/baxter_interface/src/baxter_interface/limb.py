@@ -25,7 +25,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from copy import copy
+from copy import deepcopy
 
 import roslib
 roslib.load_manifest('baxter_interface')
@@ -89,7 +89,7 @@ class Limb(object):
             rate = (1.0 / (now - self._last_state_time).to_sec())
             self._state_rate = ((99 * self._state_rate) + rate)/100
         self._last_state_time = now
-        for i in xrange(len(msg.name)):
+        for i in range(len(msg.name)):
             self._joint_angle[msg.name[i]] = msg.position[i]
             self._joint_velocity[msg.name[i]] = msg.velocity[i]
             self._joint_effort[msg.name[i]] = msg.effort[i]
@@ -129,7 +129,7 @@ class Limb(object):
         """
         Return all joint angles.
         """
-        return copy(self._joint_angle)
+        return deepcopy(self._joint_angle)
 
     def joint_velocity(self, joint):
         """
@@ -143,7 +143,7 @@ class Limb(object):
         """
         Return all joint velocities.
         """
-        return copy(self._joint_velocity)
+        return deepcopy(self._joint_velocity)
 
     def joint_effort(self, joint):
         """
@@ -157,25 +157,25 @@ class Limb(object):
         """
         Return all joint efforts.
         """
-        return copy(self._joint_effort)
+        return deepcopy(self._joint_effort)
 
     def endpoint_pose(self):
         """
         Return cartesian endpoint pose (position, orientation).
         """
-        return copy(self._cartesian_pose)
+        return deepcopy(self._cartesian_pose)
 
     def endpoint_velocity(self):
         """
         Return cartesian endpoint twist, a.k.a. velocity (linear, angular).
         """
-        return copy(self._cartesian_velocity)
+        return deepcopy(self._cartesian_velocity)
 
     def endpoint_effort(self):
         """
         Return cartesian endpoint wrench, a.k.a. effort (force, torque).
         """
-        return copy(self._cartesian_effort)
+        return deepcopy(self._cartesian_effort)
 
     def set_joint_position_mode(self):
         """
