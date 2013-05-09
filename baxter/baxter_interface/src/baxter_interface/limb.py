@@ -25,6 +25,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from copy import copy
+
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -117,6 +119,12 @@ class Limb(object):
         """
         return self._joint_angle[joint]
 
+    def joint_angles(self):
+        """
+        Return all joint angles.
+        """
+        return copy(self._joint_angle)
+
     def joint_velocity(self, joint):
         """
         Return the requested joint velocity.
@@ -125,6 +133,12 @@ class Limb(object):
         """
         return self._joint_velocity[joint]
 
+    def joint_velocities(self):
+        """
+        Return all joint velocities.
+        """
+        return copy(self._joint_velocity)
+
     def joint_effort(self, joint):
         """
         Return the requested joint effort.
@@ -132,6 +146,12 @@ class Limb(object):
         @param joint    - name of a joint
         """
         return self._joint_effort[joint]
+
+    def joint_efforts(self):
+        """
+        Return all joint efforts.
+        """
+        return copy(self._joint_effort)
 
     def set_joint_position_mode(self):
         """
@@ -186,7 +206,7 @@ class Limb(object):
     def move_to_joint_positions(self, positions, timeout=15.0):
         """
         @param positions dict({str:float})   - dictionary of joint_name:angle
-        @param timeout    - seconds to wait for move to finish [10]
+        @param timeout    - seconds to wait for move to finish [15]
 
         Commands the limb to the provided positions.  Waits until the reported
         joint state matches that specified.
