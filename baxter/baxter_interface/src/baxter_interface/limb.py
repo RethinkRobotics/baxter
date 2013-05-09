@@ -48,9 +48,9 @@ class Limb(object):
         self._joint_angle = {}
         self._joint_velocity = {}
         self._joint_effort = {}
-        self._cartesian_pose = {}
-        self._cartesian_velocity = {}
-        self._cartesian_effort = {}
+        self._cartesian_pose = None
+        self._cartesian_velocity = None
+        self._cartesian_effort = None
 
         ns = '/robot/limb/' + limb + '/'
         sdkns = '/sdk' + ns
@@ -158,6 +158,24 @@ class Limb(object):
         Return all joint efforts.
         """
         return copy(self._joint_effort)
+
+    def endpoint_pose(self):
+        """
+        Return cartesian endpoint pose (position, orientation).
+        """
+        return copy(self._cartesian_pose)
+
+    def endpoint_velocity(self):
+        """
+        Return cartesian endpoint twist, a.k.a. velocity (linear, angular).
+        """
+        return copy(self._cartesian_velocity)
+
+    def endpoint_effort(self):
+        """
+        Return cartesian endpoint wrench, a.k.a. effort (force, torque).
+        """
+        return copy(self._cartesian_effort)
 
     def set_joint_position_mode(self):
         """
