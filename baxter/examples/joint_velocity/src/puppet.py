@@ -65,8 +65,8 @@ class Puppeteer(object):
 
         """
         print("Moving to neutral pose...")
-        self._this_arm.set_neutral_pose()
-        self._other_arm.set_neutral_pose()
+        self._this_arm.move_to_neutral()
+        self._other_arm.move_to_neutral()
 
     def puppet(self):
         """

@@ -87,7 +87,7 @@ class Limb(object):
             rate = (1.0 / (now - self._last_state_time).to_sec())
             self._state_rate = ((99 * self._state_rate) + rate)/100
         self._last_state_time = now
-        for i in range(len(msg.name)):
+        for i in xrange(len(msg.name)):
             self._joint_angle[msg.name[i]] = msg.position[i]
             self._joint_velocity[msg.name[i]] = msg.velocity[i]
             self._joint_effort[msg.name[i]] = msg.effort[i]
@@ -173,7 +173,7 @@ class Limb(object):
         self.set_joint_velocity_mode()
         self._pub_joint_velocity.publish(msg)
 
-    def set_neutral_pose(self):
+    def move_to_neutral(self):
         """
         Command the joints to the center of their joint ranges
         """
@@ -183,12 +183,12 @@ class Limb(object):
 
         return self.move_to_joint_positions(angles)
 
-    def move_to_joint_positions(self, pose, timeout=15.0):
+    def move_to_joint_positions(self, positions, timeout=15.0):
         """
-        @param pose dict({str:float})   - dictionary of joint_name:angle
+        @param positions dict({str:float})   - dictionary of joint_name:angle
         @param timeout    - seconds to wait for move to finish [10]
 
-        Commands the limb to the provided pose.  Waits until the reported
+        Commands the limb to the provided positions.  Waits until the reported
         joint state matches that specified.
         """
         def genf(joint, angle):
@@ -196,11 +196,11 @@ class Limb(object):
                 return abs(angle - self._joint_angle[joint])
             return joint_diff
 
-        diffs = [genf(j,a) for j,a in pose.items() if j in self._joint_angle]
+        diffs = [genf(j,a) for j,a in positions.items() if j in self._joint_angle]
 
         dataflow.wait_for(
             lambda: not any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs),
             timeout=timeout,
             rate=100,
-            body=lambda: self.set_joint_positions(pose)
+            body=lambda: self.set_joint_positions(positions)
             )

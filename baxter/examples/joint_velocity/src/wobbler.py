@@ -67,8 +67,8 @@ class Wobbler():
 
         """
         print("Moving to neutral pose...")
-        self._left_arm.set_neutral_pose()
-        self._right_arm.set_neutral_pose()
+        self._left_arm.move_to_neutral()
+        self._right_arm.move_to_neutral()
 
     def wobble(self):
         self.set_neutral()
