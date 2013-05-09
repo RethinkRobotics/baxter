@@ -48,9 +48,9 @@ class Limb(object):
         self._joint_angle = {}
         self._joint_velocity = {}
         self._joint_effort = {}
-        self._cartesian_pose = None
-        self._cartesian_velocity = None
-        self._cartesian_effort = None
+        self._cartesian_pose = {}
+        self._cartesian_velocity = {}
+        self._cartesian_effort = {}
 
         ns = '/robot/limb/' + limb + '/'
         sdkns = '/sdk' + ns
@@ -95,9 +95,46 @@ class Limb(object):
             self._joint_effort[msg.name[i]] = msg.effort[i]
 
     def _on_endpoint_states(self, msg):
-        self._cartesian_pose = msg.pose
-        self._cartesian_velocity = msg.twist
-        self._cartesian_effort = msg.wrench
+        #_pose = {'position': (x, y, z), 'orientation': (x, y, z, w)}
+        self._cartesian_pose = {
+            'position': (
+                msg.pose.position.x,
+                msg.pose.position.y,
+                msg.pose.position.z,
+            ),
+            'orientation': (
+                msg.pose.orientation.x,
+                msg.pose.orientation.y,
+                msg.pose.orientation.z,
+                msg.pose.orientation.w,
+            ),
+        }
+        #_twist = {'linear': (x, y, z), 'angular': (x, y, z)}
+        self._cartesian_velocity = {
+            'linear': (
+                msg.twist.linear.x,
+                msg.twist.linear.y,
+                msg.twist.linear.z,
+            ),
+            'angular': (
+                msg.twist.angular.x,
+                msg.twist.angular.y,
+                msg.twist.angular.z,
+            ),
+        }
+        #_wrench = {'force': (x, y, z), 'torque': (x, y, z)}
+        self._cartesian_effort = {
+            'force': (
+                msg.wrench.force.x,
+                msg.wrench.force.y,
+                msg.wrench.force.z,
+            ),
+            'torque': (
+                msg.wrench.torque.x,
+                msg.wrench.torque.y,
+                msg.wrench.torque.z,
+            ),
+        }
 
     def joints(self):
         """
