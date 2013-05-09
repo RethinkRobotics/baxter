@@ -32,6 +32,8 @@ nosetests.xml
 # Mr Developer
 .mr.developer.cfg
 .project
+.cproject
+cmake_install.cmake
 .pydevproject
 *.swp
 
