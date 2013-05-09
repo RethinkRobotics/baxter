@@ -99,12 +99,6 @@ class Limb(object):
         self._cartesian_velocity = msg.twist
         self._cartesian_effort = msg.wrench
 
-    def validate_name(self, joint_name):
-        """
-        Transforms joint name into valid (local) form for limb interface.
-        """
-        return joint_name.split('_')[-1]
-
     def joints(self):
         """
         Return the names of the joints for which data has been received
@@ -123,7 +117,7 @@ class Limb(object):
 
         @param joint    - name of a joint
         """
-        return self._joint_angle[self.validate_name(joint)]
+        return self._joint_angle[joint]
 
     def joint_angles(self):
         """
@@ -137,7 +131,7 @@ class Limb(object):
 
         @param joint    - name of a joint
         """
-        return self._joint_velocity[self.validate_name(joint)]
+        return self._joint_velocity[joint]
 
     def joint_velocities(self):
         """
@@ -151,7 +145,7 @@ class Limb(object):
 
         @param joint    - name of a joint
         """
-        return self._joint_effort[self.validate_name(joint)]
+        return self._joint_effort[joint]
 
     def joint_efforts(self):
         """
@@ -237,10 +231,10 @@ class Limb(object):
         """
         def genf(joint, angle):
             def joint_diff():
-                return abs(angle - self._joint_angle[self.validate_name(joint)])
+                return abs(angle - self._joint_angle[joint])
             return joint_diff
 
-        diffs = [genf(j,a) for j,a in positions.items() if self.validate_name(j) in self._joint_angle]
+        diffs = [genf(j,a) for j,a in positions.items() if j in self._joint_angle]
 
         dataflow.wait_for(
             lambda: not any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs),
