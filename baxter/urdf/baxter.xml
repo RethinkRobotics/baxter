@@ -152,6 +152,13 @@
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
   </link>
+  <link name="head_camera">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
   <link name="dummyhead1">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -254,6 +261,11 @@
     <origin rpy="1.9198622 0.0 1.571" xyz=".088 0.0 0.0"/>
     <parent link="head"/>
     <child link="screen"/>
+  </joint>
+  <joint name="head_camera" type="fixed">
+    <origin rpy="1.9198622 0.0 1.571" xyz="0.12839 0.0 0.06368"/>
+    <parent link="head"/>
+    <child link="head_camera"/>
   </joint>
   <joint name="sonar_s0" type="fixed">
     <origin rpy="0 0 0" xyz="0.0947 0 .817"/>
