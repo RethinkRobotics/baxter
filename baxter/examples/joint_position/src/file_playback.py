@@ -97,9 +97,9 @@ def map_file(filename, loops=1):
                     print("\n stopped")
                     return False
                 if len(lcmd):
-                    left.set_positions(lcmd)
+                    left.set_joint_positions(lcmd)
                 if len(rcmd):
-                    right.set_positions(rcmd)
+                    right.set_joint_positions(rcmd)
                 if 'left_gripper' in cmd:
                     grip_left.set_position(cmd['left_gripper'])
                 if 'left_gripper' in cmd:
