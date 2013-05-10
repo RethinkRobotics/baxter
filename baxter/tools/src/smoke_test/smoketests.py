@@ -239,7 +239,7 @@ class MoveArms(SmokeTest):
             """Threaded joint movement allowing for simultaneous joint moves
             """
             try:
-                limb.set_pose(angle, timeout)
+                limb.move_to_joint_positions(angle, timeout)
                 queue.put(None)
             except Exception, exception:
                 queue.put(traceback.format_exc())
@@ -322,8 +322,8 @@ class Grippers(SmokeTest):
             self._rs.enable()
             right = baxter_interface.Limb('right')
             left = baxter_interface.Limb('left')
-            right.set_neutral_pose()
-            left.set_neutral_pose()
+            right.move_to_neutral()
+            left.move_to_neutral()
             rospy.sleep(2.0)
             print("Test: Subscribe to Gripper State.")
             rospy.wait_for_message(
