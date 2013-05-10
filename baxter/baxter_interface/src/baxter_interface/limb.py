@@ -192,19 +192,19 @@ class Limb(object):
 
     def endpoint_pose(self):
         """
-        Return cartesian endpoint pose (position, orientation).
+        Return Cartesian endpoint pose {position, orientation}.
         """
         return deepcopy(self._cartesian_pose)
 
     def endpoint_velocity(self):
         """
-        Return cartesian endpoint twist, a.k.a. velocity (linear, angular).
+        Return Cartesian endpoint twist {linear, angular}.
         """
         return deepcopy(self._cartesian_velocity)
 
     def endpoint_effort(self):
         """
-        Return cartesian endpoint wrench, a.k.a. effort (force, torque).
+        Return Cartesian endpoint wrench {force, torque}.
         """
         return deepcopy(self._cartesian_effort)
 
