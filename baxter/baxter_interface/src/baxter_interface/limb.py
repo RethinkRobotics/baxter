@@ -26,6 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from copy import deepcopy
+import collections
 
 import roslib
 roslib.load_manifest('baxter_interface')
@@ -38,6 +39,10 @@ import settings
 import dataflow
 
 class Limb(object):
+    # Containers
+    Point = collections.namedtuple('Point', ['x','y','z'])
+    Quaternion = collections.namedtuple('Quaternion', ['x','y','z','w'])
+
     def __init__(self, limb):
         """
         Interface class for a limb on the Baxter robot.
@@ -97,12 +102,12 @@ class Limb(object):
     def _on_endpoint_states(self, msg):
         #_pose = {'position': (x, y, z), 'orientation': (x, y, z, w)}
         self._cartesian_pose = {
-            'position': (
+            'position': self.Point(
                 msg.pose.position.x,
                 msg.pose.position.y,
                 msg.pose.position.z,
             ),
-            'orientation': (
+            'orientation': self.Quaternion(
                 msg.pose.orientation.x,
                 msg.pose.orientation.y,
                 msg.pose.orientation.z,
@@ -111,12 +116,12 @@ class Limb(object):
         }
         #_twist = {'linear': (x, y, z), 'angular': (x, y, z)}
         self._cartesian_velocity = {
-            'linear': (
+            'linear': self.Point(
                 msg.twist.linear.x,
                 msg.twist.linear.y,
                 msg.twist.linear.z,
             ),
-            'angular': (
+            'angular': self.Point(
                 msg.twist.angular.x,
                 msg.twist.angular.y,
                 msg.twist.angular.z,
@@ -124,12 +129,12 @@ class Limb(object):
         }
         #_wrench = {'force': (x, y, z), 'torque': (x, y, z)}
         self._cartesian_effort = {
-            'force': (
+            'force': self.Point(
                 msg.wrench.force.x,
                 msg.wrench.force.y,
                 msg.wrench.force.z,
             ),
-            'torque': (
+            'torque': self.Point(
                 msg.wrench.torque.x,
                 msg.wrench.torque.y,
                 msg.wrench.torque.z,
