@@ -133,10 +133,10 @@ def map_joystick(joystick):
                 else:
                     print(doc)
         if len(lcmd):
-            left.set_positions(lcmd)
+            left.set_joint_positions(lcmd)
             lcmd.clear()
         if len(rcmd):
-            right.set_positions(rcmd)
+            right.set_joint_positions(rcmd)
             rcmd.clear()
         rate.sleep()
     return False

@@ -69,7 +69,7 @@ class FJTAS(object):
                 deltas = [(tgt-cur) for tgt,cur in zip(point.positions, current)]
                 velocities = [d / time_left for d in deltas]
                 cmd = dict(zip(trajectory.joint_names, velocities))
-                self._limb.set_velocities(cmd)
+                self._limb.set_joint_velocities(cmd)
                 rate.sleep()
                 time_left = arrive_at - (rospy.get_time() - start_time)
         self._server.set_succeeded()
