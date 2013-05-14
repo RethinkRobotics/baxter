@@ -58,6 +58,7 @@ import baxter_interface
 from baxter_msgs.msg import (
     AnalogIOStates,
     GripperState,
+    GripperIdentity,
     )
 from baxter_msgs.srv import (
     SolvePositionIK,
@@ -325,6 +326,21 @@ class Grippers(SmokeTest):
             right.move_to_neutral()
             left.move_to_neutral()
             rospy.sleep(2.0)
+            print("Test: Verify Gripper Identity")
+            gripper_id = rospy.wait_for_message(
+                '/sdk/robot/limb/right/accessory/gripper/identity',
+                GripperIdentity,
+                5.0
+                )
+            if not 'electric gripper' in gripper_id.name:
+                raise NameError("Grippers Test Requires Two Electric Grippers")
+            gripper_id = rospy.wait_for_message(
+                '/sdk/robot/limb/left/accessory/gripper/identity',
+                GripperIdentity,
+                5.0
+                )
+            if not 'electric gripper' in gripper_id.name:
+                raise NameError("Grippers Test Requires Two Electric Grippers")
             print("Test: Subscribe to Gripper State.")
             rospy.wait_for_message(
                 '/sdk/robot/limb/left/accessory/gripper/state',
@@ -422,7 +438,7 @@ class Cameras(SmokeTest):
         """Runs Cameras Smoke Test
         """
 
-        _xpub_img = rospy.Publisher(
+        xpub_img = rospy.Publisher(
             '/sdk/xdisplay',
             Image
         )
@@ -435,7 +451,7 @@ class Cameras(SmokeTest):
             print("Test: Opening %s" % name)
             camera.open()
             print("Test: Display %s to Screen - 10 Seconds" % name)
-            _camera_sub = rospy.Subscriber(
+            camera_sub = rospy.Subscriber(
                 '/cameras/' + name + "/image",
                 Image,
                 _repub_cb
@@ -447,7 +463,7 @@ class Cameras(SmokeTest):
         def _repub_cb(msg):
             """Camera image republish callback
             """
-            _xpub_img.publish(msg)
+            xpub_img.publish(msg)
 
         def _reset_screen():
             """Reset the screen to research sdk image
@@ -462,12 +478,22 @@ class Cameras(SmokeTest):
                 )
             img = cv.LoadImage(image_path)
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
-            _xpub_img.publish(msg)
+            xpub_img.publish(msg)
+
+        def _reset_defaults():
+            """Turn on the left/right_hand_cameras with default settings
+            """
+            print("Restarting the Default Cameras...")
+            for i in range(1, 3):
+                camera = baxter_interface.CameraController(camera_names[i])
+                camera.resolution = (320, 200,)
+                camera.fps = 25
+                camera.open()
 
         try:
             print("Enabling robot...")
             self._rs.enable()
-            print("Test: Verify Left_Hand, Right_Hand, and Head" \
+            print("Test: Verify Left_Hand, Right_Hand, and Head " \
                 "Cameras Present")
             camera_names = (
                 'head_camera',
@@ -480,10 +506,14 @@ class Cameras(SmokeTest):
             camera_list = camera_list_srv()
             for camera_name in camera_names:
                 if not camera_name in camera_list.cameras:
-                    raise Exception("Could not find camera - %s" % camera_name)
+                    raise NameError("Could not find camera - %s" % camera_name)
                 else:
                     camera = baxter_interface.CameraController(camera_name)
-                    _display(camera, camera_name)
+                    camera.close()
+            for camera_name in camera_names:
+                camera = baxter_interface.CameraController(camera_name)
+                _display(camera, camera_name)
+            _reset_defaults()
             print("Disabling robot...")
             self._rs.disable()
             self.result[0] = True
