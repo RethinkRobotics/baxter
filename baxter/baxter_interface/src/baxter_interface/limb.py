@@ -143,13 +143,13 @@ class Limb(object):
 
     def joints(self):
         """
-        Return the names of the joints for which data has been received
+        Return the names of the joints for which data has been received.
         """
         return self._joint_angle.keys()
 
     def state_rate(self):
         """
-        Return the rate at which joint state has been received
+        Return the rate at which the joint and Cartesian states are received.
         """
         return self._state_rate
 
