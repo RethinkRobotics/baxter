@@ -103,7 +103,10 @@ class SmokeTest(object):
         """
         self.result[0] = False
         self.result[1] = trace
-        self._rs.disable()
+        try:
+            self._rs.disable()
+        except:
+            pass
 
 class Enable(SmokeTest):
     """Verify ability to enable, check state and disable baxter.
