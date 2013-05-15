@@ -97,7 +97,14 @@ def main(limb):
         resp = iksvc(ikreq)
     except rospy.ServiceException,e :
         rospy.loginfo("Service call failed: %s" % (e,))
-    print(resp)
+    if (resp.isValid[0]):
+        print("SUCCESS - Valid Joint Solution Found:")
+        # Format solution into Limb API-compatible dictionary with valid joint names
+        limb_joints = dict(zip([name[-2:] for name in resp.joints[0].names], resp.joints[0].angles))
+        print limb_joints
+    else:
+        print("INVALID POSE - No Valid Joint Solution Found.")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
