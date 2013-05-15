@@ -2,21 +2,23 @@ SDK Examples
 ============
 RSDK Wiki:  http://github.com/RethinkRobotics/sdk-docs/wiki
 
-## Start:
-1. Source `init.sh` to initialize the RSDK Shell environment
-    ```
+## Start
+
+1. Source `init.sh` to initialize the RSDK Shell environment.  
+    ```bash
     $ ./init.sh <robot_hostname or ip> [ROS distro]
     ```
-  - Optionally provide the ROS Master hostname or IP address, and ROS distro.  
-2. (Install Dependencies)
-    ```
+   - Optionally provide the ROS Master hostname or IP address, and ROS distro.  
+
+2. (Install Dependencies)  
+    ```bash
     $ sudo apt-get install ros-electric-control ros-electric-joystick-drivers ros-electric-geometry  
     $ sudo apt-get install python-argparse  
-    ```
+    ```  
 3. (Build RSDK packages with `rosmake`)
   - Use `$ rosmake baxter --pre-clean` to make all baxter packages.  
   - Use `$ rosmake joint_position` to make the joint_position package with dependencies.  
-3. Enable Baxter with the tools enable_robot.py script
+3. Enable Baxter with the tools enable_robot.py script  
   - Use `$ rosrun tools enable_robot.py -e` to enable Baxter (see help with `-h`).  
 
 
