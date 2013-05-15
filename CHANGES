@@ -9,9 +9,6 @@ Overview
 The Research SDK provides a platform for roboticists to develop custom 
 applications to run on the Baxter hardware platform.
 
-It is designed for high level AI researchers, and those who work at the controls 
-level, interested in kinematics, dynamics, force-based algorithms, and 
-controlling redundant systems.
 
 See our wiki for more information:
 
@@ -32,31 +29,35 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Baxter-Research-Robot-Hardware-
 Additions
 =========
 
-*Added installer
-*Added puppet example
-*Added joint trajectory example
-*Added joint velocity example
-*Exposed IK solver
-*Added camera control and navigation
+*Added ability to update the robot software via ros command line interface
+*Added joint trajectory interface
+*Added joint velocity puppet example
+*Added navigator interface (buttons, LEDs) and example.
+*Exposed inverse kinematics solver
+*Added camera interface, open/close/list all available cameras. Ability to adjust frame size, resolution, frames/second, gains, etc...
 *Added cartesian endpoint state
-*Added core manager
+*Added core manager allowing for listing, extraction and removal of saved core files
+*Added PlayStation 3 joystick support
 *Added smoke test
 
 Removals
 ========
 
+-Removed enable/disable service calls
 
 Changes
 =======
 
 -Updated URDF
--Updated limb API
+-Updated Baxter interface limb.py api changes. Generic naming 
 -Changed mechanism for enabling robot
+-Init.sh script now support all ros versions
 
 Fixes
 =====
 -Fixed issue with exiting joystick examples
 -Fixed wobbler periodically exits with 'failed to disable robot'
+-Added numerous timeouts on state transitions (ie. robot enable, gripper calibration) and position movement validations (head position, limb joint positions).
 
 Issues
 ======
