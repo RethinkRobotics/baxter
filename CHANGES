@@ -1,7 +1,7 @@
-Rethink Robotics Research SDK 0.5.2 Release Notes
+Rethink Robotics Research SDK 0.6.0 Release Notes
 =================================================
 
-Date: 3/26/2013
+Date: 5/15/2013
 
 Overview
 ========
@@ -32,9 +32,15 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Baxter-Research-Robot-Hardware-
 Additions
 =========
 
-*Added ability to control gripper with joystick
-*Refactoring of joint_position example
-*Added example image for xdisplay example
+*Added installer
+*Added puppet example
+*Added joint trajectory example
+*Added joint velocity example
+*Exposed IK solver
+*Added camera control and navigation
+*Added cartesian endpoint state
+*Added core manager
+*Added smoke test
 
 Removals
 ========
@@ -43,14 +49,14 @@ Removals
 Changes
 =======
 
-*Moved xdisplay to head_control directory
-*Changed startup graphic
+-Updated URDF
+-Updated limb API
+-Changed mechanism for enabling robot
 
 Fixes
 =====
--Collision avoidance regression in urdf
--Velocity commands time out
--Joint drift on joint_position
+-Fixed issue with exiting joystick examples
+-Fixed wobbler periodically exits with 'failed to disable robot'
 
 Issues
 ======
@@ -58,9 +64,6 @@ Issues
 -Calibration and Tare scripts will not run if there is a joint error at the head. 
 Joint errors can be found in the robot monitor. 
 https://github.com/RethinkRobotics/sdk-docs/wiki/Tools---robot_monitor
-
--When exiting joystick examples, hitting any key will exit example but not the 
-joy_node which requires Ctrl-C to exit.
-
--Wobbler periodically exits with 'failed to disable robot'
+-The ROS_HOSTNAME is always set to "<robot_hostname>.local", 
+which needs to be resolvable by a client machine (avahi, /etc/hosts or DNS server configuration)
 
