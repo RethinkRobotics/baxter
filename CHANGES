@@ -1,17 +1,13 @@
-Rethink Robotics Research SDK 0.5.2 Release Notes
+Rethink Robotics Research SDK 0.6.0 Release Notes
 =================================================
 
-Date: 3/26/2013
+Date: 5/15/2013
 
 Overview
 ========
 
 The Research SDK provides a platform for roboticists to develop custom 
 applications to run on the Baxter hardware platform.
-
-It is designed for high level AI researchers, and those who work at the controls 
-level, interested in kinematics, dynamics, force-based algorithms, and 
-controlling redundant systems.
 
 See our wiki for more information:
 
@@ -32,35 +28,41 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Baxter-Research-Robot-Hardware-
 Additions
 =========
 
-*Added ability to control gripper with joystick
-*Refactoring of joint_position example
-*Added example image for xdisplay example
+*Added ability to update the robot software via ros command line interface
+*Added joint trajectory interface
+*Added joint velocity puppet example
+*Added navigator interface (buttons, LEDs) and example.
+*Added inverse kinematics solver
+*Added camera interface, open/close/list all available cameras. Ability to adjust frame size, resolution, frames/second, gains, etc...
+*Added Cartesian endpoint state
+*Added core manager allowing for listing, extraction and removal of saved core files
+*Added PlayStation 3 joystick support
+*Added smoke test
 
 Removals
 ========
 
-
 Changes
 =======
 
-*Moved xdisplay to head_control directory
-*Changed startup graphic
+-Updated URDF
+-Updated Baxter interface limb.py api with more explicit naming
+-Init.sh script now supports all ros versions
+-Robot enable/disable now uses rostopic interface
+-Roslaunch instances have been replaced by rosrun scripts
 
 Fixes
 =====
--Collision avoidance regression in urdf
--Velocity commands time out
--Joint drift on joint_position
+
+-Fixed joystick examples to exit properly
+-Fixed wobbler periodic exiting with 'failed to disable robot'
+-Added numerous timeouts on state transitions (ie. robot enable, gripper calibration) and position movement validations (head position, limb joint positions).
 
 Issues
 ======
                                           
--Calibration and Tare scripts will not run if there is a joint error at the head. 
+-Calibration and Tare scripts will not run if there is a joint error related to the head.
 Joint errors can be found in the robot monitor. 
 https://github.com/RethinkRobotics/sdk-docs/wiki/Tools---robot_monitor
-
--When exiting joystick examples, hitting any key will exit example but not the 
-joy_node which requires Ctrl-C to exit.
-
--Wobbler periodically exits with 'failed to disable robot'
-
+-The ROS_HOSTNAME is always set to "<robot_hostname>.local", 
+which needs to be resolvable by a client machine (avahi, /etc/hosts or DNS server configuration)
