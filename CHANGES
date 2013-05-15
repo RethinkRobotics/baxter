@@ -9,7 +9,6 @@ Overview
 The Research SDK provides a platform for roboticists to develop custom 
 applications to run on the Baxter hardware platform.
 
-
 See our wiki for more information:
 
 https://github.com/RethinkRobotics/sdk-docs/wiki/Baxter-Overview
@@ -33,9 +32,9 @@ Additions
 *Added joint trajectory interface
 *Added joint velocity puppet example
 *Added navigator interface (buttons, LEDs) and example.
-*Exposed inverse kinematics solver
+*Added inverse kinematics solver
 *Added camera interface, open/close/list all available cameras. Ability to adjust frame size, resolution, frames/second, gains, etc...
-*Added cartesian endpoint state
+*Added Cartesian endpoint state
 *Added core manager allowing for listing, extraction and removal of saved core files
 *Added PlayStation 3 joystick support
 *Added smoke test
@@ -43,28 +42,27 @@ Additions
 Removals
 ========
 
--Removed enable/disable service calls
-
 Changes
 =======
 
 -Updated URDF
--Updated Baxter interface limb.py api changes. Generic naming 
--Changed mechanism for enabling robot
--Init.sh script now support all ros versions
+-Updated Baxter interface limb.py api with more explicit naming
+-Init.sh script now supports all ros versions
+-Robot enable/disable now uses rostopic interface
+-Roslaunch instances have been replaced by rosrun scripts
 
 Fixes
 =====
--Fixed issue with exiting joystick examples
--Fixed wobbler periodically exits with 'failed to disable robot'
+
+-Fixed joystick examples to exit properly
+-Fixed wobbler periodic exiting with 'failed to disable robot'
 -Added numerous timeouts on state transitions (ie. robot enable, gripper calibration) and position movement validations (head position, limb joint positions).
 
 Issues
 ======
                                           
--Calibration and Tare scripts will not run if there is a joint error at the head. 
+-Calibration and Tare scripts will not run if there is a joint error related to the head.
 Joint errors can be found in the robot monitor. 
 https://github.com/RethinkRobotics/sdk-docs/wiki/Tools---robot_monitor
 -The ROS_HOSTNAME is always set to "<robot_hostname>.local", 
 which needs to be resolvable by a client machine (avahi, /etc/hosts or DNS server configuration)
-
