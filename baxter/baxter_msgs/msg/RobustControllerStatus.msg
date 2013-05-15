@@ -17,9 +17,6 @@ string controlUid
 # without receiving an Enable message.
 bool timedOut
 
-# @deprecated DO NOT USE
-int32 error
-
 # A list of relevant error codes.  Error codes are defined by the individual
 # robust controllers, consult a robust controller's documentation to see what
 # error codes it generates.

@@ -152,6 +152,13 @@
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
   </link>
+  <link name="head_camera">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
   <link name="dummyhead1">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -254,6 +261,11 @@
     <origin rpy="1.9198622 0.0 1.571" xyz=".088 0.0 0.0"/>
     <parent link="head"/>
     <child link="screen"/>
+  </joint>
+  <joint name="head_camera" type="fixed">
+    <origin rpy="1.9198622 0.0 1.571" xyz="0.12839 0.0 0.06368"/>
+    <parent link="head"/>
+    <child link="head_camera"/>
   </joint>
   <joint name="sonar_s0" type="fixed">
     <origin rpy="0 0 0" xyz="0.0947 0 .817"/>
@@ -437,7 +449,7 @@
       </geometry>
     </collision>
     <inertial>
-      <origin rpy="0 0 0" xyz="0.06041 -0.00697 -0.006"/>
+      <origin rpy="0 0 0" xyz="0.06041 0.00697 0.006"/>
       <mass value="1.60979"/>
       <inertia ixx="0.00387607152" ixy="-0.00044384784" ixz="-0.00021115038" iyy="0.00700537914" iyz="0.00015348067" izz="0.0055275524"/>
     </inertial>
@@ -550,15 +562,15 @@
     </inertial>
   </link>
   <link name="right_hand_camera_axis">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.01" radius="0.02"/>
-      </geometry>
-      <material name="blue">
-        <color rgba="0 0 1 0.8"/>
-      </material>
-    </visual>
+    <!--visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.02" length="0.01" />
+        </geometry>
+        <material name="blue">
+          <color rgba="0 0 1 0.8" />
+        </material>
+      </visual-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0"/>
@@ -898,7 +910,7 @@
       </geometry>
     </collision>
     <inertial>
-      <origin rpy="0 0 0" xyz="0.06041 -0.00697 -0.006"/>
+      <origin rpy="0 0 0" xyz="0.06041 0.00697 0.006"/>
       <mass value="1.60979"/>
       <inertia ixx="0.00387607152" ixy="-0.00044384784" ixz="-0.00021115038" iyy="0.00700537914" iyz="0.00015348067" izz="0.0055275524"/>
     </inertial>
@@ -1011,15 +1023,15 @@
     </inertial>
   </link>
   <link name="left_hand_camera_axis">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.01" radius="0.02"/>
-      </geometry>
-      <material name="blue">
-        <color rgba="0 0 1 0.8"/>
-      </material>
-    </visual>
+    <!--visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.02" length="0.01" />
+        </geometry>
+        <material name="blue">
+          <color rgba="0 0 1 0.8" />
+        </material>
+      </visual-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0"/>

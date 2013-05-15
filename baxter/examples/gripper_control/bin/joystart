@@ -1,0 +1,19 @@
+#!/bin/bash
+
+kill_children() {
+  PIDS=$(pgrep -P ${1})
+  for p in ${PIDS}; do
+    kill_children ${p}
+    kill ${p} 2>/dev/null
+  done;
+}
+
+kill_my_children() {
+  kill_children $$
+}
+
+trap 'kill_my_children' SIGINT SIGTERM
+rosrun joy joy_node &
+rosrun gripper_control joystick.py ${1}
+kill_my_children
+

@@ -1,0 +1,4 @@
+geometry_msgs/PoseStamped[] pose_stamp
+---
+baxter_msgs/JointPositions[] joints
+bool[] isValid

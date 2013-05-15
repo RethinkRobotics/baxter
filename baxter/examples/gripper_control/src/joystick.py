@@ -91,10 +91,15 @@ def map_joystick(joystick):
     bindings_list.append(bindings)
 
     rate = rospy.Rate(100)
+    print_help(bindings_list)
     print("press any key to stop...")
     while not rospy.is_shutdown():
-        if iodevices.getch():
-            return True
+        c = iodevices.getch()
+        if c:
+            if c == '?':
+                print_help(bindings_list)
+            else:
+                return True
         for (test, cmd, doc) in bindings:
             if test[0](*test[1]):
                 cmd[0](*cmd[1])
@@ -107,7 +112,7 @@ def map_joystick(joystick):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("joystick", help="specify the type of joystick to use; xbox or logitech")
+    parser.add_argument("joystick", help="specify the type of joystick to use; xbox | logitech | ps3")
     args, unknown = parser.parse_known_args()
 
     print("Initializing node... ")
@@ -122,6 +127,8 @@ if __name__ == '__main__':
         joystick = iodevices.joystick.XboxController()
     elif args.joystick == 'logitech':
         joystick = iodevices.joystick.LogitechController()
+    elif args.joystick == 'ps3':
+        joystick = iodevices.joystick.PS3Controller()
     else:
         parser.error("Unsupported joystick type '%s'" % (args.joystick))
 

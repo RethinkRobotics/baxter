@@ -7,7 +7,12 @@
   <review status="unreviewed" notes=""/>
   <url>http://github.com/RethinkRobotics</url>
   <depend package="baxter_interface"/>
+  <depend package="baxter_msgs"/>
   <depend package="rospy"/>
+  <depend package="utilities"/>
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="cv_bridge"/>
 </package>
 
 

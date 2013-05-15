@@ -26,4 +26,4 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from wait_for import wait_for
-
+from signals import Signal

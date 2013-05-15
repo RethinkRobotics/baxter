@@ -42,7 +42,12 @@ def map_keyboard():
     right = baxter_interface.Limb('right')
     grip_left = baxter_interface.Gripper('left')
     grip_right = baxter_interface.Gripper('right')
-    set_j = lambda l,j,d: l.set_positions({j: d + l.joint_angle(j)})
+
+    def set_j(limb, joint_name, delta):
+        current_position = limb.joint_angle(joint_name)
+        joint_command = {joint_name: current_position + delta}
+        limb.set_joint_positions(joint_command)
+
     bindings = {
     #   key: (function, args, description)
         '9': (set_j, [left, 's0', 0.1], "left s0 increase"),
@@ -61,6 +66,7 @@ def map_keyboard():
         'n': (set_j, [left, 'w2', -0.1], "left w2 decrease"),
         ',': (grip_left.close, [], "left: gripper close"),
         'm': (grip_left.open, [], "left: gripper open"),
+        '/': (grip_left.calibrate, [], "left: gripper calibrate"),
 
         '4': (set_j, [right, 's0', 0.1], "right s0 increase"),
         '1': (set_j, [right, 's0', -0.1], "right s0 decrease"),
@@ -78,16 +84,19 @@ def map_keyboard():
         'z': (set_j, [right, 'w2', -0.1], "right w2 decrease"),
         'c': (grip_right.close, [], "right: gripper close"),
         'x': (grip_right.open, [], "right: gripper open"),
+        'b': (grip_right.calibrate, [], "right: gripper calibrate"),
      }
     done = False
     print("Controlling joints. Press ? for help, Esc to quit.")
     while not done and not rospy.is_shutdown():
         c = iodevices.getch()
         if c:
+            #catch Esc or ctrl-c
             if c in ['\x1b', '\x03']:
                 done = True
             elif c in bindings:
                 cmd = bindings[c]
+                #expand binding to something like "set_j(right, 's0', 0.1)"
                 cmd[0](*cmd[1])
                 print("command: %s" % (cmd[2],))
             else:

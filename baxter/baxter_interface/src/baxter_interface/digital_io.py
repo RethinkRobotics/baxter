@@ -35,6 +35,7 @@ from baxter_msgs.msg import (
     DigitalIOState,
     DigitalOutputCommand,
 )
+import dataflow
 
 class DigitalIO(object):
     """
@@ -62,24 +63,18 @@ class DigitalIO(object):
             DigitalIOState,
             self._on_io_state)
 
-        rate = rospy.Rate(10)
-        timeout = rospy.Time.now() + rospy.Duration(2)
-        while not rospy.is_shutdown() and timeout > rospy.Time.now():
-            if len(self._state.keys()):
-                break
-            rate.sleep()
-        if not len(self._state.keys()):
-            raise IOError(errno.ETIMEDOUT, "Failed to connect to baxter")
+        dataflow.wait_for(
+            lambda: len(self._state.keys()) != 0,
+            timeout=2.0,
+            timeout_msg="Failed to get current digital_io state from %s" \
+            % (topic_base,),
+            )
 
         # check if output-capable before creating publisher
         if self._is_output:
             self._pub_output = rospy.Publisher(
                 type_ns + '/command',
-                DigitalOutputCommand, latch=True)
-        # Message is latched because there is a non-zero delay between
-        # publisher creation and subscriber connection, where messages could
-        # otherwise be lost.
-        # See also: http://answers.ros.org/question/32952/with-rospy-messages-dont-seem-to-be-recieved-if-published-soon-after-creating-the-publisher/
+                DigitalOutputCommand)
 
     def _on_io_state(self, msg):
         """
@@ -100,11 +95,13 @@ class DigitalIO(object):
         """
         return self._is_output
 
-    def set_output(self, value):
+    def set_output(self, value, timeout=2.0):
         """
         Control the state of the Digital Output.
 
         @param value bool    - new state {True, False} of the Output.
+        @param timeout (float)  - Seconds to wait for the io to reflect command.
+                                  If 0, just command once and return.  [0]
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
@@ -113,4 +110,13 @@ class DigitalIO(object):
         cmd.name = self._id
         cmd.value = value
         self._pub_output.publish(cmd)
+
+        if not timeout == 0:
+            dataflow.wait_for(
+                test=lambda: self.state() == value,
+                timeout=timeout,
+                rate=100,
+                timeout_msg=("Failed to command digital io to: %r" % (value,)),
+                body=lambda: self._pub_output.publish(cmd)
+                )
 
