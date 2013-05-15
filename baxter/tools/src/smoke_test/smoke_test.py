@@ -33,6 +33,7 @@ RSDK Smoke Test Execution
 import sys
 import time
 import argparse
+import re
 import socket
 import traceback
 
@@ -137,11 +138,15 @@ if __name__ == '__main__':
         print("\nExiting.")
         sys.exit(1)
 
+    master_hostname = re.split(
+        'http://|.local',
+        roslib.scriptutil.get_master().lookupNode('/rosnode', '/rosout')[2]
+        )[1]
     cur_time = time.localtime()
     filename = (
-                "rsdk-smoke_%s_%s.%s.%s" % \
-                (test_dict['version'], cur_time.tm_mday, cur_time.tm_mon, \
-                 cur_time.tm_year)
+                "%s-%s.%s.%s-rsdk-%s.smoketest" % \
+                (master_hostname, cur_time.tm_mon, cur_time.tm_mday, \
+                 cur_time.tm_year, test_dict['version'],)
                 )
     if args.test == None:
         print 'Performing All Tests'

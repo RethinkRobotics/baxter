@@ -67,8 +67,8 @@ class Wobbler():
 
         """
         print("Moving to neutral pose...")
-        self._left_arm.set_neutral_pose()
-        self._right_arm.set_neutral_pose()
+        self._left_arm.move_to_neutral()
+        self._right_arm.move_to_neutral()
 
     def wobble(self):
         self.set_neutral()
@@ -100,9 +100,9 @@ class Wobbler():
                 self._pub_rate.publish(1000)
                 elapsed = rospy.Time.now() - start
                 cmd = dict(zip(self._joint_names, [v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
-                self._left_arm.set_velocities(cmd)
+                self._left_arm.set_joint_velocities(cmd)
                 cmd = dict(zip(self._joint_names, [-v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
-                self._right_arm.set_velocities(cmd)
+                self._right_arm.set_joint_velocities(cmd)
                 rate.sleep()
 
         rate = rospy.Rate(100);
@@ -110,8 +110,8 @@ class Wobbler():
             for i in range(100):
                 if rospy.is_shutdown():
                     return False
-                self._left_arm.set_position_mode()
-                self._right_arm.set_position_mode()
+                self._left_arm.set_joint_position_mode()
+                self._right_arm.set_joint_position_mode()
                 self._pub_rate.publish(100)
                 rate.sleep()
             #return to normal

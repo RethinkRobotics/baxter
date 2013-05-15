@@ -46,7 +46,7 @@ def map_keyboard():
     def set_j(limb, joint_name, delta):
         current_position = limb.joint_angle(joint_name)
         joint_command = {joint_name: current_position + delta}
-        limb.set_positions(joint_command)
+        limb.set_joint_positions(joint_command)
 
     bindings = {
     #   key: (function, args, description)
