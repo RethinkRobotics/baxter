@@ -1,1 +1,1 @@
-gzsdf print baxter.urdf
+gzsdf print baxter.urdf > baxter.sdf
