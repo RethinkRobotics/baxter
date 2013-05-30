@@ -72,8 +72,11 @@ class Limb(object):
             ns + 'command_joint_velocities',
             baxter_msgs.msg.JointVelocities)
 
+        self._last_state_time = None
+        self._state_rate = 0
+
         joint_state_sub = rospy.Subscriber(
-            ns + 'joint_states',
+            '/robot/joint_states',
             sensor_msgs.msg.JointState,
             self._on_joint_states)
 
@@ -81,9 +84,6 @@ class Limb(object):
             sdkns + 'endpoint/state',
             baxter_msgs.msg.EndpointState,
             self._on_endpoint_states)
-
-        self._last_state_time = None
-        self._state_rate = 0
 
         dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0)
 
@@ -95,9 +95,10 @@ class Limb(object):
             self._state_rate = ((99 * self._state_rate) + rate)/100
         self._last_state_time = now
         for i in range(len(msg.name)):
-            self._joint_angle[msg.name[i]] = msg.position[i]
-            self._joint_velocity[msg.name[i]] = msg.velocity[i]
-            self._joint_effort[msg.name[i]] = msg.effort[i]
+            if self.name in msg.name[i]:
+                self._joint_angle[msg.name[i]] = msg.position[i]
+                self._joint_velocity[msg.name[i]] = msg.velocity[i]
+                self._joint_effort[msg.name[i]] = msg.effort[i]
 
     def _on_endpoint_states(self, msg):
         #_pose = {'position': (x, y, z), 'orientation': (x, y, z, w)}
@@ -145,7 +146,7 @@ class Limb(object):
         """
         Return the names of the joints for which data has been received.
         """
-        return self._joint_angle.keys()
+        return sorted(self._joint_angle.keys())
 
     def state_rate(self):
         """
@@ -257,10 +258,7 @@ class Limb(object):
         """
         Command the joints to the center of their joint ranges
         """
-        angles = dict(zip(
-            ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2'],
-            [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]))
-
+        angles = dict(zip(self.joints(),[0.0, 0.75, 0.0, -0.55, 0.0, 1.26, 0.0]))
         return self.move_to_joint_positions(angles)
 
     def move_to_joint_positions(self, positions, timeout=15.0):
