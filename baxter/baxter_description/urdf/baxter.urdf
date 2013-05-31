@@ -7,8 +7,8 @@
   <link name="base">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="10"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="torso">
@@ -30,8 +30,8 @@
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
-      <mass value="5"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="35.336455"/>
+      <inertia ixx="1.849155" ixy="-0.000354" ixz="-0.154188" iyy="1.662671" iyz="0.003292" izz="0.802239"/>
     </inertial>
   </link>
   <link name="left_torso_itb">
@@ -48,8 +48,9 @@
          </visual>
          -->
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_torso_itb">
@@ -66,8 +67,9 @@
          </visual>
          -->
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="pedestal">
@@ -83,13 +85,14 @@
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0 0.0"/>
       <geometry>
-        <cylinder length="0.7" radius="0.25"/>
+        <mesh filename="package://baxter_description/meshes/base/PEDESTAL.DAE"/>
+        <!--cylinder length="0.7" radius="0.25"/-->
       </geometry>
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="5"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="60.86397744"/>
+      <inertia ixx="5.0635929" ixy="0.00103417" ixz="0.80199628" iyy="6.08689388" iyz="0.00105311" izz="4.96191932"/>
     </inertial>
   </link>
   <link name="head">
@@ -111,8 +114,8 @@
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.547767"/>
+      <inertia ixx="0.004641" ixy="0.000159" ixz="0.000242" iyy="0.003295" iyz="-0.001324" izz="0.003415"/>
     </inertial>
   </link>
   <link name="sonar_ring">
@@ -133,8 +136,8 @@
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="screen">
@@ -156,22 +159,22 @@
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.440171"/>
+      <inertia ixx="0.004006" ixy="0.000230" ixz="0.000002" iyy="0.002800" iyz="0.000029" izz="0.001509"/>
     </inertial>
   </link>
   <link name="head_camera">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="dummyhead1">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="collision_head_link_1">
@@ -193,8 +196,8 @@
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="collision_head_link_2">
@@ -217,8 +220,8 @@
     </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <joint name="collision_head_1" type="fixed">
@@ -284,8 +287,9 @@
   <link name="right_arm_mount">
     <!-- all defaults -->
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_upper_shoulder">
@@ -359,8 +363,9 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_lower_elbow">
@@ -384,28 +389,6 @@
       <origin rpy="0 0 0" xyz="0.02611 0.00159 -0.01117"/>
       <mass value="2.07206"/>
       <inertia ixx="0.00711582686" ixy="0.00036036173" ixz="0.0007459496" iyy="0.01318227876" iyz="-0.00019663418" izz="0.00926852064"/>
-    </inertial>
-  </link>
-  <link name="right_lower_elbow_highspeed_collision">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.001" radius="0.001"/>
-      </geometry>
-      <material name="darkred">
-        <color rgba=".5 .1 .1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <geometry>
-        <sphere radius="0.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
   </link>
   <link name="right_upper_forearm">
@@ -433,8 +416,9 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_arm_itb">
@@ -451,8 +435,9 @@
          </visual>
          -->
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_lower_forearm">
@@ -478,28 +463,6 @@
       <inertia ixx="0.00387607152" ixy="-0.00044384784" ixz="-0.00021115038" iyy="0.00700537914" iyz="0.00015348067" izz="0.0055275524"/>
     </inertial>
   </link>
-  <link name="right_lower_forearm_highspeed_collision">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.001" radius="0.001"/>
-      </geometry>
-      <material name="darkred">
-        <color rgba=".5 .1 .1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.01" radius="0.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
-    </inertial>
-  </link>
   <link name="right_wrist">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -521,28 +484,6 @@
       <origin rpy="0 0 0" xyz="0.00198 0.00125 0.01855"/>
       <mass value="0.35093"/>
       <inertia ixx="0.00025289155" ixy="0.00000575311" ixz="-0.00000159345" iyy="0.0002688601" iyz="-0.00000519818" izz="0.0003074118"/>
-    </inertial>
-  </link>
-  <link name="right_wrist_highspeed_collision">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 -0.0825"/>
-      <geometry>
-        <cylinder length="0.001" radius="0.001"/>
-      </geometry>
-      <material name="darkred">
-        <color rgba=".5 .1 .1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.04" radius="0.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
   </link>
   <link name="right_hand">
@@ -581,8 +522,8 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_hand_camera_axis">
@@ -597,8 +538,8 @@
       </visual-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_hand_range">
@@ -613,8 +554,8 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="right_gripper">
@@ -629,8 +570,8 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <joint name="right_torso_arm_mount" type="fixed">
@@ -676,12 +617,6 @@
     <limit effort="60.0" lower="-0.05" upper="2.618" velocity="2.5"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <joint name="right_e1_fixed" type="fixed">
-    <origin rpy="-1.571 -1.3819 0" xyz="0.069 0 0.25386"/>
-    <axis xyz="0 0 1"/>
-    <parent link="right_upper_elbow"/>
-    <child link="right_lower_elbow_highspeed_collision"/>
-  </joint>
   <joint name="right_w0" type="revolute">
     <origin rpy="1.571 0 1.571" xyz="0.10359 0 0"/>
     <axis xyz="0 0 1"/>
@@ -711,12 +646,6 @@
     <limit effort="20.0" lower="-1.571" upper="2.094" velocity="5.0"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <joint name="right_w1_fixed" type="fixed">
-    <origin rpy="-1.571 -1.571 0" xyz="0.01 0 0.27186"/>
-    <axis xyz="0 0 1"/>
-    <parent link="right_upper_forearm"/>
-    <child link="right_lower_forearm_highspeed_collision"/>
-  </joint>
   <joint name="right_w2" type="revolute">
     <origin rpy="1.571 0 1.571" xyz="0.115975 0 0"/>
     <axis xyz="0 0 1"/>
@@ -724,12 +653,6 @@
     <child link="right_wrist"/>
     <limit effort="20.0" lower="-3.059" upper="3.059" velocity="5.0"/>
     <dynamics damping="0.0" friction="0.0"/>
-  </joint>
-  <joint name="right_w2_fixed" type="fixed">
-    <origin rpy="1.571 0 1.571" xyz="0.16555 0 0"/>
-    <axis xyz="0 0 1"/>
-    <parent link="right_lower_forearm"/>
-    <child link="right_wrist_highspeed_collision"/>
   </joint>
   <joint name="right_hand" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.11355"/>
@@ -761,8 +684,9 @@
   <link name="left_arm_mount">
     <!-- all defaults -->
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_upper_shoulder">
@@ -836,8 +760,9 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_lower_elbow">
@@ -861,28 +786,6 @@
       <origin rpy="0 0 0" xyz="0.02611 0.00159 -0.01117"/>
       <mass value="2.07206"/>
       <inertia ixx="0.00711582686" ixy="0.00036036173" ixz="0.0007459496" iyy="0.01318227876" iyz="-0.00019663418" izz="0.00926852064"/>
-    </inertial>
-  </link>
-  <link name="left_lower_elbow_highspeed_collision">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.001" radius="0.001"/>
-      </geometry>
-      <material name="darkred">
-        <color rgba=".5 .1 .1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <geometry>
-        <sphere radius="0.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
   </link>
   <link name="left_upper_forearm">
@@ -910,8 +813,9 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_arm_itb">
@@ -928,8 +832,9 @@
          </visual>
          -->
     <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0.1"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_lower_forearm">
@@ -955,28 +860,6 @@
       <inertia ixx="0.00387607152" ixy="-0.00044384784" ixz="-0.00021115038" iyy="0.00700537914" iyz="0.00015348067" izz="0.0055275524"/>
     </inertial>
   </link>
-  <link name="left_lower_forearm_highspeed_collision">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.001" radius="0.001"/>
-      </geometry>
-      <material name="darkred">
-        <color rgba=".5 .1 .1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.01" radius="0.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
-    </inertial>
-  </link>
   <link name="left_wrist">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -998,28 +881,6 @@
       <origin rpy="0 0 0" xyz="0.00198 0.00125 0.01855"/>
       <mass value="0.35093"/>
       <inertia ixx="0.00025289155" ixy="0.00000575311" ixz="-0.00000159345" iyy="0.0002688601" iyz="-0.00000519818" izz="0.0003074118"/>
-    </inertial>
-  </link>
-  <link name="left_wrist_highspeed_collision">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 -0.0825"/>
-      <geometry>
-        <cylinder length="0.001" radius="0.001"/>
-      </geometry>
-      <material name="darkred">
-        <color rgba=".5 .1 .1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.04" radius="0.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
   </link>
   <link name="left_hand">
@@ -1058,8 +919,8 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_hand_camera_axis">
@@ -1074,8 +935,8 @@
       </visual-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_hand_range">
@@ -1090,8 +951,8 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <link name="left_gripper">
@@ -1106,8 +967,8 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
   </link>
   <joint name="left_torso_arm_mount" type="fixed">
@@ -1153,12 +1014,6 @@
     <limit effort="60.0" lower="-0.05" upper="2.618" velocity="2.5"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <joint name="left_e1_fixed" type="fixed">
-    <origin rpy="-1.571 -1.3819 0" xyz="0.069 0 0.25386"/>
-    <axis xyz="0 0 1"/>
-    <parent link="left_upper_elbow"/>
-    <child link="left_lower_elbow_highspeed_collision"/>
-  </joint>
   <joint name="left_w0" type="revolute">
     <origin rpy="1.571 0 1.571" xyz="0.10359 0 0"/>
     <axis xyz="0 0 1"/>
@@ -1188,12 +1043,6 @@
     <limit effort="20.0" lower="-1.571" upper="2.094" velocity="5.0"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <joint name="left_w1_fixed" type="fixed">
-    <origin rpy="-1.571 -1.571 0" xyz="0.01 0 0.27186"/>
-    <axis xyz="0 0 1"/>
-    <parent link="left_upper_forearm"/>
-    <child link="left_lower_forearm_highspeed_collision"/>
-  </joint>
   <joint name="left_w2" type="revolute">
     <origin rpy="1.571 0 1.571" xyz="0.115975 0 0"/>
     <axis xyz="0 0 1"/>
@@ -1201,12 +1050,6 @@
     <child link="left_wrist"/>
     <limit effort="20.0" lower="-3.059" upper="3.059" velocity="5.0"/>
     <dynamics damping="0.0" friction="0.0"/>
-  </joint>
-  <joint name="left_w2_fixed" type="fixed">
-    <origin rpy="1.571 0 1.571" xyz="0.16555 0 0"/>
-    <axis xyz="0 0 1"/>
-    <parent link="left_lower_forearm"/>
-    <child link="left_wrist_highspeed_collision"/>
   </joint>
   <joint name="left_hand" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.11355"/>
