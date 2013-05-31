@@ -1,0 +1,13 @@
+<launch>
+
+  <!-- Spawn a robot into Gazebo -->
+  <node name="spawn_model" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+	args="-file $(find baxter_description)/urdf/baxter.urdf -urdf -z 1 -model baxter" />
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find baxter_gazebo)/worlds/baxter.world"/> <!-- Note: the world_name is with respect to GAZEBO_RESOURCE_PATH environmental variable -->
+    <!-- more default parameters can be changed here -->
+  </include>
+
+</launch>
