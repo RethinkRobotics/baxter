@@ -56,7 +56,7 @@ def usage(argv):
 
 class Trajectory(object):
     def __init__(self, limb):
-        ns = '/robot/limb/' + limb + '/'
+        ns = '/sdk/robot/limb/' + limb + '/'
         self._client = actionlib.SimpleActionClient(
             ns + "follow_joint_trajectory",
             FollowJointTrajectoryAction,
