@@ -110,7 +110,7 @@ class Head(object):
 
         if not timeout == 0:
             dataflow.wait_for(
-                lambda: abs(self.pan()-angle) <= settings.JOINT_ANGLE_TOLERANCE,
+                lambda: abs(self.pan()-angle) <= settings.HEAD_PAN_ANGLE_TOLERANCE,
                 timeout=timeout,
                 rate=100,
                 timeout_msg="Failed to move head to pan command %f" % angle,

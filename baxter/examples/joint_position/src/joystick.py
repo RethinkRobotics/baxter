@@ -75,8 +75,10 @@ def map_joystick(joystick):
     rcmd = {}
 
     #available joints
-    lj = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
-    rj = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
+    lj = ['left_s0', 'left_s1', 'left_e0', 'left_e1', 'left_w0', \
+          'left_w1', 'left_w2']
+    rj = ['right_s0', 'right_s1', 'right_e0', 'right_e1', 'right_w0', \
+          'right_w1', 'right_w2']
 
     #abbreviations
     jhi = lambda s: joystick.stick_value(s) > 0
