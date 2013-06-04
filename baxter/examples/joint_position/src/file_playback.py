@@ -63,7 +63,7 @@ def map_file(filename, loops=1):
     grip_right = baxter_interface.Gripper('right')
     rate = rospy.Rate(1000)
     start_time = rospy.get_time()
-    print("playing back %s" % (filename,))
+    print("Playing back: %s" % (filename,))
     with open(filename, 'r') as f:
         lines = f.readlines()
     keys = lines[0].rstrip().split(',')
@@ -71,10 +71,22 @@ def map_file(filename, loops=1):
     l = 0
     while loops < 1 or l < loops:
         l = l+1
+        print("Moving to start position...")
+        start_raw = [try_float(x) for x in lines[1].rstrip().split(',')]
+        raw_tuples = zip(keys[1:], start_raw[1:])
+        cleaned_tuples = [x for x in raw_tuples if x[1] is not None]
+        cmd_start = dict(cleaned_tuples)
+        l_start = dict((key, cmd_start[key]) for key in cmd_start.keys() \
+            if key[:-2] == 'left_')
+        r_start = dict((key, cmd_start[key]) for key in cmd_start.keys() \
+            if key[:-2] == 'right_')
+        left.move_to_joint_positions(l_start)
+        right.move_to_joint_positions(r_start)
         for values in lines[1:]:
             i = i +1
             loopstr = str(loops) if loops > 0 else "forever"
-            sys.stdout.write("\r record %d of %d, loop %d of %s" % (i, len(lines),l,loopstr))
+            sys.stdout.write("\r Record %d of %d, loop %d of %s" \
+                % (i, len(lines)-1,l,loopstr))
             sys.stdout.flush()
 
             #convert the line of strings to a float or None
@@ -85,8 +97,10 @@ def map_file(filename, loops=1):
             cleaned = [x for x in combined if x[1] is not None]
             #convert it to a dictionary with only valid commands
             cmd = dict(cleaned)
-            lcmd = dict((key[-2:], cmd[key]) for key in cmd.keys() if key[:-2] == 'left_')
-            rcmd = dict((key[-2:], cmd[key]) for key in cmd.keys() if key[:-2] == 'right_')
+            lcmd = dict((key, cmd[key]) for key in cmd.keys() \
+                if key[:-2] == 'left_')
+            rcmd = dict((key, cmd[key]) for key in cmd.keys() \
+                if key[:-2] == 'right_')
 
             #command this set of commands until the next frame
             while (rospy.get_time() - start_time) < values[0]:
@@ -111,7 +125,8 @@ def map_file(filename, loops=1):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="input file")
-    parser.add_argument("-l", "--loops", default=1, help="number of times to loop the input file. 0=infinite.")
+    parser.add_argument("-l", "--loops", default=1, \
+        help="number of times to loop the input file. 0=infinite.")
     args = parser.parse_args()
 
     print("Initializing node... ")

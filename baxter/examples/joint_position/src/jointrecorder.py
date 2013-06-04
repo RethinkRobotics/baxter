@@ -45,6 +45,7 @@ class JointRecorder(object):
         self._start_time = rospy.get_time()
         self._done = False
 
+        self._rs = baxter_interface.RobotEnable()
         self._limb_left = baxter_interface.Limb("left")
         self._limb_right = baxter_interface.Limb("right")
         self._gripper_left = baxter_interface.Gripper("left")
@@ -57,6 +58,7 @@ class JointRecorder(object):
         """
         Stop recording
         """
+        self._rs.disable()
         self._done = True
 
     def done(self):
@@ -78,18 +80,21 @@ class JointRecorder(object):
         will overwrite existing files.
         """
         if self._filename:
+            self._rs.enable()
             joints_left = self._limb_left.joints()
             joints_right = self._limb_right.joints()
             with open(self._filename, 'w') as f:
                 f.write('time,')
-                f.write(','.join(["left_" + j for j in joints_left]) + ',')
+                f.write(','.join([j for j in joints_left]) + ',')
                 f.write('left_gripper,')
-                f.write(','.join(["right_" + j for j in joints_right]) + ',')
+                f.write(','.join([j for j in joints_right]) + ',')
                 f.write('right_gripper\n')
 
                 while not self.done():
-                    angles_left = [self._limb_left.joint_angle(j) for j in joints_left]
-                    angles_right = [self._limb_right.joint_angle(j) for j in joints_right]
+                    angles_left = [self._limb_left.joint_angle(j) \
+                        for j in joints_left]
+                    angles_right = [self._limb_right.joint_angle(j) \
+                        for j in joints_right]
 
                     f.write("%f," % (self._time_stamp(),))
 

@@ -39,10 +39,9 @@ import baxter_interface
 
 class FJTAS(object):
     def __init__(self, limb):
-        limbns = {'left':'l_arm_controller', 'right':'r_arm_controller'}
-        sdkns = '/sdk/robot/limb/' + limb + '/'
+        ns = '/sdk/robot/limb/' + limb + '/'
         self._server = actionlib.SimpleActionServer(
-            sdkns + "follow_joint_trajectory",
+            ns + 'follow_joint_trajectory',
             FollowJointTrajectoryAction,
             execute_cb=self._on_fjta,
             auto_start=False)
@@ -50,26 +49,31 @@ class FJTAS(object):
         self._limb = baxter_interface.Limb(limb)
 
     def _on_fjta(self, goal):
+        print("Recieved Joint Trajectory")
         trajectory = goal.trajectory
         start_time = trajectory.header.stamp.to_sec()
+        if start_time == 0:
+            start_time = rospy.get_time()
         dataflow.wait_for(
             lambda: rospy.get_time() >= start_time,
             timeout=float("inf")
         )
-        rate = rospy.Rate(1000)
+#         rate = rospy.Rate(1000)
         for point in trajectory.points:
-            arrive_at = point.time_from_start.to_sec()
-            time_left = arrive_at - (rospy.get_time() - start_time)
-            while time_left > 0:
-                try:
-                    current = [self._limb.joint_angle(j) for j in trajectory.joint_names]
-                except KeyError as e:
-                    rospy.logerr("unable to execute trajectory: ", e.strerror)
-                    return
-                deltas = [(tgt-cur) for tgt,cur in zip(point.positions, current)]
-                velocities = [d / time_left for d in deltas]
-                cmd = dict(zip(trajectory.joint_names, velocities))
-                self._limb.set_joint_velocities(cmd)
-                rate.sleep()
-                time_left = arrive_at - (rospy.get_time() - start_time)
+#             arrive_at = point.time_from_start.to_sec()
+#             time_left = arrive_at - (rospy.get_time() - start_time)
+#             while time_left > 0:
+#                 try:
+#                     current = [self._limb.joint_angle(j) for j in trajectory.joint_names]
+#                 except KeyError as e:
+#                     rospy.logerr("unable to execute trajectory: ", e.strerror)
+#                     return
+#                 deltas = [(tgt-cur) for tgt,cur in zip(point.positions, current)]
+#                 velocities = [d / time_left for d in deltas]
+#                 cmd = dict(zip(trajectory.joint_names, velocities))
+#                 self._limb.set_joint_velocities(cmd)
+#                 rate.sleep()
+#                 time_left = arrive_at - (rospy.get_time() - start_time)
+            self._limb.move_to_joint_positions(dict(zip(trajectory.joint_names, point.positions)))
+        print ("Finished executing trajectory.")
         self._server.set_succeeded()
