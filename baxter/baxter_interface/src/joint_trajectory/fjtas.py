@@ -49,7 +49,6 @@ class FJTAS(object):
         self._limb = baxter_interface.Limb(limb)
 
     def _on_fjta(self, goal):
-        print("Recieved Joint Trajectory")
         trajectory = goal.trajectory
         start_time = trajectory.header.stamp.to_sec()
         if start_time == 0:
@@ -74,5 +73,4 @@ class FJTAS(object):
                 self._limb.set_joint_velocities(cmd)
                 rate.sleep()
                 time_left = arrive_at - (rospy.get_time() - start_time)
-        print ("Finished executing trajectory.")
         self._server.set_succeeded()
