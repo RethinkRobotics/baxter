@@ -36,6 +36,12 @@ nosetests.xml
 cmake_install.cmake
 .pydevproject
 *.swp
+CATKIN_IGNORE
+catkin
+catkin_generated
+devel
+
+*.smoketest
 
 baxter/examples/joint-interface/baxter_joint_msgs/src/baxter_joint_msgs/msg/
 baxter/baxter_msgs/src/baxter_msgs/

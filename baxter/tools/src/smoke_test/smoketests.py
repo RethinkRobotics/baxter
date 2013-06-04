@@ -252,9 +252,6 @@ class MoveArms(SmokeTest):
         try:
             print("Enabling robot...")
             self._rs.enable()
-            print("Moving Head to Neutral Location.")
-            head = baxter_interface.Head()
-            head.set_pan(0.0)
             print("Test: Create Limb Instances")
             right = baxter_interface.Limb('right')
             left = baxter_interface.Limb('left')
