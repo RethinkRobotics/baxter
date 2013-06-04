@@ -54,9 +54,10 @@ class Puppeteer(object):
         @param amplification - factor by which to amplify the arm movement
         """
         other_arm = {"left":"right", "right":"left"}
-        self._this_arm = baxter_interface.limb.Limb(limb)
-        self._other_arm = baxter_interface.limb.Limb(other_arm[limb])
-        self._joint_names = ['s0','s1','e0','e1','w0','w1','w2',]
+        self._limb = limb
+        self._other_limb = other_arm[limb]
+        self._this_arm = baxter_interface.limb.Limb(self._limb)
+        self._other_arm = baxter_interface.limb.Limb(self._other_limb)
         self._amp = amplification
 
     def set_neutral(self):
@@ -76,6 +77,9 @@ class Puppeteer(object):
         rate = rospy.Rate(1000);
         start = rospy.Time.now()
 
+        joint_names = self._this_arm.joints()
+        other_arm_names = self._this_arm.joints()
+
         done = False
         print("Puppeting. Press any key to stop...")
         while not done and not rospy.is_shutdown():
@@ -84,10 +88,11 @@ class Puppeteer(object):
             else:
                 elapsed = rospy.Time.now() - start
                 cmd = {}
-                for name in self._joint_names:
-                    v = self._other_arm.joint_velocity(name)
-                    if name in ('s0', 'e0', 'w0', 'w2'):
-                        v = -v
+                for name in joint_names:
+                    v = self._other_arm.joint_velocity(str(name).replace(self._limb, self._other_limb))
+                    for joint in ['s0', 'e0', 'w0', 'w2']:
+                        if joint in name:
+                            v = -v
                     cmd[name] = v * self._amp
                 self._this_arm.set_joint_velocities(cmd)
                 rate.sleep()
