@@ -253,23 +253,17 @@ class MoveArms(SmokeTest):
             print("Enabling robot...")
             self._rs.enable()
             print("Moving Head to Neutral Location.")
-           # head = baxter_interface.Head()
-           # head.set_pan(0.0)
+            head = baxter_interface.Head()
+            head.set_pan(0.0)
             print("Test: Create Limb Instances")
             right = baxter_interface.Limb('right')
             left = baxter_interface.Limb('left')
             left_queue = Queue.Queue()
             right_queue = Queue.Queue()
-            # Max Joint Range 
-            #     ( 1.701,  1.047,  3.054,  2.618,  3.059,  2.094,  3.059)
-            # Min Joint Range 
-            #     (-1.701, -2.147, -3.054, -0.050, -3.059, -1.571, -3.059)
-#             joint_moves = (
-#                 [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
-#                 [0.5, -0.8, 2.8, 0.15, 0.0, 1.9, 2.8],
-#                 [-0.1, -0.8, -1.0, 2.5, 0.0, -1.4, -2.8],
-#                 [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
-#                 )
+            # Max Joint Range (e0, e1, s0, s1, w0, w1, w2)
+            #     (3.054,   2.618,  1.701,  1.047,  3.059,  2.094,  3.059)
+            # Min Joint Range (e0, e1, s0, s1, w0, w1, w2) 
+            #     (-3.054, -0.050, -1.701, -2.147, -3.059, -1.571, -3.059)
             joint_moves = (
                 [ 0.0, 0.75, 0.0, -0.55, 0.0, 1.26,  0.0],
                 [ 2.8, 0.15, 0.5,  -0.8, 0.0,  1.9,  2.8],
