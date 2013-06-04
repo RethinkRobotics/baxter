@@ -89,10 +89,10 @@ class Puppeteer(object):
                 elapsed = rospy.Time.now() - start
                 cmd = {}
                 for name in joint_names:
-                    v = self._other_arm.joint_velocity(str(name).replace(self._limb, self._other_limb))
-                    for joint in ['s0', 'e0', 'w0', 'w2']:
-                        if joint in name:
-                            v = -v
+                    self._other_limb[:-2]
+                    v = self._other_arm.joint_velocity(self._other_limb + name[-3:])
+                    if name[-2:] in ('s0', 'e0', 'w0', 'w2'):
+                        v = -v
                     cmd[name] = v * self._amp
                 self._this_arm.set_joint_velocities(cmd)
                 rate.sleep()
