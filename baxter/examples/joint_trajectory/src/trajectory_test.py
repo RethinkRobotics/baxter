@@ -82,9 +82,8 @@ class Trajectory(object):
 
     def clear(self, limb):
         self._goal = FollowJointTrajectoryGoal()
-        self._goal.trajectory.joint_names = [limb + '_s0', limb + '_s1', \
-            limb + '_e0', limb + '_e1', limb + '_w0', \
-            limb + '_w1', limb + '_w2']
+        self._goal.trajectory.joint_names = [limb + '_' + joint for joint in \
+            ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']]
 
 def main(limb):
     print("Initializing node... ")
@@ -108,6 +107,7 @@ def main(limb):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", dest="limb", required=True, help="send joint trajectory to which limb [left | right]")
+    parser.add_argument("-l", "--limb", dest="limb", required=True, \
+        help="send joint trajectory to which limb [left | right]")
     args = parser.parse_args()
     main(args.limb)

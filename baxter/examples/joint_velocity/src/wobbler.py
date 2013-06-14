@@ -56,8 +56,8 @@ class Wobbler():
         self._pub_rate = rospy.Publisher('/robot/joint_state_publish_rate', UInt16)
         self._left_arm = baxter_interface.limb.Limb("left")
         self._right_arm = baxter_interface.limb.Limb("right")
-        self._left_joint_names = self._left_arm.joints()
-        self._right_joint_names = self._right_arm.joints()
+        self._left_joint_names = self._left_arm.joint_names()
+        self._right_joint_names = self._right_arm.joint_names()
 
         # set joint state publishing to 1000Hz
         self._pub_rate.publish(1000)
@@ -100,7 +100,7 @@ class Wobbler():
             else:
                 self._pub_rate.publish(1000)
                 elapsed = rospy.Time.now() - start
-                cmd = dict(zip(self._left_joint_names, [v_funcs[i](elapsed) for i in range(len(self._right_joint_names))]))
+                cmd = dict(zip(self._left_joint_names, [v_funcs[i](elapsed) for i in range(len(self._left_joint_names))]))
                 self._left_arm.set_joint_velocities(cmd)
                 cmd = dict(zip(self._right_joint_names, [-v_funcs[i](elapsed) for i in range(len(self._right_joint_names))]))
                 self._right_arm.set_joint_velocities(cmd)

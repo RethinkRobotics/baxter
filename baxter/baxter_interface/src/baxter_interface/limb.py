@@ -57,6 +57,13 @@ class Limb(object):
         self._cartesian_velocity = {}
         self._cartesian_effort = {}
 
+        self._joint_names = {
+            'left': ['left_s0', 'left_s1', 'left_e0', 'left_e1', \
+                'left_w0', 'left_w1', 'left_w2'],
+            'right': ['right_s0', 'right_s1', 'right_e0', 'right_e1', \
+                'right_w0', 'right_w1', 'right_w2']
+            }
+
         ns = '/robot/limb/' + limb + '/'
         sdkns = '/sdk' + ns
 
@@ -142,11 +149,11 @@ class Limb(object):
             ),
         }
 
-    def joints(self):
+    def joint_names(self):
         """
-        Return the names of the joints for which data has been received.
+        Return the names of the joints for the specified limb.
         """
-        return sorted(self._joint_angle.keys())
+        return self._joint_names[self.name]
 
     def state_rate(self):
         """
@@ -258,7 +265,7 @@ class Limb(object):
         """
         Command the joints to the center of their joint ranges
         """
-        angles = dict(zip(self.joints(),[0.0, 0.75, 0.0, -0.55, 0.0, 1.26, 0.0]))
+        angles = dict(zip(self.joint_names(),[0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]))
         return self.move_to_joint_positions(angles)
 
     def move_to_joint_positions(self, positions, timeout=15.0):

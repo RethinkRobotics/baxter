@@ -57,7 +57,7 @@ class FJTAS(object):
             lambda: rospy.get_time() >= start_time,
             timeout=float("inf")
         )
-        rate = rospy.Rate(1000)
+        rate = rospy.Rate(100)
         for point in trajectory.points:
             arrive_at = point.time_from_start.to_sec()
             time_left = arrive_at - (rospy.get_time() - start_time)

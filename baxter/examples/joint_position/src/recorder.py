@@ -32,6 +32,7 @@ import roslib
 roslib.load_manifest('joint_position')
 import rospy
 
+import baxter_interface
 from jointrecorder import JointRecorder
 
 if __name__ == '__main__':
@@ -43,7 +44,15 @@ if __name__ == '__main__':
 
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_recorder")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
+
     recorder = JointRecorder(args.filename, args.recordRate)
     print("Recording. Press any key to stop.")
     recorder.record()
+
+    print("Disabling robot... ")
+    rs.disable()
     print("done.")
