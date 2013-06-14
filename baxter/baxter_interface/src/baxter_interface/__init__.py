@@ -35,4 +35,5 @@ from navigator import Navigator
 from camera import CameraController
 from settings import (
     JOINT_ANGLE_TOLERANCE,
+    HEAD_PAN_ANGLE_TOLERANCE,
 )

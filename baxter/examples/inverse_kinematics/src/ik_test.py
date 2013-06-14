@@ -99,8 +99,8 @@ def main(limb):
         rospy.loginfo("Service call failed: %s" % (e,))
     if (resp.isValid[0]):
         print("SUCCESS - Valid Joint Solution Found:")
-        # Format solution into Limb API-compatible dictionary with valid joint names
-        limb_joints = dict(zip([name[-2:] for name in resp.joints[0].names], resp.joints[0].angles))
+        # Format solution into Limb API-compatible dictionary
+        limb_joints = dict(zip(resp.joints[0].names, resp.joints[0].angles))
         print limb_joints
     else:
         print("INVALID POSE - No Valid Joint Solution Found.")

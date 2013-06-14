@@ -56,14 +56,13 @@ def usage(argv):
 
 class Trajectory(object):
     def __init__(self, limb):
-        limbns = {'left':'l_arm_controller', 'right':'r_arm_controller'}
-        sdkns = '/sdk/robot/limb/' + limb + '/'
+        ns = '/sdk/robot/limb/' + limb + '/'
         self._client = actionlib.SimpleActionClient(
-            sdkns + "follow_joint_trajectory",
+            ns + "follow_joint_trajectory",
             FollowJointTrajectoryAction,
         )
         self._client.wait_for_server()
-        self.clear()
+        self.clear(limb)
 
     def add_point(self, positions, time):
         point = JointTrajectoryPoint()
@@ -81,9 +80,10 @@ class Trajectory(object):
     def wait(self):
         self._client.wait_for_result()
 
-    def clear(self):
+    def clear(self, limb):
         self._goal = FollowJointTrajectoryGoal()
-        self._goal.trajectory.joint_names = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
+        self._goal.trajectory.joint_names = [limb + '_' + joint for joint in \
+            ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']]
 
 def main(limb):
     print("Initializing node... ")
@@ -107,6 +107,7 @@ def main(limb):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", dest="limb", required=True, help="send joint trajectory to which limb [left | right]")
+    parser.add_argument("-l", "--limb", dest="limb", required=True, \
+        help="send joint trajectory to which limb [left | right]")
     args = parser.parse_args()
     main(args.limb)
