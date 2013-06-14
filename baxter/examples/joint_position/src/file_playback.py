@@ -46,6 +46,25 @@ def try_float(x):
     except ValueError:
         return None
 
+def clean_line(line, names):
+    """ Cleans a single line of recorded joint positions
+    @param line - the line described in a list to process
+    @param names - joint name keys
+    """
+    #convert the line of strings to a float or None
+    line = [try_float(x) for x in line.rstrip().split(',')]
+    #zip the values with the joint names
+    combined = zip(names[1:], line[1:])
+    #take out any tuples that have a none value
+    cleaned = [x for x in combined if x[1] is not None]
+    #convert it to a dictionary with only valid commands
+    command = dict(cleaned)
+    left_command = dict((key, command[key]) for key in command.keys() \
+        if key[:-2] == 'left_')
+    right_command = dict((key, command[key]) for key in command.keys() \
+        if key[:-2] == 'right_')
+    return (command, left_command, right_command, line)
+
 def map_file(filename, loops=1):
     """ Loops through csv file
     Does not loop indefinitely, but only until the file is read
@@ -63,31 +82,27 @@ def map_file(filename, loops=1):
     grip_right = baxter_interface.Gripper('right')
     rate = rospy.Rate(1000)
     start_time = rospy.get_time()
-    print("playing back %s" % (filename,))
+    print("Playing back: %s" % (filename,))
     with open(filename, 'r') as f:
         lines = f.readlines()
     keys = lines[0].rstrip().split(',')
     i = 0
     l = 0
+    # If specified, repeat the file playback 'loops' number of times
     while loops < 1 or l < loops:
         l = l+1
+        print("Moving to start position...")
+        cmd_start, lcmd_start, rcmd_start, raw_start = clean_line(lines[1], keys)
+        left.move_to_joint_positions(lcmd_start)
+        right.move_to_joint_positions(rcmd_start)
         for values in lines[1:]:
             i = i +1
             loopstr = str(loops) if loops > 0 else "forever"
-            sys.stdout.write("\r record %d of %d, loop %d of %s" % (i, len(lines),l,loopstr))
+            sys.stdout.write("\r Record %d of %d, loop %d of %s" \
+                % (i, len(lines)-1,l,loopstr))
             sys.stdout.flush()
 
-            #convert the line of strings to a float or None
-            values = [try_float(x) for x in values.rstrip().split(',')]
-            #zip the values with the joint names
-            combined = zip(keys[1:], values[1:])
-            #take out any tuples that have a none value
-            cleaned = [x for x in combined if x[1] is not None]
-            #convert it to a dictionary with only valid commands
-            cmd = dict(cleaned)
-            lcmd = dict((key[-2:], cmd[key]) for key in cmd.keys() if key[:-2] == 'left_')
-            rcmd = dict((key[-2:], cmd[key]) for key in cmd.keys() if key[:-2] == 'right_')
-
+            cmd, lcmd, rcmd, values = clean_line(values, keys)
             #command this set of commands until the next frame
             while (rospy.get_time() - start_time) < values[0]:
                 if rospy.is_shutdown():
@@ -111,7 +126,8 @@ def map_file(filename, loops=1):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="input file")
-    parser.add_argument("-l", "--loops", default=1, help="number of times to loop the input file. 0=infinite.")
+    parser.add_argument("-l", "--loops", default=1, \
+        help="number of times to loop the input file. 0=infinite.")
     args = parser.parse_args()
 
     print("Initializing node... ")
