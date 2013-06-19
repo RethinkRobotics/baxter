@@ -75,7 +75,7 @@ class Trajectory(object):
         self._client.send_goal(self._goal)
 
     def stop(self):
-        pass
+        self._client.cancel_goal()
 
     def wait(self):
         self._client.wait_for_result()
@@ -99,9 +99,9 @@ def main(limb):
     }
     p1 = positions[limb]
     traj = Trajectory(limb)
-    traj.add_point(p1, 2.0)
-    traj.add_point([x * 0.9 for x in p1], 4.0)
-    traj.add_point([x * 1.1 for x in p1], 7.0)
+    traj.add_point(p1, 7.0)
+    traj.add_point([x * 0.75 for x in p1], 9.0)
+    traj.add_point([x * 1.25 for x in p1], 12.0)
     traj.start()
     traj.wait()
 

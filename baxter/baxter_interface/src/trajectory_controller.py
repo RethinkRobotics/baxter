@@ -49,13 +49,13 @@ from joint_trajectory import (
 def usage(argv):
     print "usage: " + argv[0] + " <namespace>"
 
-def main(limb):
+def main(limb, rate, kp, ki, kd):
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_controller%s" % ("" if limb == 'both' else "_" + limb,))
     print("Initializing trajectory interface...")
     if limb == 'both':
-        fjtas = FJTAS('right')
-        fjtas = FJTAS('left')
+        fjtas = FJTAS('right', rate, kp, ki, kd)
+        fjtas = FJTAS('left', rate, kp, ki, kd)
     else:
         fjtas = FJTAS(limb)
     print("Running. Ctrl-c to quit")
@@ -64,5 +64,9 @@ def main(limb):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--limb", dest="limb", default="both", help="trajectory controller limb [both | left | right]")
+    parser.add_argument("-r", "--rate", dest="rate", default=100.0, type=float, help="trajectory control rate (Hz) - default: 100.0")
+    parser.add_argument("-kp", "--kp", dest="kp", default=2.0, type=float, help="proportional control gain - default: 2.0")
+    parser.add_argument("-ki", "--ki", dest="ki", default=0.0, type=float, help="integral control gain - default: 0.0")
+    parser.add_argument("-kd", "--kd", dest="kd", default=0.0, type=float, help="derivative control gain - default: 0.0")
     args = parser.parse_args()
-    main(args.limb)
+    main(args.limb, args.rate, args.kp, args.ki, args.kd)
