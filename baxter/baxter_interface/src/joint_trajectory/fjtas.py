@@ -92,7 +92,7 @@ class FJTAS(object):
             self._error_threshold[joint] = rospy.get_param(
                 self._ns + '/constraints/' + joint + '/trajectory', -1.0)
             self._pid_gains['kp'][joint] = rospy.get_param(
-                self._ns + '/constraints/' + joint + '/kp', 0.2)
+                self._ns + '/constraints/' + joint + '/kp', 2.0)
             self._pid_gains['ki'][joint] = rospy.get_param(
                 self._ns + '/constraints/' + joint + '/ki', 0.0)
             self._pid_gains['kd'][joint] = rospy.get_param(
@@ -125,19 +125,18 @@ class FJTAS(object):
             # Create new points for every control cycle to achieve a linear
             # trajectory across each joint to arrive at the goal point at
             # exactly the specified time
-            for k in xrange(move_interval):
+            for j in xrange(move_interval):
                 point = JointTrajectoryPoint()
                 diff = []
-                k = float(k + 1.0)
-                for p in xrange(len(trajectory.points[i].positions)):
-                    start = trajectory.points[i - 1].positions[p]
-                    end = trajectory.points[i].positions[p]
-                    diff.append(end - start)
+                j = float(j + 1.0)
+                for k in xrange(len(trajectory.points[i].positions)):
+                    start = trajectory.points[i - 1].positions[k]
+                    end = trajectory.points[i].positions[k]
                     diff.append(end - start)
                     point.positions.append(
-                        start + diff[p] * (k / move_interval))
+                        start + diff[k] * (j / move_interval))
                 point.time_from_start = rospy.Duration(
-                    trajectory.points[i - 1].time_from_start.to_sec() + k * (1.0 / discretization))
+                    trajectory.points[i - 1].time_from_start.to_sec() + j * (1.0 / discretization))
                 trajectory_out.points.append(point)
         return trajectory_out
 
