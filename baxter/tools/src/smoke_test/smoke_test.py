@@ -122,6 +122,8 @@ if __name__ == '__main__':
         'valid_tests': {
             '0.6.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
                 'Grippers', 'BlinkLEDs', 'Cameras'],
+            '0.6.1': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+                'Grippers', 'BlinkLEDs', 'Cameras'],
             }
         }
 
