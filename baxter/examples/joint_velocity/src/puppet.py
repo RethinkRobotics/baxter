@@ -74,7 +74,7 @@ class Puppeteer(object):
 
         """
         self.set_neutral()
-        rate = rospy.Rate(1000);
+        rate = rospy.Rate(100);
         start = rospy.Time.now()
 
         control_joint_names = self._control_arm.joint_names()
