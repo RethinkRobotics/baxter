@@ -26,7 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-Baxter RSDK Follow Joint Trajectory Action Server
+Baxter RSDK Joint Trajectory Action Server
 """
 import math
 
@@ -36,7 +36,8 @@ import rospy
 import actionlib
 
 from std_msgs.msg import (
-    UInt16,)
+    UInt16,
+)
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
 )
@@ -50,9 +51,9 @@ import control
 import baxter_interface
 
 
-class FJTAS(object):
+class JointTrajectoryActionServer(object):
 
-    def __init__(self, limb, rate):
+    def __init__(self, limb, rate=100.0):
         self._ns = '/sdk/robot/limb/' + limb + '/follow_joint_trajectory'
         self._server = actionlib.SimpleActionServer(
             self._ns,
@@ -103,7 +104,7 @@ class FJTAS(object):
         @param trajectory trajectory_msgs.msg.JointTrajectory - input trajectory
         @param discretization float - control rate (Hz)
 
-        Creates a linear interpolated discretized trajectory across each joint.
+        Creates a linearly interpolated discretized trajectory across each joint.
         """
         trajectory_out = JointTrajectory()
         trajectory_out.joint_names = trajectory.joint_names
@@ -111,11 +112,12 @@ class FJTAS(object):
         # if time from start for the first position is greater than 0
         if trajectory.points[0].time_from_start > rospy.Duration(0.0):
             start_point = JointTrajectoryPoint()
+            start_position = self._limb.joint_angles()
             for joint in self._control_joints:
-                start_point.positions.append(self._limb.joint_angle(joint))
+                start_point.positions.append(start_position(joint))
             start_point.time_from_start = rospy.Duration(0.0)
             trajectory.points.insert(0, start_point)
-        # Step over our original trajectory, inserting discretized points in
+        # Step over our original trajectory, inserting discretized points
         # in time and position for the specified control rate
         for i in xrange(1, len(trajectory.points)):
             # Determine the time step intervals based on the time
@@ -128,7 +130,7 @@ class FJTAS(object):
             for j in xrange(move_interval):
                 point = JointTrajectoryPoint()
                 diff = []
-                j = float(j + 1.0)
+                j = j + 1.0
                 for k in xrange(len(trajectory.points[i].positions)):
                     start = trajectory.points[i - 1].positions[k]
                     end = trajectory.points[i].positions[k]
@@ -148,8 +150,7 @@ class FJTAS(object):
         velocities = []
         if self._server.is_preempt_requested():
             self._command_stop(joint_names)
-            rospy.loginfo(
-                "%s: Trajectory Preempted" % self._action_name)
+            rospy.loginfo("%s: Trajectory Preempted" % (self._action_name,))
             self._server.set_preempted()
             return False
         deltas = self._get_current_error(joint_names, point.positions)
@@ -157,7 +158,7 @@ class FJTAS(object):
             if delta[1] >= self._error_threshold[delta[0]] and self._error_threshold[delta[0]] >= 0.0:
                 self._command_stop(joint_names)
                 rospy.logerr("%s: Trajectory Aborted - Exceeded Error Threshold on %s: %s" %
-                             (self._action_name, delta[0], str(delta[1],)))
+                             (self._action_name, delta[0], str(delta[1]),))
                 self._server.set_aborted()
                 return False
             velocities.append(self._pid[delta[0]].compute_output(delta[1]))
@@ -184,7 +185,7 @@ class FJTAS(object):
             else:
                 rospy.logerr(
                     "%s: Trajectory Aborted - Provided Invalid Joint Name %s" %
-                    (self._action_name, e))
+                    (self._action_name, joint,))
                 self._server.set_aborted()
                 return
         # Create a new discretized joint trajectory
@@ -203,27 +204,21 @@ class FJTAS(object):
         success = True
         # Execute the trajectory
         for point in trajectory.points:
-            arrive_at = point.time_from_start.to_sec()
-            time_left = arrive_at - (rospy.get_time() - start_time)
-            while time_left > 0 and success:
+            arrive_at = point.time_from_start.to_sec() + start_time
+            while rospy.get_time() < arrive_at and success:
                 success = self._command_velocities(trajectory.joint_names, point)
                 if not success:
                     return
                 control_rate.sleep()
-                time_left = arrive_at - (rospy.get_time() - start_time)
 
         # Keep trying to meet goal until goal_time constraint expired
-        remaining_time = (rospy.get_time() < start_time + trajectory.points[-1].time_from_start.to_sec() + self._goal_time)
-        outside_goal_tolerance = any((self._goal_error[error[0]] > 0 and self._goal_error[error[0]] < math.fabs(error[1]) for error in self._get_current_error(trajectory.joint_names, trajectory.points[-1].positions)))
-        while (remaining_time and outside_goal_tolerance):
+        while ((rospy.get_time() < start_time + trajectory.points[-1].time_from_start.to_sec() + self._goal_time) and any((self._goal_error[error[0]] > 0 and self._goal_error[error[0]] < math.fabs(error[1]) for error in self._get_current_error(trajectory.joint_names, trajectory.points[-1].positions)))):
             success = self._command_velocities(
                 trajectory.joint_names,
                 trajectory.points[-1])
             if not success:
                 return
             control_rate.sleep()
-            remaining_time = rospy.get_time() < start_time + trajectory.points[-1].time_from_start.to_sec() + self._goal_time
-            outside_goal_tolerance = any((self._goal_error[error[0]] > 0 and self._goal_error[error[0]] < math.fabs(error[1]) for error in self._get_current_error(trajectory.joint_names, trajectory.points[-1].positions)))
 
         # Verify goal constraint
         if outside_goal_tolerance:
