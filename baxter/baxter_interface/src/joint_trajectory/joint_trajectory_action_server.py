@@ -28,6 +28,7 @@
 """
 Baxter RSDK Joint Trajectory Action Server
 """
+from copy import deepcopy
 import math
 
 import roslib
@@ -58,7 +59,7 @@ class JointTrajectoryActionServer(object):
         self._server = actionlib.SimpleActionServer(
             self._ns,
             FollowJointTrajectoryAction,
-            execute_cb=self._on_fjta,
+            execute_cb=self._on_trajectory_action,
             auto_start=False)
         self._action_name = rospy.get_name()
         self._server.start()
@@ -106,39 +107,52 @@ class JointTrajectoryActionServer(object):
 
         Creates a linearly interpolated discretized trajectory across each joint.
         """
+        trajectory_in = deepcopy(trajectory)
         trajectory_out = JointTrajectory()
-        trajectory_out.joint_names = trajectory.joint_names
+        trajectory_out.joint_names = trajectory_in.joint_names
+
+        # Verify trajectory is not empty
+        if len(trajectory.points) == 0:
+            return trajectory_out
+
+        # Convenience interpolation function
+        def interp(p1, p2, pct):
+            return p1 + pct * (p2 - p1)
+
         # Add a new point representing our current position
         # if time from start for the first position is greater than 0
-        if trajectory.points[0].time_from_start > rospy.Duration(0.0):
+        if trajectory_in.points[0].time_from_start > rospy.Duration(0.0):
             start_point = JointTrajectoryPoint()
             start_position = self._limb.joint_angles()
             for joint in self._control_joints:
-                start_point.positions.append(start_position(joint))
+                start_point.positions.append(start_position[joint])
             start_point.time_from_start = rospy.Duration(0.0)
-            trajectory.points.insert(0, start_point)
+            trajectory_in.points.insert(0, start_point)
+
         # Step over our original trajectory, inserting discretized points
         # in time and position for the specified control rate
-        for i in xrange(1, len(trajectory.points)):
+        num_positions = len(trajectory.points[0].positions)
+
+        for i in xrange(1, len(trajectory_in.points)):
+            start = trajectory_in.points[i - 1]
+            end = trajectory_in.points[i]
             # Determine the time step intervals based on the time
             # to achieve the next point and the control rate
-            move_interval = int(
-                ((trajectory.points[i].time_from_start - trajectory.points[i - 1].time_from_start).to_sec()) / (1.0 / discretization))
+            duration  = (end.time_from_start - start.time_from_start).to_sec()
+            move_interval = int(duration * discretization)
             # Create new points for every control cycle to achieve a linear
             # trajectory across each joint to arrive at the goal point at
             # exactly the specified time
             for j in xrange(move_interval):
+                percent = (j + 1.0) / move_interval
                 point = JointTrajectoryPoint()
-                diff = []
-                j = j + 1.0
-                for k in xrange(len(trajectory.points[i].positions)):
-                    start = trajectory.points[i - 1].positions[k]
-                    end = trajectory.points[i].positions[k]
-                    diff.append(end - start)
-                    point.positions.append(
-                        start + diff[k] * (j / move_interval))
-                point.time_from_start = rospy.Duration(
-                    trajectory.points[i - 1].time_from_start.to_sec() + j * (1.0 / discretization))
+                point.positions = map(
+                    interp,
+                    start.positions,
+                    end.positions,
+                    [percent] * num_positions)
+                point.time_from_start = rospy.Duration(interp(
+                    start.time_from_start.to_sec(), end.time_from_start.to_sec(), percent))
                 trajectory_out.points.append(point)
         return trajectory_out
 
@@ -173,7 +187,7 @@ class JointTrajectoryActionServer(object):
             cmd = dict(zip(joint, velocities))
             self._limb.set_joint_velocities(cmd)
 
-    def _on_fjta(self, goal):
+    def _on_trajectory_action(self, goal):
         self._get_trajectory_parameters(goal.trajectory.joint_names)
         # Verify control_joints and set PID gains
         for joint in goal.trajectory.joint_names:
@@ -212,7 +226,10 @@ class JointTrajectoryActionServer(object):
                 control_rate.sleep()
 
         # Keep trying to meet goal until goal_time constraint expired
-        while ((rospy.get_time() < start_time + trajectory.points[-1].time_from_start.to_sec() + self._goal_time) and any((self._goal_error[error[0]] > 0 and self._goal_error[error[0]] < math.fabs(error[1]) for error in self._get_current_error(trajectory.joint_names, trajectory.points[-1].positions)))):
+        def check_goal_state():
+            return any((self._goal_error[error[0]] > 0 and self._goal_error[error[0]] < math.fabs(error[1]) for error in self._get_current_error(trajectory.joint_names, trajectory.points[-1].positions)))
+
+        while ((rospy.get_time() < start_time + trajectory.points[-1].time_from_start.to_sec() + self._goal_time) and check_goal_state()):
             success = self._command_velocities(
                 trajectory.joint_names,
                 trajectory.points[-1])
@@ -221,7 +238,7 @@ class JointTrajectoryActionServer(object):
             control_rate.sleep()
 
         # Verify goal constraint
-        if outside_goal_tolerance:
+        if check_goal_state():
             self._command_stop(trajectory.joint_names)
             rospy.logerr("%s: Trajectory Failed - Exceeded Goal Threshold Error" %
                          (self._action_name,))
