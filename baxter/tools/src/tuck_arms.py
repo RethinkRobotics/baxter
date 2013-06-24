@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from chardet.constants import False
 
 # Copyright (c) 2013, Rethink Robotics
 # All rights reserved.
@@ -53,7 +52,7 @@ class Tuck(object):
             }
         self._tuck = tuck_cmd
         self._tuck_rate = rospy.Rate(20.0) # Hz
-        self._tuck_threshold = 0.3 # Radians
+        self._tuck_threshold = 0.6 # Radians
         self._tuck_state = {'left': False, 'right': False}
         self._joint_moves = {
             'tuck': {
@@ -73,26 +72,33 @@ class Tuck(object):
                  '/robot/limb/right/CollisionAvoidance/suppress_body_avoidance',
                  Empty)
         }
+        self._rs = baxter_interface.RobotEnable()
         self._supervised_tuck()
 
     def _check_tucked(self, goal):
         for limb in self._limbs:
             diff = 0.0
-            for joint_idx, joint in enumerate([self._arms[limb].joint_names()]):
+            for joint_idx, joint in enumerate(self._arms[limb].joint_names()):
                 if joint[-2:] in ('s0', 's1', 'e0') or goal == 'untuck':
-                    diff = diff + abs(self._joint_moves[goal][limb][idx] - self._arms[limb].joint_angle(joint))
+                    diff = diff + abs(self._joint_moves[goal][limb][joint_idx] - self._arms[limb].joint_angle(joint))
             self._tuck_state[limb] = diff < self._tuck_threshold
 
+    def _reset_tucked_state(self):
+        for limb in self._limbs:
+            self._tuck_state[limb] = False
+
     def _move_to(self, tuck, disabled):
+        self._rs.enable()
         while any(self._tuck_state[limb] != True for limb in self._limbs) and not rospy.is_shutdown():
             for limb in self._limbs:
                 if disabled:
                     self._disable_pub[limb].publish(Empty())
-                self._arms[limb].set_joint_positions(dict(zip(self._arms[limb].joints(),self._joint_moves[tuck][limb])))
+                self._arms[limb].set_joint_positions(dict(zip(self._arms[limb].joint_names(),self._joint_moves[tuck][limb])))
             self._check_tucked(tuck)
             self._tuck_rate.sleep()
-        for limb in self._limbs:
-            self._tuck_state[limb] = False
+        self._reset_tucked_state()
+        if (tuck == 'tuck'):
+            self._rs.disable()
         return
 
     def _supervised_tuck(self):
@@ -114,6 +120,7 @@ class Tuck(object):
         else:
             # If arms are tucked disable collision and untuck arms.
             if all(self._tuck_state[limb] == True for limb in self._limbs):
+                self._reset_tucked_state()
                 # Disable collision and untuck Arms
                 self._move_to('untuck', True)
                 return
