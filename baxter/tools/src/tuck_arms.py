@@ -111,15 +111,16 @@ class Tuck(object):
                 rospy.loginfo("Arms already in 'Tucked' position.")
                 return
             else:
+                any_tucked = any(self._tuck_state[limb] == True for limb in self._limbs)
                 # Move to neutral location before tucking arms to avoid damaging the robot
-                self._move_to('untuck', False)
+                self._move_to('untuck', any_tucked)
                 # Disable collision and Tuck Arms
                 self._move_to('tuck', True)
                 return
         # Untuck Arms
         else:
             # If arms are tucked disable collision and untuck arms.
-            if all(self._tuck_state[limb] == True for limb in self._limbs):
+            if any(self._tuck_state[limb] == True for limb in self._limbs):
                 self._reset_tucked_state()
                 # Disable collision and untuck Arms
                 self._move_to('untuck', True)
