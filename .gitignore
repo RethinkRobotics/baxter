@@ -42,7 +42,10 @@ catkin_generated
 devel
 
 *.smoketest
-
+*.cfgc
+baxter/baxter_interface/docs/
+baxter/baxter_interface/src/baxter_interface/cfg/
+baxter/baxter_interface/cfg/cpp/
 baxter/examples/joint-interface/baxter_joint_msgs/src/baxter_joint_msgs/msg/
 baxter/baxter_msgs/src/baxter_msgs/
 msg_gen
