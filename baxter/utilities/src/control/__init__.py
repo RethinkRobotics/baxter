@@ -25,25 +25,4 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Baxter RSDK Joint Trajectory Action Server
-"""
-import roslib
-roslib.load_manifest('baxter_interface')
-import rospy
-import actionlib
-
-from pr2_controller_msgs import JointTrajectoryAction
-
-class JTAS(object):
-    def __init__(self, ns):
-        self._server = actionlib.SimpleActionServer(
-            ns + "/joint_tracectory",
-            JointTrajectoryAction,
-            execute_cb=self._on_jta,
-            auto_start=False)
-        self._server.start()
-
-    def _on_jta(self):
-        print("jta")
-        self._server.set_succeeded()
+from pid import PID

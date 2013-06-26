@@ -25,6 +25,4 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-#from jtbasic import JTBasic
-#from jtas import JTAS
-from fjtas import FJTAS
+from joint_trajectory_action_server import JointTrajectoryActionServer

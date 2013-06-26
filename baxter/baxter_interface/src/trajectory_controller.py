@@ -29,8 +29,8 @@
 
 """
 Baxter RSDK Joint Trajectory Controller
-    Unlike the PR2, this is not a Motor Controller plugin, but
-    a regular node running SDK side.
+    Unlike other robots running ROS, this is not a Motor Controller plugin,
+    but a regular node using the SDK interface.
 """
 import sys
 import argparse
@@ -39,30 +39,40 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
+from dynamic_reconfigure.server import Server
+from baxter_interface.cfg import (
+    JointTrajectoryActionServerConfig
+)
+
 import iodevices
 import dataflow
 import baxter_interface
 from joint_trajectory import (
-    FJTAS,
+    JointTrajectoryActionServer,
 )
 
 def usage(argv):
     print "usage: " + argv[0] + " <namespace>"
 
-def main(limb):
+def main(limb, rate):
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_controller%s" % ("" if limb == 'both' else "_" + limb,))
     print("Initializing trajectory interface...")
+
+
+    dynamic_cfg_srv = Server(JointTrajectoryActionServerConfig,
+                                 lambda config,level: config)
     if limb == 'both':
-        fjtas = FJTAS('right')
-        fjtas = FJTAS('left')
+        JointTrajectoryActionServer('right', dynamic_cfg_srv, rate)
+        JointTrajectoryActionServer('left', dynamic_cfg_srv, rate)
     else:
-        fjtas = FJTAS(limb)
+        JointTrajectoryActionServer(limb, rate, )
     print("Running. Ctrl-c to quit")
     rospy.spin()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-l", "--limb", dest="limb", default="both", help="trajectory controller limb [both | left | right]")
+    parser.add_argument("-r", "--rate", dest="rate", default=100.0, type=float, help="trajectory control rate (Hz)")
     args = parser.parse_args()
-    main(args.limb)
+    main(args.limb, args.rate)
