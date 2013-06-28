@@ -89,7 +89,7 @@ class JointTrajectoryActionServer(object):
                 self._pid[joint].set_kp(self._parameters.config[joint + '_kp'])
                 self._pid[joint].set_ki(self._parameters.config[joint + '_ki'])
                 self._pid[joint].set_kd(self._parameters.config[joint + '_kd'])
-                self._goal_error[joint] = self._parameters.config[joint + '_kd']
+                self._goal_error[joint] = self._parameters.config[joint + '_goal']
                 self._error_threshold[joint] = self._parameters.config[joint + '_trajectory']
                 self._pid[joint].initialize()
             else:
@@ -175,7 +175,8 @@ class JointTrajectoryActionServer(object):
                 # If our current time is before the first specified point
                 # in the trajectory, then we should interpolate between
                 # our current position and that point.
-                p1 = self._get_current_position(joint_names)
+                p1 = JointTrajectoryPoint()
+                p1.positions = self._get_current_position(joint_names)
             else:
                 p1 = goal.trajectory.points[idx - 1]
 
