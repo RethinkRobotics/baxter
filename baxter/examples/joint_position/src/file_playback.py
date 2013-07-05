@@ -126,7 +126,7 @@ def map_file(filename, loops=1):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="input file")
-    parser.add_argument("-l", "--loops", default=1, \
+    parser.add_argument("-l", "--loops", type=int, default=1, \
         help="number of times to loop the input file. 0=infinite.")
     args = parser.parse_args()
 
@@ -137,5 +137,4 @@ if __name__ == '__main__':
     print("Enabling robot... ")
     rs.enable()
 
-    map_file(args.file, int(args.loops))
-    rs.disable()
+    map_file(args.file, args.loops)
