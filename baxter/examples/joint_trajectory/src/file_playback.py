@@ -57,27 +57,28 @@ from trajectory_msgs.msg import (
 
 class Trajectory(object):
     def __init__(self):
-        l_server = '/sdk/robot/limb/left/follow_joint_trajectory'
-        r_server = '/sdk/robot/limb/right/follow_joint_trajectory'
+        #create our action server clients
         self._left_client = actionlib.SimpleActionClient(
-            l_server,
+            '/sdk/robot/limb/left/follow_joint_trajectory',
             FollowJointTrajectoryAction,
         )
         self._right_client = actionlib.SimpleActionClient(
-            r_server,
+            '/sdk/robot/limb/right/follow_joint_trajectory',
             FollowJointTrajectoryAction,
         )
 
+        #verify joint trajectory action servers are available
         l_server_up = self._left_client.wait_for_server(rospy.Duration(1.0))
         r_server_up = self._right_client.wait_for_server(rospy.Duration(1.0))
         if not l_server_up or not r_server_up:
-            msg = "Action server not available. Verify trajectory controller."
+            msg = "Action server not available. Verify controller availability."
             rospy.logerr(msg)
             sys.exit(0)
+        #create our goal request
         self._l_goal = FollowJointTrajectoryGoal()
         self._r_goal = FollowJointTrajectoryGoal()
 
-        # To get current angles for start move
+        #limb interface - current angles needed for start move
         self._l_arm = baxter_interface.Limb('left')
         self._r_arm = baxter_interface.Limb('right')
 
@@ -102,42 +103,59 @@ class Trajectory(object):
         return (command, line,)
 
     def parse_file(self, filename):
+        """ Parses input file into FollowJointTrajectoryGoal format
+        @param filename - input filename
+        """
+        #open recorded file
         with open(filename, 'r') as f:
             lines = f.readlines()
+        #read joint names specified in file
         joint_names = lines[0].rstrip().split(',')
+        #parse joint names for the left and right limbs
         for name in joint_names:
-            if name[:-2] == 'left_' and name != 'left_gripper':
+            if 'left' == name[:-3]:
                 self._l_goal.trajectory.joint_names.append(name)
-            if name[:-2] == 'right_' and name != 'right_gripper':
+            elif 'right' == name[:-3]:
                 self._r_goal.trajectory.joint_names.append(name)
 
         def find_start_offset(pos):
+            #create empty lists
             cur, cmd = ([] for i in range(2))
-            for joint in joint_names:
-                if 'left' == joint[:-3]:
-                    cmd.append(pos[joint])
-                    cur.append(self._l_arm.joint_angle(joint))
-                elif 'right' == joint[:-3]:
-                    cmd.append(pos[joint])
-                    cur.append(self._r_arm.joint_angle(joint))
+            #for all joints find our current and first commanded position
+            for name in joint_names:
+                if 'left' == name[:-3]:
+                    cmd.append(pos[name])
+                    cur.append(self._l_arm.joint_angle(name))
+                elif 'right' == name[:-3]:
+                    cmd.append(pos[name])
+                    cur.append(self._r_arm.joint_angle(name))
             diffs = map(operator.sub, cmd, cur)
             diffs = map(operator.abs, diffs)
+            #set default velocities for only our initial move to start motion
             default_velocities = [0.25] * 14
+            #determine the largest time offset necessary across all joints
             offset = max(map(operator.div, diffs, default_velocities))
-            return offset - float(lines[1].rstrip().split(',')[0])
+            return offset
 
         for idx, values in enumerate(lines[1:]):
+            #clean each line of file
             cmd, values = self.clean_line(values, joint_names)
             #find allowable time offset for move to start position
             if idx == 0:
                 start_offset = find_start_offset(cmd)
-            #add a point for this set of commands recorded time
+            #add a point for this set of commands with recorded time
             cur_cmd = [cmd[jnt] for jnt in self._l_goal.trajectory.joint_names]
             self.add_point(cur_cmd, 'left', values[0] + start_offset)
             cur_cmd = [cmd[jnt] for jnt in self._r_goal.trajectory.joint_names]
             self.add_point(cur_cmd, 'right', values[0] + start_offset)
 
     def add_point(self, positions, side, time):
+        """ Appends trajectory with new point
+        @param positions - joint positions
+        @param side - limb to command point
+        @param time - time from start for point in seconds
+        """
+        #creates a point in trajectory with time_from_start and positions
         point = JointTrajectoryPoint()
         point.positions = copy(positions)
         point.time_from_start = rospy.Duration(time)
@@ -147,24 +165,32 @@ class Trajectory(object):
             self._r_goal.trajectory.points.append(point)
 
     def start(self):
+        """ Sends FollowJointTrajectoryAction request
+        """
         self._left_client.send_goal(self._l_goal)
         self._right_client.send_goal(self._r_goal)
 
     def stop(self):
+        """ Preempts trajectory exection by sending cancel goals
+        """
         self._left_client.cancel_goal()
         self._right_client.cancel_goal()
 
     def wait(self):
+        """ Waits for and verifies trajectory execution result
+        """
+        #create a timeout for our trajectory execution
         last_time = self._r_goal.trajectory.points[-1].time_from_start.to_sec()
-        timeout = rospy.Duration(2.0 * last_time)
+        timeout = rospy.Duration(1.5 * last_time)
 
         l_finish = self._left_client.wait_for_result(timeout)
         r_finish = self._right_client.wait_for_result(timeout)
 
+        #verify result
         if l_finish and r_finish:
             return True
         else:
-            print("Trajectory action did not finish before timeout.")
+            print("Trajectory action did not finish before timeout/interrupt.")
             return False
 
 def main(file, loops):
@@ -178,13 +204,15 @@ def main(file, loops):
 
     traj = Trajectory()
     traj.parse_file(file)
+    #for safe interrupt handling
+    rospy.on_shutdown(lambda: traj.stop())
     result = True
     loop_cnt = 1
     loopstr = str(loops)
     if loops == 0:
         loops = float('inf')
         loopstr = "forever"
-    while result == True and loop_cnt <= loops:
+    while result == True and loop_cnt <= loops and not rospy.is_shutdown():
         print("Playback loop %d of %s" % (loop_cnt, loopstr,))
         traj.start()
         result = traj.wait()
