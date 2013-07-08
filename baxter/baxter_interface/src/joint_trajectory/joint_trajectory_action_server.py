@@ -133,7 +133,6 @@ class JointTrajectoryActionServer(object):
                              (self._action_name, delta[0], str(delta[1]),))
                 self._server.set_aborted()
                 return False
-           # print self._pid[delta[0]].get_kp()
             velocities.append(self._pid[delta[0]].compute_output(delta[1]))
         cmd = dict(zip(joint_names, velocities))
         self._limb.set_joint_velocities(cmd)
@@ -227,7 +226,7 @@ class JointTrajectoryActionServer(object):
         last_time = trajectory_points[-1].time_from_start.to_sec()
         def check_goal_state():
             for error in self._get_current_error(joint_names, last_point):
-                if (self._goal_error[error[0]] > 0 
+                if (self._goal_error[error[0]] > 0
                     and self._goal_error[error[0]] < math.fabs(error[1])):
                     return error[0]
             else:
