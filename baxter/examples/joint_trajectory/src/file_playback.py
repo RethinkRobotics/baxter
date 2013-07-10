@@ -43,7 +43,6 @@ roslib.load_manifest('joint_trajectory')
 import rospy
 import actionlib
 
-import iodevices
 import dataflow
 import baxter_interface
 from control_msgs.msg import (
@@ -81,6 +80,9 @@ class Trajectory(object):
         #limb interface - current angles needed for start move
         self._l_arm = baxter_interface.Limb('left')
         self._r_arm = baxter_interface.Limb('right')
+
+        #param namespace
+        self._param_ns = '/rethink_rsdk_joint_trajectory_controller/'
 
     def clean_line(self, line, joint_names):
         """ Cleans a single line of recorded joint positions
@@ -120,21 +122,27 @@ class Trajectory(object):
 
         def find_start_offset(pos):
             #create empty lists
-            cur, cmd = ([] for i in range(2))
+            cur = []
+            cmd = []
+            dflt_vel = []
+            vel_param = self._param_ns + "%s_default_velocity"
             #for all joints find our current and first commanded position
+            #reading default velocities from the parameter server if specified
             for name in joint_names:
                 if 'left' == name[:-3]:
                     cmd.append(pos[name])
                     cur.append(self._l_arm.joint_angle(name))
+                    prm = rospy.get_param(vel_param % name, 0.25)
+                    dflt_vel.append(prm)
                 elif 'right' == name[:-3]:
                     cmd.append(pos[name])
                     cur.append(self._r_arm.joint_angle(name))
+                    prm = rospy.get_param(vel_param % name, 0.25)
+                    dflt_vel.append(prm)
             diffs = map(operator.sub, cmd, cur)
             diffs = map(operator.abs, diffs)
-            #set default velocities for only our initial move to start motion
-            default_velocities = [0.25] * 14
             #determine the largest time offset necessary across all joints
-            offset = max(map(operator.div, diffs, default_velocities))
+            offset = max(map(operator.div, diffs, dflt_vel))
             return offset
 
         for idx, values in enumerate(lines[1:]):
@@ -173,15 +181,25 @@ class Trajectory(object):
     def stop(self):
         """ Preempts trajectory exection by sending cancel goals
         """
-        self._left_client.cancel_goal()
-        self._right_client.cancel_goal()
+        if (self._left_client.gh is not None and
+            self._left_client.get_state() == actionlib.GoalStatus.ACTIVE):
+            self._left_client.cancel_goal()
+
+        if (self._right_client.gh is not None and
+            self._right_client.get_state() == actionlib.GoalStatus.ACTIVE):
+            self._right_client.cancel_goal()
+
+        #delay to allow for terminating handshake
+        rospy.sleep(0.1)
 
     def wait(self):
         """ Waits for and verifies trajectory execution result
         """
         #create a timeout for our trajectory execution
+        #total time trajectory expected for trajectory execution plus a buffer
         last_time = self._r_goal.trajectory.points[-1].time_from_start.to_sec()
-        timeout = rospy.Duration(1.5 * last_time)
+        time_buffer = rospy.get_param(self._param_ns + 'goal_time', 0.0) + 1.5
+        timeout = rospy.Duration(last_time + time_buffer)
 
         l_finish = self._left_client.wait_for_result(timeout)
         r_finish = self._right_client.wait_for_result(timeout)
@@ -190,7 +208,8 @@ class Trajectory(object):
         if l_finish and r_finish:
             return True
         else:
-            print("Trajectory action did not finish before timeout/interrupt.")
+            msg = "Trajectory action did not finish before timeout/interrupt."
+            rospy.logwarn(msg)
             return False
 
 def main(file, loops):
@@ -225,4 +244,5 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--loops', dest='loops', type=int, default=1,
         help="number of playback loops. 0=infinite.")
     args = parser.parse_args()
+
     main(args.file, args.loops)
