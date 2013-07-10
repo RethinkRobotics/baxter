@@ -81,6 +81,9 @@ class Trajectory(object):
         self._l_arm = baxter_interface.Limb('left')
         self._r_arm = baxter_interface.Limb('right')
 
+        #param namespace
+        self._param_ns = '/rethink_rsdk_joint_trajectory_controller/'
+
     def clean_line(self, line, joint_names):
         """ Cleans a single line of recorded joint positions
         @param line - the line described in a list to process
@@ -122,19 +125,19 @@ class Trajectory(object):
             cur = []
             cmd = []
             dflt_vel = []
-            ns = '/rethink_rsdk_joint_trajectory_controller/'
+            vel_param = self._param_ns + "%s_default_velocity"
             #for all joints find our current and first commanded position
             #reading default velocities from the parameter server if specified
             for name in joint_names:
                 if 'left' == name[:-3]:
                     cmd.append(pos[name])
                     cur.append(self._l_arm.joint_angle(name))
-                    prm = rospy.get_param(ns + name + '_default_velocity', 0.25)
+                    prm = rospy.get_param(vel_param % name, 0.25)
                     dflt_vel.append(prm)
                 elif 'right' == name[:-3]:
                     cmd.append(pos[name])
                     cur.append(self._r_arm.joint_angle(name))
-                    prm = rospy.get_param(ns + name + '_default_velocity', 0.25)
+                    prm = rospy.get_param(vel_param % name, 0.25)
                     dflt_vel.append(prm)
             diffs = map(operator.sub, cmd, cur)
             diffs = map(operator.abs, diffs)
@@ -178,8 +181,13 @@ class Trajectory(object):
     def stop(self):
         """ Preempts trajectory exection by sending cancel goals
         """
-        self._left_client.cancel_goal()
-        self._right_client.cancel_goal()
+        if (self._left_client.gh is not None and
+            self._left_client.get_state() == actionlib.GoalStatus.ACTIVE):
+            self._left_client.cancel_goal()
+
+        if (self._right_client.gh is not None and
+            self._right_client.get_state() == actionlib.GoalStatus.ACTIVE):
+            self._right_client.cancel_goal()
 
     def wait(self):
         """ Waits for and verifies trajectory execution result
@@ -187,8 +195,7 @@ class Trajectory(object):
         #create a timeout for our trajectory execution
         #total time trajectory expected for trajectory execution plus a buffer
         last_time = self._r_goal.trajectory.points[-1].time_from_start.to_sec()
-        goal_time = '/rethink_rsdk_joint_trajectory_controller/goal_time'
-        buffer = rospy.get_param(goal_time, 0.0) + 1.5
+        buffer = rospy.get_param(self._param_ns + 'goal_time', 0.0) + 1.5
         timeout = rospy.Duration(last_time + buffer)
 
         l_finish = self._left_client.wait_for_result(timeout)
