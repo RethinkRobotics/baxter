@@ -1,7 +1,7 @@
-Rethink Robotics Research SDK 0.6.0 Release Notes
+Rethink Robotics Research SDK 0.6.1 Release Notes
 =================================================
 
-Date: 5/15/2013
+Date: 7/9/2013
 
 Overview
 ========
@@ -28,41 +28,38 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Baxter-Research-Robot-Hardware-
 Additions
 =========
 
-*Added ability to update the robot software via ros command line interface
-*Added joint trajectory interface
-*Added joint velocity puppet example
-*Added navigator interface (buttons, LEDs) and example.
-*Added inverse kinematics solver
-*Added camera interface, open/close/list all available cameras. Ability to adjust frame size, resolution, frames/second, gains, etc...
-*Added Cartesian endpoint state
-*Added core manager allowing for listing, extraction and removal of saved core files
-*Added PlayStation 3 joystick support
-*Added smoke test
+*Added tuck arms routine.
+*Added ability to enable/disable sonar sensors.
+*Added ability to flip/mirror cameras.
+*Added joint trajectory playback example.
+*Added generic PID controller.
 
 Removals
 ========
+-None
 
 Changes
 =======
 
--Updated URDF
--Updated Baxter interface limb.py api with more explicit naming
--Init.sh script now supports all ros versions
--Robot enable/disable now uses rostopic interface
--Roslaunch instances have been replaced by rosrun scripts
+-New joint trajectory action server implementation in support of MoveIt! and Arm Navigation. Action client now configurable via dynamic reconfigure. PID controller to track commanded joint trajectory honoring positions/times commanded.
+-Updated Baxter interface limb.py api to only support 'full' joint naming (ie. the joint names specified in the urdf). This is a reflection of the upcoming removal of redundant /robot/limb/joint_states in favor of /robot/joint_states. All examples now reflect this standard usage in elimination of 'short' naming (ie. 's1' versus 'left_s1').
+-Updated URDF. More accurate collision geometries, intertial descriptions, joint damping.
+-URDF moved into baxter_description/urdf.
+-Joint trajectory test example updated with more exaggerated motion.
 
 Fixes
 =====
 
--Fixed joystick examples to exit properly
--Fixed wobbler periodic exiting with 'failed to disable robot'
--Added numerous timeouts on state transitions (ie. robot enable, gripper calibration) and position movement validations (head position, limb joint positions).
+-Smoke test hostname is now abiguous to ROS distributions.
+-Head camera now flipped/mirrored by default resulting in 'upright' image orientation.
+-Head pan tolerance now matches deadband for the joint controller. Eliminates timeout for sub-deadband commands.
+-Tuned state publish rates to 100Hz in all velocity examples.
 
 Issues
 ======
                                           
 -Calibration and Tare scripts will not run if there is a joint error related to the head.
-Joint errors can be found in the robot monitor. 
+Joint errors can be found in the robot monitor.
 https://github.com/RethinkRobotics/sdk-docs/wiki/Tools---robot_monitor
--The ROS_HOSTNAME is always set to "<robot_hostname>.local", 
+-The ROS_HOSTNAME is always set to "<robot_hostname>.local",
 which needs to be resolvable by a client machine (avahi, /etc/hosts or DNS server configuration)
