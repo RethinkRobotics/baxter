@@ -189,14 +189,17 @@ class Trajectory(object):
             self._right_client.get_state() == actionlib.GoalStatus.ACTIVE):
             self._right_client.cancel_goal()
 
+        #delay to allow for terminating handshake
+        rospy.sleep(0.1)
+
     def wait(self):
         """ Waits for and verifies trajectory execution result
         """
         #create a timeout for our trajectory execution
         #total time trajectory expected for trajectory execution plus a buffer
         last_time = self._r_goal.trajectory.points[-1].time_from_start.to_sec()
-        buffer = rospy.get_param(self._param_ns + 'goal_time', 0.0) + 1.5
-        timeout = rospy.Duration(last_time + buffer)
+        time_buffer = rospy.get_param(self._param_ns + 'goal_time', 0.0) + 1.5
+        timeout = rospy.Duration(last_time + time_buffer)
 
         l_finish = self._left_client.wait_for_result(timeout)
         r_finish = self._right_client.wait_for_result(timeout)

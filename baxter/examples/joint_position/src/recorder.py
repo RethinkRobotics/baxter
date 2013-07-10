@@ -53,6 +53,4 @@ if __name__ == '__main__':
     print("Recording. Press any key to stop.")
     recorder.record()
 
-    print("Disabling robot... ")
-    rs.disable()
     print("done.")
