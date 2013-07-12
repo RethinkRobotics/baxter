@@ -15,6 +15,7 @@
   <depend package="std_msgs"/>
   <depend package="control_msgs"/>
   <depend package="trajectory_msgs"/>
+  <depend package="dynamic_reconfigure"/>
 </package>
 
 

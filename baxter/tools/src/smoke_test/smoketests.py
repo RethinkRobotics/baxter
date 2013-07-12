@@ -252,39 +252,33 @@ class MoveArms(SmokeTest):
         try:
             print("Enabling robot...")
             self._rs.enable()
-            print("Moving Head to Neutral Location.")
-            head = baxter_interface.Head()
-            head.set_pan(0.0)
             print("Test: Create Limb Instances")
             right = baxter_interface.Limb('right')
             left = baxter_interface.Limb('left')
             left_queue = Queue.Queue()
             right_queue = Queue.Queue()
-            angles = {}
-            j = ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']
-            # Max Joint Range 
+            # Max Joint Range (s0, s1, e0, e1, w0, w1, w2)
             #     ( 1.701,  1.047,  3.054,  2.618,  3.059,  2.094,  3.059)
-            # Min Joint Range 
+            # Min Joint Range (e0, e1, s0, s1, w0, w1, w2) 
             #     (-1.701, -2.147, -3.054, -0.050, -3.059, -1.571, -3.059)
             joint_moves = (
-                [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
-                [0.5, -0.8, 2.8, 0.15, 0.0, 1.9, 2.8],
-                [-0.1, -0.8, -1.0, 2.5, 0.0, -1.4, -2.8],
-                [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
+                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26,  0.0],
+                [ 0.5,  -0.8, 2.8, 0.15, 0.0,  1.9,  2.8],
+                [-0.1,  -0.8,-1.0, 2.5,  0.0, -1.4, -2.8],
+                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26,  0.0],
                 )
             for move in joint_moves:
                 print(
                     "Test: Moving to Joint Positions: " + \
                     ", ".join("%.2f" % x for x in move)
                     )
-                angles = dict(zip(j, move))
                 left_thread = threading.Thread(
                     target=move_thread, 
-                    args=(left, angles, left_queue)
+                    args=(left, dict(zip(left.joint_names(), move)), left_queue)
                     )
                 right_thread = threading.Thread(
                     target=move_thread, 
-                    args=(right, angles, right_queue)
+                    args=(right, dict(zip(right.joint_names(), move)), right_queue)
                     )
                 left_thread.daemon = True
                 right_thread.daemon = True

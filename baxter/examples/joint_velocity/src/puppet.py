@@ -53,10 +53,11 @@ class Puppeteer(object):
         @param limb - the arm to be puppeted with the other
         @param amplification - factor by which to amplify the arm movement
         """
-        other_arm = {"left":"right", "right":"left"}
-        self._this_arm = baxter_interface.limb.Limb(limb)
-        self._other_arm = baxter_interface.limb.Limb(other_arm[limb])
-        self._joint_names = ['s0','s1','e0','e1','w0','w1','w2',]
+        puppet_arm = {"left":"right", "right":"left"}
+        self._control_limb = limb
+        self._puppet_limb = puppet_arm[limb]
+        self._control_arm = baxter_interface.limb.Limb(self._control_limb)
+        self._puppet_arm = baxter_interface.limb.Limb(self._puppet_limb)
         self._amp = amplification
 
     def set_neutral(self):
@@ -65,16 +66,19 @@ class Puppeteer(object):
 
         """
         print("Moving to neutral pose...")
-        self._this_arm.move_to_neutral()
-        self._other_arm.move_to_neutral()
+        self._control_arm.move_to_neutral()
+        self._puppet_arm.move_to_neutral()
 
     def puppet(self):
         """
 
         """
         self.set_neutral()
-        rate = rospy.Rate(1000);
+        rate = rospy.Rate(100);
         start = rospy.Time.now()
+
+        control_joint_names = self._control_arm.joint_names()
+        puppet_joint_names = self._puppet_arm.joint_names()
 
         done = False
         print("Puppeting. Press any key to stop...")
@@ -84,12 +88,12 @@ class Puppeteer(object):
             else:
                 elapsed = rospy.Time.now() - start
                 cmd = {}
-                for name in self._joint_names:
-                    v = self._other_arm.joint_velocity(name)
-                    if name in ('s0', 'e0', 'w0', 'w2'):
+                for idx, name in enumerate(puppet_joint_names):
+                    v = self._control_arm.joint_velocity(control_joint_names[idx])
+                    if name[-2:] in ('s0', 'e0', 'w0', 'w2'):
                         v = -v
                     cmd[name] = v * self._amp
-                self._this_arm.set_joint_velocities(cmd)
+                self._puppet_arm.set_joint_velocities(cmd)
                 rate.sleep()
 
         rate = rospy.Rate(100);
@@ -97,8 +101,8 @@ class Puppeteer(object):
             for i in range(100):
                 if rospy.is_shutdown():
                     return False
-                self._this_arm.set_joint_position_mode()
-                self._other_arm.set_joint_position_mode()
+                self._control_arm.set_joint_position_mode()
+                self._puppet_arm.set_joint_position_mode()
                 rate.sleep()
             #return to normal
             self.set_neutral()

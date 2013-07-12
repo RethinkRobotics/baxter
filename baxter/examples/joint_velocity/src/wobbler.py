@@ -56,10 +56,11 @@ class Wobbler():
         self._pub_rate = rospy.Publisher('/robot/joint_state_publish_rate', UInt16)
         self._left_arm = baxter_interface.limb.Limb("left")
         self._right_arm = baxter_interface.limb.Limb("right")
-        self._joint_names = ['s0','s1','e0','e1','w0','w1','w2',]
+        self._left_joint_names = self._left_arm.joint_names()
+        self._right_joint_names = self._right_arm.joint_names()
 
-        # set joint state publishing to 1000Hz
-        self._pub_rate.publish(1000)
+        # set joint state publishing to 100Hz
+        self._pub_rate.publish(100)
 
     def set_neutral(self):
         """
@@ -76,7 +77,7 @@ class Wobbler():
         Performs the wobbling of both arms
 
         """
-        rate = rospy.Rate(1000);
+        rate = rospy.Rate(100);
         start = rospy.Time.now()
 
         def make_v_func():
@@ -90,18 +91,18 @@ class Wobbler():
                 return math.cos(period_factor * elapsed.to_sec() * math.pi * 2) * amplitude_factor
             return v_func
 
-        v_funcs = [make_v_func() for x in range(len(self._joint_names))]
+        v_funcs = [make_v_func() for x in range(len(self._right_joint_names))]
         done = False
         print("Wobbling. Press any key to stop...")
         while not done and not rospy.is_shutdown():
             if iodevices.getch():
                 done = True
             else:
-                self._pub_rate.publish(1000)
+                self._pub_rate.publish(100)
                 elapsed = rospy.Time.now() - start
-                cmd = dict(zip(self._joint_names, [v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
+                cmd = dict(zip(self._left_joint_names, [v_funcs[i](elapsed) for i in range(len(self._left_joint_names))]))
                 self._left_arm.set_joint_velocities(cmd)
-                cmd = dict(zip(self._joint_names, [-v_funcs[i](elapsed) for i in range(len(self._joint_names))]))
+                cmd = dict(zip(self._right_joint_names, [-v_funcs[i](elapsed) for i in range(len(self._right_joint_names))]))
                 self._right_arm.set_joint_velocities(cmd)
                 rate.sleep()
 

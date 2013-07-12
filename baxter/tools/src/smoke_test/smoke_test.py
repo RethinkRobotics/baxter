@@ -88,7 +88,7 @@ def get_version():
         rospy.get_param('/rethink/software_version').split('_')[0]
     except socket.error:
         print(
-            "Exiting: Could not communicate with ROS Master to determine" \
+            "Exiting: Could not communicate with ROS Master to determine " \
             "Software version"
             )
         sys.exit(1)
@@ -121,6 +121,8 @@ if __name__ == '__main__':
         'version': None,
         'valid_tests': {
             '0.6.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+                'Grippers', 'BlinkLEDs'],
+            '0.6.1': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
                 'Grippers', 'BlinkLEDs', 'Cameras'],
             }
         }
@@ -140,7 +142,7 @@ if __name__ == '__main__':
 
     master_hostname = re.split(
         'http://|.local',
-        roslib.scriptutil.get_master().lookupNode('/rosnode', '/rosout')[2]
+        rospy.get_master().getUri()[2]
         )[1]
     cur_time = time.localtime()
     filename = (
