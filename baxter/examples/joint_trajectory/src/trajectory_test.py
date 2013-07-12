@@ -79,6 +79,7 @@ class Trajectory(object):
 
     def wait(self):
         self._client.wait_for_result()
+        rospy.sleep(0.1)
 
     def clear(self, limb):
         self._goal = FollowJointTrajectoryGoal()
