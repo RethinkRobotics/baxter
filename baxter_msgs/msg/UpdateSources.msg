@@ -1,0 +1,2 @@
+string          uuid
+UpdateSource[]  sources

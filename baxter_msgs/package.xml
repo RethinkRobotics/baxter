@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>baxter_msgs</name>
+  <version>0.6.1</version>
+  <description>
+    Messages and Services required for communication
+    with the Baxter robot from Rethink Robotics.
+  </description>
+
+  <maintainer email="rsdk.support@rethinkrobotics.com">
+    Rethink Robotics Inc.
+  </maintainer>
+  <license>BSD</license>
+  <url type="website">http://www.rethinkrobotics.com</url>
+  <url type="repository">
+    https://github.com/RethinkRobotics/sdk-examples
+  </url>
+  <url type="bugtracker">
+    https://github.com/RethinkRobotics/sdk-examples/issues
+  </url>
+  <author>Rethink Robotics Inc.</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+
+</package>
