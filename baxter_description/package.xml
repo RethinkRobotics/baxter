@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <name>baxter_description</name>
+  <version>0.6.1</version>
+  <description>
+    Description of Baxter robot from Rethink Robotics. This package
+    contains the URDF and meshes describing Baxter.
+  </description>
+
+  <maintainer email="rsdk.support@rethinkrobotics.com">
+    Rethink Robotics Inc.
+  </maintainer>
+  <license>BSD</license>
+  <url type="website">http://www.rethinkrobotics.com</url>
+  <url type="repository">
+    https://github.com/RethinkRobotics/baxter_common
+  </url>
+  <url type="bugtracker">
+    https://github.com/RethinkRobotics/baxter_common/issues
+  </url>
+  <author>Rethink Robotics Inc.</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>

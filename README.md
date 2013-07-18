@@ -1,4 +1,4 @@
-SDK Examples
+Catkinized Version of SDK Examples
 ============
 RSDK Wiki:  http://github.com/RethinkRobotics/sdk-docs/wiki
 
