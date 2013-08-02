@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(inverse_kinematics)
+
+find_package(catkin
+  REQUIRED
+  rospy
+  baxter_msgs
+  baxter_interface
+  utilities
+)
+
+catkin_python_setup()
+
+catkin_package(
+  CATKIN_DEPENDS
+  rospy
+  baxter_msgs
+  baxter_interface
+  utilities
+)
