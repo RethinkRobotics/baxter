@@ -49,7 +49,7 @@ def send_image(path):
     @param path - path to the image file to load and send
     """
     img = cv.LoadImage(path)
-    msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
+    msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
     pub = rospy.Publisher('/sdk/xdisplay', sensor_msgs.msg.Image, latch=True)
     pub.publish(msg)
     # Even with the latch, we seem to need to wait a bit before exiting to
@@ -65,30 +65,40 @@ def usage():
 
     -h, --help          This screen
     -f, --file [PATH]   Path to image file to send
+    -d, --delay [SEC]   Time in seconds to wait before publishing image
     """ % (os.path.basename(sys.argv[0]),)
 
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hf:',
-            ['help', 'file=',])
+            ['help', 'file=', 'delay='])
     except getopt.GetoptError as err:
         print str(err)
         usage()
         sys.exit(2)
 
     path = None
+    delay = 0.0
     for o, a in opts:
         if o in ('-h', '--help'):
             usage()
             sys.exit(0)
         elif o in ('-f', '--file'):
             path = a
+        elif o in ('-d', '--delay'):
+            delay = a
 
     if not os.access(path, os.R_OK):
         rospy.logerr("Cannot read file at '%s'" % (path,))
         sys.exit(1)
 
     rospy.init_node('xdisplay_image', anonymous=True)
+
+    # Wait for specified time
+    if float(delay) > 0:
+        rospy.loginfo("Waiting for %s seconds before publishing image to face" % (delay,))
+        rospy.Rate(1/float(delay)).sleep()
+
     send_image(path)
     sys.exit(0)
 
