@@ -98,7 +98,13 @@ class Limb(object):
         now = rospy.Time.now()
         if self._last_state_time:
             #cheap low pass
-            rate = (1.0 / (now - self._last_state_time).to_sec())
+
+            # \todo make this check for zero better somehow?
+            denominator = (now - self._last_state_time).to_sec()
+            if denominator == 0:
+                denominator = 0.000001; # magic small number \todo better number
+
+            rate = (1.0 / denominator)
             self._state_rate = ((99 * self._state_rate) + rate)/100
         self._last_state_time = now
         for i in range(len(msg.name)):
