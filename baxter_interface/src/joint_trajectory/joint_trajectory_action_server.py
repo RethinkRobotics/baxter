@@ -91,6 +91,7 @@ class JointTrajectoryActionServer(object):
                 rospy.logerr(
                     "%s: Trajectory Aborted - Provided Invalid Joint Name %s" %
                     (self._action_name, jnt,))
+                rospy.logerr("%s: Available joints: %s" % (self._action_name, self._limb.joint_names()) )
                 self._server.set_aborted()
                 return False
 
