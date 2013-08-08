@@ -45,6 +45,7 @@ devel
 *.cfgc
 baxter_interface/docs/
 baxter_interface/src/baxter_interface/cfg/
+baxter_interface/cfg/cpp/
 examples/joint-interface/baxter_joint_msgs/src/baxter_joint_msgs/msg/
 baxter_sdk/baxter_interface/cfg/JointTrajectoryActionServerConfig.py
 baxter_msgs/src/
