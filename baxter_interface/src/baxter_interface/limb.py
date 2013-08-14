@@ -92,7 +92,11 @@ class Limb(object):
             baxter_msgs.msg.EndpointState,
             self._on_endpoint_states)
 
-        dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0)
+        # Wait for joint angle messages to accumulate
+        joint_angle_timeout = 5 # sec
+        dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0, joint_angle_timeout, True, 100, 
+                          str(joint_angle_timeout) + " sec timeout expired waiting for joint angles"
+                          + " to populate from /robot/joint_states message")
 
     def _on_joint_states(self, msg):
         now = rospy.Time.now()
