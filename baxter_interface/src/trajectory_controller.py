@@ -71,8 +71,10 @@ def main(limb, rate):
     rospy.spin()
 
 if __name__ == "__main__":
+    argv = rospy.myargv() # strip out ROS arguments
+
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-l", "--limb", dest="limb", default="both", help="trajectory controller limb [both | left | right]")
     parser.add_argument("-r", "--rate", dest="rate", default=100.0, type=float, help="trajectory control rate (Hz)")
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
     main(args.limb, args.rate)
