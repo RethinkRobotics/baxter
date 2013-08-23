@@ -38,7 +38,7 @@ import rospy
 import std_msgs.msg
 
 import dataflow
-from baxter_msgs.msg import (
+from baxter_maintenance_msgs.msg import (
     UpdateSources,
     UpdateStatus,
 )

@@ -36,7 +36,7 @@ import roslib
 roslib.load_manifest('tools')
 import rospy
 
-from baxter_msgs.msg import (
+from baxter_maintenance_msgs.msg import (
     TareEnable,
 )
 
@@ -57,7 +57,7 @@ class Tare(baxter_interface.robustcontroller.RobustController):
 
         # Initialize RobustController, use 5 minute timeout for the Tare process
         super(Tare, self).__init__(
-            '/sdk/robustcontroller/%s/Tare' % (limb,),
+            'robustcontroller/%s/Tare' % (limb,),
             enable_msg,
             disable_msg,
             5 * 60)

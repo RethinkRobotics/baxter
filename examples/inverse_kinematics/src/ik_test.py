@@ -47,12 +47,14 @@ from geometry_msgs.msg import (
     Quaternion,
 )
 from std_msgs.msg import Header
-from baxter_msgs.srv import SolvePositionIK
-from baxter_msgs.srv import SolvePositionIKRequest
+from baxter_core_msgs.srv import (
+    SolvePositionIK,
+    SolvePositionIKRequest,
+)
 
 def main(limb):
     rospy.init_node("rethink_rsdk_inverse_kinematics_test")
-    ns = "/sdk/robot/limb/" + limb + "/solve_ik_position"
+    ns = "robot/limb/" + limb + "/solve_ik_position"
     rospy.wait_for_service(ns)
     iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
     ikreq = SolvePositionIKRequest()

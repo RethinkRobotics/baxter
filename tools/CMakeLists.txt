@@ -8,7 +8,8 @@ find_package(catkin
   geometry_msgs
   cv_bridge
   baxter_interface
-  baxter_msgs
+  baxter_core_msgs
+  baxter_maintenance_msgs
   utilities
 )
 
@@ -21,6 +22,7 @@ catkin_package(
   geometry_msgs
   cv_bridge
   baxter_interface
-  baxter_msgs
+  baxter_core_msgs
+  baxter_maintenance_msgs
   utilities
 )

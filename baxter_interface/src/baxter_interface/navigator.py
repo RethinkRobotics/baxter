@@ -32,7 +32,9 @@ import rospy
 import dataflow
 import digital_io
 
-import baxter_msgs.msg
+from baxter_core_msgs.msg import (
+    ITBState,
+)
 
 class Navigator(object):
     """
@@ -71,8 +73,8 @@ class Navigator(object):
         self.wheel_changed = dataflow.Signal()
 
         self._state_sub = rospy.Subscriber(
-            '/sdk/robot/itb/%s_itb/state' % (self._id,),
-            baxter_msgs.msg.ITB,
+            'robot/itb/%s_itb/state' % (self._id,),
+            ITBState,
             self._on_state)
 
         self._inner_led = digital_io.DigitalIO(
@@ -150,7 +152,10 @@ class Navigator(object):
         if self._state == msg:
             return
 
-        buttons = [self.button0_changed, self.button1_changed, self.button2_changed]
+        buttons = [self.button0_changed,
+                   self.button1_changed,
+                   self.button2_changed
+                   ]
         for i, signal in enumerate(buttons):
             if self._state.buttons[i] != msg.buttons[i]:
                 signal(msg.buttons[i])

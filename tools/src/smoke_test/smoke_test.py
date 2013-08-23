@@ -120,9 +120,9 @@ if __name__ == '__main__':
     test_dict = {
         'version': None,
         'valid_tests': {
-            '0.6.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
-                'Grippers', 'BlinkLEDs'],
-            '0.6.1': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+            '0.6.0': ['BlinkLEDs'],
+            '0.6.1': ['BlinkLEDs', 'Cameras'],
+            '0.7.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms',
                 'Grippers', 'BlinkLEDs', 'Cameras'],
             }
         }
@@ -159,5 +159,6 @@ if __name__ == '__main__':
         ros_init()
         run_test(args.test, filename, args.proceed)
     else:
-        print("Exiting: Invalid test provided: %s" % args.test)
+        print("Exiting: Invalid test provided: %s for %s version software" %
+              (args.test, test_dict['version'],))
         parser.print_help()

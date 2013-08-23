@@ -55,15 +55,15 @@ import cv
 import cv_bridge
 
 import baxter_interface
-from baxter_msgs.msg import (
+from baxter_core_msgs.msg import (
     AnalogIOStates,
-    GripperState,
-    GripperIdentity,
+    EndEffectorProperties,
+    EndEffectorState,
     )
-from baxter_msgs.srv import (
+from baxter_core_msgs.srv import (
+    ListCameras,
     SolvePositionIK,
     SolvePositionIKRequest,
-    ListCameras,
     )
 
 class SmokeTest(object):
@@ -142,9 +142,9 @@ class Messages(SmokeTest):
         try:
             print("Test: Subscribe to topic: /robot/joint_states")
             rospy.wait_for_message('/robot/joint_states', JointState, 5.0)
-            print("Test: Subscribe to topic: /sdk/robot/analog_io_states")
+            print("Test: Subscribe to topic: /robot/analog_io_states")
             rospy.wait_for_message(
-                '/sdk/robot/analog_io_states', 
+                '/robot/analog_io_states', 
                 AnalogIOStates, 
                 5.0
                 )
@@ -162,7 +162,7 @@ class Services(SmokeTest):
         """Runs Services Smoke Test
         """
         try:
-            srv = '/sdk/robot/limb/left/solve_ik_position'
+            srv = '/ExternalTools/left/PositionKinematicsNode/IKService'
             print("Test: Service availability: %s" % srv)
             rospy.wait_for_service(srv, 5.0)
             print("Test: IK service call Solve IK")
@@ -318,70 +318,48 @@ class Grippers(SmokeTest):
         try:
             print("Enabling robot, Moving to Neutral Location...")
             self._rs.enable()
-            right = baxter_interface.Limb('right')
-            left = baxter_interface.Limb('left')
-            right.move_to_neutral()
-            left.move_to_neutral()
-            rospy.sleep(2.0)
-            print("Test: Verify Gripper Identity")
-            gripper_id = rospy.wait_for_message(
-                '/sdk/robot/limb/right/accessory/gripper/identity',
-                GripperIdentity,
-                5.0
-                )
-            if not 'electric gripper' in gripper_id.name:
-                raise NameError("Grippers Test Requires Two Electric Grippers")
-            gripper_id = rospy.wait_for_message(
-                '/sdk/robot/limb/left/accessory/gripper/identity',
-                GripperIdentity,
-                5.0
-                )
-            if not 'electric gripper' in gripper_id.name:
-                raise NameError("Grippers Test Requires Two Electric Grippers")
-            print("Test: Subscribe to Gripper State.")
-            rospy.wait_for_message(
-                '/sdk/robot/limb/left/accessory/gripper/state',
-                GripperState,
-                5.0
-                )
-            rospy.wait_for_message(
-                '/sdk/robot/limb/right/accessory/gripper/state',
-                GripperState,
-                5.0
-                )
-            print("Test: Reboot Grippers.")
-            lg = baxter_interface.Gripper('left')
-            rg = baxter_interface.Gripper('right')
-            lg.reboot()
-            rg.reboot()
-            print("Test: Calibrating Grippers.")
-            lg.calibrate()
-            rg.calibrate()
-            print("Test: Open Grippers")
-            lg.open()
-            rg.open()
-            print("Test: Close Grippers")
-            rospy.sleep(2.0)
-            lg.close()
-            rg.close()
-            rospy.sleep(2.0)
-            print("Test: Open Grippers")
-            lg.open()
-            rg.open()
-            rospy.sleep(2.0)
-            print("Test: Position Moves")
-            lg.set_position(50.0)
-            rg.set_position(50.0)
-            rospy.sleep(1.0)
-            lg.set_position(75.0)
-            rg.set_position(75.0)
-            rospy.sleep(1.0)
-            lg.set_position(0.0)
-            rg.set_position(0.0)
-            rospy.sleep(1.0)
-            lg.set_position(100.0)
-            rg.set_position(100.0)
-            rospy.sleep(1.0)
+            for name in ['left', 'right']:
+                limb = baxter_interface.Limb(name)
+                gripper = baxter_interface.Gripper(name)
+                limb.move_to_neutral()
+                rospy.sleep(2.0)
+                print("Test: Verify %s Gripper Type" % (name,))
+                if gripper.type() is not 'electric':
+                    raise NameError("Test Requires Two Electric Grippers")
+                s_topic = 'robot/end_effector/' + name + '_gripper/state'
+                ee_state = rospy.wait_for_message(s_topic,
+                                                  EndEffectorState,
+                                                  5.0
+                                                  )
+                print("Test: Reboot %s Gripper." % (name,))
+                gripper.reboot()
+                #gripper.configure()
+                print("Test: Calibrating %s Gripper." % (name,))
+                gripper.calibrate()
+                print("Test: Close %s Gripper" % (name,))
+                gripper.close(True)
+                print("Test: Open %s Gripper" % (name,))
+                gripper.open(True)
+                print("Test: Close %s Gripper" % (name,))
+                gripper.close(True)
+                print("Test: Open %s Gripper" % (name,))
+                gripper.open(True)
+                print("Test: %s Gripper Position Moves" % (name,))
+                gripper.command_position(50.0, True)
+                gripper.command_position(75.0, True)
+                gripper.command_position(0.0, True)
+                gripper.command_position(100.0, True)
+                print("Test: %s Gripper Velocity Moves" % (name,))
+                gripper.set_velocity(50.0)
+                gripper.close(True)
+                gripper.set_velocity(25.0)
+                gripper.open(True)
+                gripper.set_velocity(100.0)
+                gripper.close(True)
+                gripper.open(True)
+                gripper.set_velocity(50.0)
+                gripper.close(True)
+                gripper.open(True)
             print("Disabling robot...")
             self._rs.disable()
             self.result[0] = True

@@ -7,7 +7,6 @@ find_package(catkin
   actionlib
   control_msgs
   trajectory_msgs
-  baxter_msgs
   baxter_interface
   utilities
 )
@@ -20,7 +19,6 @@ catkin_package(
   actionlib
   control_msgs
   trajectory_msgs
-  baxter_msgs
   baxter_interface
   utilities
 )

@@ -36,11 +36,6 @@ import rospy
 
 from std_msgs.msg import (
     UInt16,)
-from sensor_msgs.msg import (
-    JointState,)
-from baxter_msgs.msg import (
-    JointVelocities,
-    JointCommandMode,)
 
 import baxter_interface
 import iodevices

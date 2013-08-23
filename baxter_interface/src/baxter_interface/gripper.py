@@ -25,16 +25,23 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import time
-import copy
+from copy import deepcopy
+from math import fabs
+
+from json import (
+    JSONDecoder,
+    JSONEncoder,
+)
 
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-import baxter_msgs.msg as baxmsg
-import std_msgs.msg as stdmsg
+from baxter_core_msgs.msg import (
+    EndEffectorCommand,
+    EndEffectorProperties,
+    EndEffectorState,
+)
 
 import dataflow
 
@@ -47,145 +54,128 @@ class Gripper(object):
         """
         self.name = gripper
 
-        ns = '/robot/limb/' + self.name + '/accessory/gripper/'
-        sdkns = '/sdk' + ns
+        ns = '/robot/end_effector/' + self.name + '_gripper/'
 
-        self._pub_enable = rospy.Publisher(
-            ns + 'set_enabled',
-            stdmsg.Bool)
-
-        self._pub_reset = rospy.Publisher(
-            ns + 'command_reset',
-            stdmsg.Bool)
-
-        self._pub_calibrate = rospy.Publisher(
-            ns + 'command_calibrate',
-            stdmsg.Empty)
-
-        self._pub_command = rospy.Publisher(
-            sdkns + 'command_set',
-            baxmsg.GripperCommand)
-
-        self._sub_identity = rospy.Subscriber(
-            sdkns + 'identity',
-            baxmsg.GripperIdentity,
-            self._on_gripper_identity)
-
-        self._sub_properties = rospy.Subscriber(
-            sdkns + 'properties',
-            baxmsg.GripperProperties,
-            self._on_gripper_properties)
-
-        self._sub_state = rospy.Subscriber(
-            sdkns + 'state',
-            baxmsg.GripperState,
-            self._on_gripper_state)
-
-        self._command = baxmsg.GripperCommand(
-            position=0.0,
-            force=30.0,
-            velocity=100.0,
-            holding=0.0,
-            deadZone=3.0)
-
-        self._identity = baxmsg.GripperIdentity()
-        self._properties = baxmsg.GripperProperties()
         self._state = None
+        self._prop = EndEffectorProperties()
+        self._cmd_msg = EndEffectorCommand()
+
+        self._params = {}
+
+        self._pub_cmd = rospy.Publisher(ns + 'command', EndEffectorCommand)
+
+        self._state_sub = rospy.Subscriber(
+                              ns + 'state',
+                              EndEffectorState,
+                              self._on_gripper_state
+                          )
+
+        self._prop_sub = rospy.Subscriber(
+                                   ns + 'properties',
+                                   EndEffectorProperties,
+                                   self._on_gripper_prop
+                               )
 
         dataflow.wait_for(
             lambda: not self._state is None,
             timeout=5.0,
-            timeout_msg="Failed to get current gripper state from %s" % (sdkns + 'state'),
+            timeout_msg=("Failed to get current state from %s" % 
+                         (ns + 'state',))
         )
 
+        self.configure(defaults=True)
+
     def _on_gripper_state(self, state):
-        self._state = copy.deepcopy(state)
+        self._state = deepcopy(state)
 
-    def _on_gripper_identity(self, identity):
-        self._identity = copy.deepcopy(identity)
-
-    def _on_gripper_properties(self, properties):
-        self._properties = copy.deepcopy(properties)
+    def _on_gripper_prop(self, properties):
+        self._prop = deepcopy(properties)
 
     def _clip(self, val):
         return max(min(val, 100.0), 0.0)
 
-    def enable(self, timeout=2.0):
-        """
-        Enable the gripper
-        """
-        self._pub_enable.publish(True)
-        dataflow.wait_for(
-            test=lambda: self.enabled(),
-            timeout=timeout,
-            body=lambda: self._pub_enable.publish(True)
+    def _command(self, cmd, block=False, test=True, time=0.0, args='', msg=''):
+        self._cmd_msg.id = self.hardware_id()
+        self._cmd_msg.command = cmd
+        if len(args) != 0:
+            self._cmd_msg.args = JSONEncoder().encode(args)
+        self._pub_cmd.publish(self._cmd_msg)
+        if block:
+            dataflow.wait_for(
+                test=lambda: test(),
+                timeout=time,
+                timeout_msg=msg,
+                body=lambda: self._pub_cmd.publish(self._cmd_msg)
             )
 
-    def disable(self, timeout=2.0):
-        """
-        Disable the gripper
-        """
-        self._pub_enable.publish(False)
-        dataflow.wait_for(
-            test=lambda: not self.enabled(),
-            timeout=timeout,
-            body=lambda: self._pub_enable.publish(False)
-            )
+    def configure(self, defaults=False):
+        if defaults:
+            self._params['position'] = 100.0
+            self._params['velocity'] = 50.0
+            self._params['moving_force'] = 30.0
+            self._params['holding_force'] = 30.0
+            self._params['dead_zone'] = 5.0
+        cmd = EndEffectorCommand.CMD_CONFIGURE
+        self._command(cmd, args=self._params)
 
-    def reset(self, timeout=2.0):
+    def reset(self, timeout=2.0, block=True):
         """
         Reset the gripper
         """
-        self._pub_reset.publish(False)
-        dataflow.wait_for(
-            test=lambda: not self.error(),
-            timeout=timeout,
-            body=lambda: self._pub_reset.publish(False)
-            )
+        cmd = EndEffectorCommand.CMD_RESET
+        error_msg = ("Unable to successfully reset the %s gripper" % 
+                     (self.name,))
+        self._command(cmd, block, lambda: self._state.error == False,
+                      time=timeout, msg=error_msg)
 
-    def reboot(self, timeout=2.0):
+    def reboot(self, timeout=2.0, block=True):
         """
         Reboot the gripper
         """
-        self._pub_reset.publish(True)
-        dataflow.wait_for(
-            test=lambda: not self.calibrated(),
-            timeout=timeout,
-            body=lambda: self._pub_reset.publish(True)
-            )
+        cmd = EndEffectorCommand.CMD_REBOOT
+        error_msg = ("Unable to successfully reboot the %s gripper" % 
+                     (self.name,))
+        self._command(cmd, block, lambda: self._state.calibrated == False,
+                      time=timeout, msg=error_msg)
+        self.configure(defaults=True)
 
-    def calibrate(self, timeout=5.0):
+    def calibrate(self, timeout=5.0, block=True):
         """
         Calibrate the gripper
         """
-        self._pub_calibrate.publish(stdmsg.Empty())
-        self.enable()
-        dataflow.wait_for(
-            test=lambda: self.calibrated(),
-            timeout=timeout,
-            body=lambda: self._pub_calibrate.publish(stdmsg.Empty())
-            )
+        cmd = EndEffectorCommand.CMD_CALIBRATE
+        error_msg = ("Unable to successfully calibrate the %s gripper" % 
+                     (self.name,))
+        self._command(cmd, block, lambda: self._state.calibrated == True,
+                      time=timeout, msg=error_msg)
+        self.configure(defaults=True)
 
-    def stop(self):
+
+    def stop(self, block=True):
         """
         Stop the gripper at the current position and force
         """
-        cmd = baxmsg.GripperCommand()
-        cmd.position = self._state.position
-        cmd.velocity = 0.0
-        cmd.force = self._state.force
-        cmd.holding = self._state.force
-        cmd.deadZone = self._command.deadZone
-        self._pub_command.publish(cmd)
+        cmd = EndEffectorCommand.CMD_STOP
+        error_msg = ("Unable to verify the %s gripper has stopped" % 
+                     (self.name,))
+        self._command(cmd, block, lambda: self._state.moving == False,
+                      time=timeout, msg=error_msg)
 
-    def set_position(self, position):
+    def command_position(self, position, block=False, timeout=5.0):
         """
         Set the gripper position
 
         @param position (float) - in % 0=close 100=open
         """
-        self._command.position = self._clip(position)
-        self._pub_command.publish(self._command)
+        cmd = EndEffectorCommand.CMD_GO
+        arguments = {"position": self._clip(position)}
+        error_msg = ("Unable to verify the %s gripper position move" % 
+                     (self.name,))
+        self._command(cmd, block,
+                      lambda: (fabs(self._state.position - position) < 
+                               self._params['dead_zone'] or
+                               self._state.gripping),
+                      time=timeout, args=arguments, msg=error_msg)
 
     def set_velocity(self, velocity):
         """
@@ -193,17 +183,17 @@ class Gripper(object):
 
         @param velocity (float) - in % 0=stop 100=max
         """
-        self._command.velocity = self._clip(velocity)
-        self._pub_command.publish(self._command)
+        self._params['velocity'] = self._clip(velocity)
+        self.configure(defaults=False)
 
-    def set_force(self, force):
+    def set_moving_force(self, force):
         """
         Set the gripper force
 
         @param force (float) - in % 0=none 100=max
         """
-        self._command.force = self._clip(force)
-        self._pub_command.publish(self._command)
+        self._params['force'] = self._clip(force)
+        self.configure(defaults=False)
 
     def set_holding_force(self, force):
         """
@@ -211,8 +201,8 @@ class Gripper(object):
 
         @param force (float) - in % 0=none 100=max
         """
-        self._command.holding = self._clip(force)
-        self._pub_command.publish(self._command)
+        self._params['force'] = self._clip(force)
+        self.configure(defaults=False)
 
     def set_dead_band(self, dead_band):
         """
@@ -220,17 +210,16 @@ class Gripper(object):
 
         @param dead_band (float) - in % of full position
         """
-        self._command.deadZone = self._clip(dead_band)
-        self._pub_command.publish(self._command)
+        self._params['dead_band'] = self._clip(dead_band)
+        self.configure(defaults=False)
 
-    def inc_position(self, position):
+    def inc_position_command(self, position, block=False):
         """
         Increment the gripper position
 
         @param position (float) - percentage to increment by
         """
-        self._command.position = self._clip(position + self._command.position)
-        self._pub_command.publish(self._command)
+        self.command_position = self._clip(self._state.position + position)
 
     def inc_velocity(self, velocity):
         """
@@ -238,17 +227,18 @@ class Gripper(object):
 
         @param velocity (float) - percentage to increment by
         """
-        self._command.velocity = self._clip(velocity + self._command.velocity)
-        self._pub_command.publish(self._command)
+        self._params['velocity'] = self._clip(self._params['velocity'] +
+                                              velocity)
+        self.configure(defaults=False)
 
-    def inc_force(self, force):
+    def inc_moving_force(self, force):
         """
         Increment the gripper force
 
         @param force (float) - percentage to increment by
         """
-        self._command.force = self._clip(force + self._command.force)
-        self._pub_command.publish(self._command)
+        self._params['moving_force'] = self._clip(self._params['moving_force'] +
+                                                  force)
 
     def inc_holding_force(self, force):
         """
@@ -256,8 +246,9 @@ class Gripper(object):
 
         @param force (float) - percentage to increment by
         """
-        self._command.holding = self._clip(force + self._command.holding)
-        self._pub_command.publish(self._command)
+        self._params['holding_force'] = self._clip(self._params['holding_force']
+                                                   + force)
+        self.configure(defaults=False)
 
     def inc_dead_band(self, dead_band):
         """
@@ -265,70 +256,66 @@ class Gripper(object):
 
         @param dead_band (float) - percentage to increment by
         """
-        self._command.deadZone = self._clip(dead_band + self._command.deadZone)
-        self._pub_command.publish(self._command)
+        self._params['dead_band'] = self._clip(self._params['dead_band']
+                                                   + dead_band)
+        self.configure(defaults=False)
 
-    def open(self):
-        self.set_position(100.0)
+    def open(self, block=False):
+        self.command_position(100.0, block)
 
-    def close(self):
-        self.set_position(0.0)
+    def close(self, block=False):
+        self.command_position(0.0, block)
 
     def enabled(self):
-        return self._state.enabled == baxmsg.GripperState.STATE_TRUE
+        return self._state.enabled is True
 
     def calibrated(self):
-        return self._state.calibrated == baxmsg.GripperState.STATE_TRUE
+        return self._state.calibrated is True
 
     def ready(self):
-        return self._state.ready == baxmsg.GripperState.STATE_TRUE
+        return self._state.ready is True
 
     def moving(self):
-        return self._state.moving == baxmsg.GripperState.STATE_TRUE
+        return self._state.moving is True
 
     def gripping(self):
-        return self._state.gripping == baxmsg.GripperState.STATE_TRUE
+        return self._state.gripping is True
 
     def missed(self):
-        return self._state.missed == baxmsg.GripperState.STATE_TRUE
+        return self._state.missed is True
 
     def error(self):
-        return self._state.error == baxmsg.GripperState.STATE_TRUE
-
-    def position(self):
-        return self._state.position
-
-    def force(self):
-        return self._state.force
-
-    def has_force(self):
-        return self._properties.hasForce
-
-    def has_position(self):
-        return self._properties.hasPosition
+        return self._state.error is True
 
     def is_reverse(self):
-        return self._properties.isReverse
+        return self._state.reversed is True
 
-    def name(self):
-        return self._identity.name
+    def position(self):
+        return deepcopy(self._state.position)
+
+    def force(self):
+        return deepcopy(self._state.force)
+
+    def has_force(self):
+        return self._prop.hasForce is True
+
+    def has_position(self):
+        return self._prop.hasPosition is True
 
     def type(self):
-        if self._identity.type == baxmsg.GripperIdentity.SUCTION_CUP_GRIPPER:
+        if self._prop.ui_type == EndEffectorProperties.NO_GRIPPER:
+            return 'no_gripper'
+        elif self._prop.ui_type == EndEffectorProperties.SUCTION_CUP_GRIPPER:
             return 'suction'
-        elif self._identity.type == baxmsg.GripperIdentity.PNEUMATIC_GRIPPER:
-            return 'pneumatic'
-        elif self._identity.type == baxmsg.GripperIdentity.ELECTRIC_GRIPPER:
+        elif self._prop.ui_type == EndEffectorProperties.ELECTRIC_GRIPPER:
             return 'electric'
+        elif self._prop.ui_type == EndEffectorProperties.CUSTOM_GRIPPER:
+            return 'custom'
         else:
             return None
 
     def hardware_id(self):
-        return self._identity.hardware_id
+        return deepcopy(self._state.id)
 
     def version(self):
-        return "%d.%d.%d" % (
-            self._identity.version_major,
-            self._identity.version_minor,
-            self._identity.revision_lsb)
-
+        return deepcopy(self._prop.firmware_rev)

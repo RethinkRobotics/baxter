@@ -29,7 +29,8 @@ RSDK Wiki:  http://github.com/RethinkRobotics/sdk-docs/wiki
 +-- baxter                      # the baxter rsdk stack
     +-- baxter_description          # .stl meshes for rendering
     +-- baxter_interface            # python interfaces to baxter
-    +-- baxter_msgs                 # ROS messages and services
+    +-- baxter_core_msgs            # ROS messages and services for robot control
+    +-- baxter_maintenance_msgs     # ROS messages and services for robot maintenance
     +-- examples                    # runnable example programs:
     |   +-- gripper_control             # control grippers w/keyboard or joystick
     |   |   +-- src                         # (where python programs live)

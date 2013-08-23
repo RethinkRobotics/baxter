@@ -56,7 +56,7 @@ import baxter_interface
 class JointTrajectoryActionServer(object):
     def __init__(self, limb, parameters, rate=100.0):
         self._param = parameters
-        self._ns = '/sdk/robot/limb/' + limb + '/follow_joint_trajectory'
+        self._ns = 'robot/limb/' + limb + '/follow_joint_trajectory'
         self._server = actionlib.SimpleActionServer(
             self._ns,
             FollowJointTrajectoryAction,

@@ -32,16 +32,26 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-import baxter_msgs.msg
-import sensor_msgs.msg
+from baxter_core_msgs.msg import (
+    JointCommand,
+    EndpointState,
+)
+
+from sensor_msgs.msg import (
+    JointState
+)
+
+from std_msgs.msg import (
+    Float64,
+)
 
 import settings
 import dataflow
 
 class Limb(object):
     # Containers
-    Point = collections.namedtuple('Point', ['x','y','z'])
-    Quaternion = collections.namedtuple('Quaternion', ['x','y','z','w'])
+    Point = collections.namedtuple('Point', ['x', 'y', 'z'])
+    Quaternion = collections.namedtuple('Quaternion', ['x', 'y', 'z', 'w'])
 
     def __init__(self, limb):
         """
@@ -58,38 +68,39 @@ class Limb(object):
         self._cartesian_effort = {}
 
         self._joint_names = {
-            'left': ['left_s0', 'left_s1', 'left_e0', 'left_e1', \
+            'left': ['left_s0', 'left_s1', 'left_e0', 'left_e1',
                 'left_w0', 'left_w1', 'left_w2'],
-            'right': ['right_s0', 'right_s1', 'right_e0', 'right_e1', \
+            'right': ['right_s0', 'right_s1', 'right_e0', 'right_e1',
                 'right_w0', 'right_w1', 'right_w2']
             }
 
         ns = '/robot/limb/' + limb + '/'
-        sdkns = '/sdk' + ns
 
-        self._pub_joint_mode = rospy.Publisher(
-            ns + 'joint_command_mode',
-            baxter_msgs.msg.JointCommandMode)
+        self._command_msg = JointCommand()
 
-        self._pub_joint_position = rospy.Publisher(
-            ns + 'command_joint_angles',
-            baxter_msgs.msg.JointPositions)
+        self._pub_speed_ratio = rospy.Publisher(
+            ns + 'set_speep_ratio',
+            Float64)
 
-        self._pub_joint_velocity = rospy.Publisher(
-            ns + 'command_joint_velocities',
-            baxter_msgs.msg.JointVelocities)
+        self._pub_joint_cmd = rospy.Publisher(
+            ns + 'joint_command',
+            JointCommand)
+
+        self._pub_joint_cmd_timeout = rospy.Publisher(
+            ns + 'joint_command_timeout',
+            Float64)
 
         self._last_state_time = None
         self._state_rate = 0
 
         joint_state_sub = rospy.Subscriber(
             '/robot/joint_states',
-            sensor_msgs.msg.JointState,
+            JointState,
             self._on_joint_states)
 
         cartesian_state_sub = rospy.Subscriber(
-            sdkns + 'endpoint/state',
-            baxter_msgs.msg.EndpointState,
+            ns + 'endpoint/state',
+            EndpointState,
             self._on_endpoint_states)
 
         dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0)
@@ -97,9 +108,9 @@ class Limb(object):
     def _on_joint_states(self, msg):
         now = rospy.Time.now()
         if self._last_state_time:
-            #cheap low pass
+            # cheap low pass
             rate = (1.0 / (now - self._last_state_time).to_sec())
-            self._state_rate = ((99 * self._state_rate) + rate)/100
+            self._state_rate = ((99 * self._state_rate) + rate) / 100
         self._last_state_time = now
         for i in range(len(msg.name)):
             if self.name in msg.name[i]:
@@ -108,7 +119,7 @@ class Limb(object):
                 self._joint_effort[msg.name[i]] = msg.effort[i]
 
     def _on_endpoint_states(self, msg):
-        #_pose = {'position': (x, y, z), 'orientation': (x, y, z, w)}
+        # _pose = {'position': (x, y, z), 'orientation': (x, y, z, w)}
         self._cartesian_pose = {
             'position': self.Point(
                 msg.pose.position.x,
@@ -122,7 +133,7 @@ class Limb(object):
                 msg.pose.orientation.w,
             ),
         }
-        #_twist = {'linear': (x, y, z), 'angular': (x, y, z)}
+        # _twist = {'linear': (x, y, z), 'angular': (x, y, z)}
         self._cartesian_velocity = {
             'linear': self.Point(
                 msg.twist.linear.x,
@@ -135,7 +146,7 @@ class Limb(object):
                 msg.twist.angular.z,
             ),
         }
-        #_wrench = {'force': (x, y, z), 'torque': (x, y, z)}
+        # _wrench = {'force': (x, y, z), 'torque': (x, y, z)}
         self._cartesian_effort = {
             'force': self.Point(
                 msg.wrench.force.x,
@@ -221,56 +232,68 @@ class Limb(object):
         """
         return deepcopy(self._cartesian_effort)
 
-    def set_joint_position_mode(self):
+    def set_command_timeout(self, timeout):
         """
-        Set the joint controller in position mode
-        """
-        msg = baxter_msgs.msg.JointCommandMode()
-        msg.mode = baxter_msgs.msg.JointCommandMode.POSITION
-        self._pub_joint_mode.publish(msg)
+        @param timeout float  - float timeout in seconds
 
-    def set_joint_velocity_mode(self):
+        Set the timeout in seconds for the joint controller
         """
-        Set the joint controller in velocity mode
+        self._pub_joint_cmd_timeout.publish(Float64(timeout))
+
+    def set_joint_position_speed(self, speed):
         """
-        msg = baxter_msgs.msg.JointCommandMode()
-        msg.mode = baxter_msgs.msg.JointCommandMode.VELOCITY
-        self._pub_joint_mode.publish(msg)
+        @param speed float  - speed ratio of maximum joint speed for execution
+
+        Sets the ratio [0.0-1.0] (clipped) of maximum joint speed for joint
+        position control execution. This will be persistent until a new
+        execution speed is specified.
+        """
+        self._pub_speed_ratio.publish(Float64(speed))
 
     def set_joint_positions(self, positions):
         """
-        @param positions dict({str:float})   - dictionary of joint_name:angle
+        @param positions dict({str:float})  - dictionary of joint_name:angle
 
         Commands the joints of this limb to the specified positions
         """
-        msg = baxter_msgs.msg.JointPositions()
-        msg.names = positions.keys()
-        msg.angles = positions.values()
-        self.set_joint_position_mode()
-        self._pub_joint_position.publish(msg)
+        self._command_msg.names = positions.keys()
+        self._command_msg.command = positions.values()
+        self._command_msg.mode = JointCommand.POSITION_MODE
+        self._pub_joint_cmd.publish(self._command_msg)
 
     def set_joint_velocities(self, velocities):
         """
-        @param velocities dict({str:float})   - dictionary of joint_name:velocity
+        @param velocities dict({str:float})  - dictionary of joint_name:velocity
 
         Commands the joints of this limb to the specified velocities
         """
-        msg = baxter_msgs.msg.JointVelocities()
-        msg.names = velocities.keys()
-        msg.velocities = velocities.values()
-        self.set_joint_velocity_mode()
-        self._pub_joint_velocity.publish(msg)
+        self._command_msg.names = velocities.keys()
+        self._command_msg.command = velocities.values()
+        self._command_msg.mode = JointCommand.VELOCITY_MODE
+        self._pub_joint_cmd.publish(self._command_msg)
+
+    def set_joint_torques(self, torques):
+        """
+        @param torques dict({str:float})  - dictionary of joint_name:torque
+
+        Commands the joints of this limb to the specified torques
+        """
+        self._command_msg.names = torques.keys()
+        self._command_msg.command = torques.values()
+        self._command_msg.mode = JointCommand.TORQUE_MODE
+        self._pub_joint_cmd.publish(self._command_msg)
 
     def move_to_neutral(self):
         """
         Command the joints to the center of their joint ranges
         """
-        angles = dict(zip(self.joint_names(),[0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]))
+        angles = dict(zip(self.joint_names(),
+                          [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]))
         return self.move_to_joint_positions(angles)
 
     def move_to_joint_positions(self, positions, timeout=15.0):
         """
-        @param positions dict({str:float})   - dictionary of joint_name:angle
+        @param positions dict({str:float})  - dictionary of joint_name:angle
         @param timeout    - seconds to wait for move to finish [15]
 
         Commands the limb to the provided positions.  Waits until the reported
@@ -281,11 +304,14 @@ class Limb(object):
                 return abs(angle - self._joint_angle[joint])
             return joint_diff
 
-        diffs = [genf(j,a) for j,a in positions.items() if j in self._joint_angle]
+        diffs = [genf(j, a) for j, a in positions.items() if
+                 j in self._joint_angle]
 
         dataflow.wait_for(
-            lambda: not any(diff() >= settings.JOINT_ANGLE_TOLERANCE for diff in diffs),
-            timeout=timeout,
-            rate=100,
-            body=lambda: self.set_joint_positions(positions)
-            )
+                          lambda: not
+                          any(diff() >= settings.JOINT_ANGLE_TOLERANCE for
+                              diff in diffs),
+                          timeout=timeout,
+                          rate=100,
+                          body=lambda: self.set_joint_positions(positions)
+                          )
