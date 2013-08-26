@@ -55,8 +55,8 @@ class DigitalIO(object):
 
         self._state = {}
 
-        type_ns = '/robot/' + self._component_type + '/'
-        topic_base = type_ns + self._id
+        type_ns = '/robot/' + self._component_type
+        topic_base = type_ns + '/' + self._id
 
         self._sub_state = rospy.Subscriber(
             topic_base + '/state',

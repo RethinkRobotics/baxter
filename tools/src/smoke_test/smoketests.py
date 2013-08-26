@@ -144,8 +144,8 @@ class Messages(SmokeTest):
             rospy.wait_for_message('/robot/joint_states', JointState, 5.0)
             print("Test: Subscribe to topic: /robot/analog_io_states")
             rospy.wait_for_message(
-                '/robot/analog_io_states', 
-                AnalogIOStates, 
+                '/robot/analog_io_states',
+                AnalogIOStates,
                 5.0
                 )
             self.result[0] = True
@@ -178,7 +178,7 @@ class Services(SmokeTest):
                         z=0.0388352386502,
                         ),
                     orientation=Quaternion(
-                        x= -0.366894936773,
+                        x=-0.366894936773,
                         y=0.885980397775,
                         z=0.108155782462,
                         w=0.262162481772,
@@ -203,7 +203,7 @@ class Head(SmokeTest):
         try:
             print("Enabling robot...")
             self._rs.enable()
-            print("Test: Moving Head to Neutral Location.")
+            print("Test: Moving Head to Neutral Location")
             head = baxter_interface.Head()
             head.set_pan(0.0, 5.0)
             print("Test: Pan Head")
@@ -213,7 +213,7 @@ class Head(SmokeTest):
             print("Test: Nod Head")
             for x in range(3):
                 head.command_nod()
-            print("Test: Display Image on Screen - 5 seconds.")
+            print("Test: Display Image on Screen - 5 seconds")
             image_path = os.path.dirname(os.path.abspath(__file__))
             img = cv.LoadImage(image_path + '/baxterworking.png')
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
@@ -262,10 +262,10 @@ class MoveArms(SmokeTest):
             # Min Joint Range (e0, e1, s0, s1, w0, w1, w2) 
             #     (-1.701, -2.147, -3.054, -0.050, -3.059, -1.571, -3.059)
             joint_moves = (
-                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26,  0.0],
-                [ 0.5,  -0.8, 2.8, 0.15, 0.0,  1.9,  2.8],
-                [-0.1,  -0.8,-1.0, 2.5,  0.0, -1.4, -2.8],
-                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26,  0.0],
+                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
+                [ 0.5, -0.8, 2.8, 0.15, 0.0, 1.9, 2.8],
+                [-0.1, -0.8, -1.0, 2.5, 0.0, -1.4, -2.8],
+                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
                 )
             for move in joint_moves:
                 print(
@@ -273,12 +273,15 @@ class MoveArms(SmokeTest):
                     ", ".join("%.2f" % x for x in move)
                     )
                 left_thread = threading.Thread(
-                    target=move_thread, 
+                    target=move_thread,
                     args=(left, dict(zip(left.joint_names(), move)), left_queue)
                     )
                 right_thread = threading.Thread(
-                    target=move_thread, 
-                    args=(right, dict(zip(right.joint_names(), move)), right_queue)
+                    target=move_thread,
+                    args=(right,
+                          dict(zip(right.joint_names(), move)),
+                          right_queue
+                          )
                     )
                 left_thread.daemon = True
                 right_thread.daemon = True
@@ -323,7 +326,7 @@ class Grippers(SmokeTest):
                 gripper = baxter_interface.Gripper(name)
                 limb.move_to_neutral()
                 rospy.sleep(2.0)
-                print("Test: Verify %s Gripper Type" % (name,))
+                print("Test: Verify %s Gripper Type" % (name.capitalize(),))
                 if gripper.type() is not 'electric':
                     raise NameError("Test Requires Two Electric Grippers")
                 s_topic = 'robot/end_effector/' + name + '_gripper/state'
@@ -331,25 +334,25 @@ class Grippers(SmokeTest):
                                                   EndEffectorState,
                                                   5.0
                                                   )
-                print("Test: Reboot %s Gripper." % (name,))
+                print("Test: Reboot %s Gripper" % (name.capitalize(),))
                 gripper.reboot()
-                #gripper.configure()
-                print("Test: Calibrating %s Gripper." % (name,))
+                # gripper.configure()
+                print("Test: Calibrating %s Gripper" % (name.capitalize(),))
                 gripper.calibrate()
-                print("Test: Close %s Gripper" % (name,))
+                print("Test: Close %s Gripper" % (name.capitalize(),))
                 gripper.close(True)
-                print("Test: Open %s Gripper" % (name,))
+                print("Test: Open %s Gripper" % (name.capitalize(),))
                 gripper.open(True)
-                print("Test: Close %s Gripper" % (name,))
+                print("Test: Close %s Gripper" % (name.capitalize(),))
                 gripper.close(True)
-                print("Test: Open %s Gripper" % (name,))
+                print("Test: Open %s Gripper" % (name.capitalize(),))
                 gripper.open(True)
-                print("Test: %s Gripper Position Moves" % (name,))
+                print("Test: %s Gripper Position Moves" % (name.capitalize(),))
                 gripper.command_position(50.0, True)
                 gripper.command_position(75.0, True)
                 gripper.command_position(0.0, True)
                 gripper.command_position(100.0, True)
-                print("Test: %s Gripper Velocity Moves" % (name,))
+                print("Test: %s Gripper Velocity Moves" % (name.capitalize(),))
                 gripper.set_velocity(50.0)
                 gripper.close(True)
                 gripper.set_velocity(25.0)

@@ -83,7 +83,7 @@ class Gripper(object):
                          (ns + 'state',))
         )
 
-        self.configure(defaults=True)
+        self._configure(defaults=True)
 
     def _on_gripper_state(self, state):
         self._state = deepcopy(state)
@@ -108,7 +108,7 @@ class Gripper(object):
                 body=lambda: self._pub_cmd.publish(self._cmd_msg)
             )
 
-    def configure(self, defaults=False):
+    def _configure(self, defaults=False):
         if defaults:
             self._params['position'] = 100.0
             self._params['velocity'] = 50.0
@@ -118,6 +118,28 @@ class Gripper(object):
         cmd = EndEffectorCommand.CMD_CONFIGURE
         self._command(cmd, args=self._params)
 
+    def valid_parameters(self):
+        """Text describing valid gripper parameters
+        """
+        return """Valid gripper parameters are
+        PARAMETERS:
+        velocity      - Velocity at which a position move will execute
+        moving_force  - Force threshold at which a move will stop
+        holding_force - Force at which a grasp will continue holding
+        dead_zone     - Position dead band within move considered successful
+        ALL PARAMETERS (0-100)
+        """
+
+    def set_parameters(self, params):
+        for key in params.keys():
+            if key in self._params:
+                self_params[key] = params[key]
+            else:
+                msg = ("Invalid parameter: %s provided. %s" % 
+                       (key, valid_parameters(),))
+                rospy.logwarn(msg)
+        self._configure(defaults=False)
+
     def reset(self, timeout=2.0, block=True):
         """
         Reset the gripper
@@ -125,8 +147,13 @@ class Gripper(object):
         cmd = EndEffectorCommand.CMD_RESET
         error_msg = ("Unable to successfully reset the %s gripper" % 
                      (self.name,))
-        self._command(cmd, block, lambda: self._state.error == False,
-                      time=timeout, msg=error_msg)
+        self._command(
+            cmd,
+            block,
+            lambda: self._state.error == False,
+            time=timeout,
+            msg=error_msg
+        )
 
     def reboot(self, timeout=2.0, block=True):
         """
@@ -135,9 +162,15 @@ class Gripper(object):
         cmd = EndEffectorCommand.CMD_REBOOT
         error_msg = ("Unable to successfully reboot the %s gripper" % 
                      (self.name,))
-        self._command(cmd, block, lambda: self._state.calibrated == False,
-                      time=timeout, msg=error_msg)
-        self.configure(defaults=True)
+        self._command(
+            cmd,
+            block,
+            lambda: (self._state.calibrated == False and
+                     self._state.error == False),
+            time=timeout,
+            msg=error_msg
+        )
+        self._configure(defaults=True)
 
     def calibrate(self, timeout=5.0, block=True):
         """
@@ -146,9 +179,13 @@ class Gripper(object):
         cmd = EndEffectorCommand.CMD_CALIBRATE
         error_msg = ("Unable to successfully calibrate the %s gripper" % 
                      (self.name,))
-        self._command(cmd, block, lambda: self._state.calibrated == True,
-                      time=timeout, msg=error_msg)
-        self.configure(defaults=True)
+        self._command(
+            cmd,
+            block,
+            lambda: self._state.calibrated == True,
+            time=timeout, msg=error_msg
+        )
+        self._configure(defaults=True)
 
 
     def stop(self, block=True):
@@ -158,8 +195,13 @@ class Gripper(object):
         cmd = EndEffectorCommand.CMD_STOP
         error_msg = ("Unable to verify the %s gripper has stopped" % 
                      (self.name,))
-        self._command(cmd, block, lambda: self._state.moving == False,
-                      time=timeout, msg=error_msg)
+        self._command(
+            cmd,
+            block,
+            lambda: self._state.moving == False,
+            time=timeout,
+            msg=error_msg
+        )
 
     def command_position(self, position, block=False, timeout=5.0):
         """
@@ -171,11 +213,17 @@ class Gripper(object):
         arguments = {"position": self._clip(position)}
         error_msg = ("Unable to verify the %s gripper position move" % 
                      (self.name,))
-        self._command(cmd, block,
-                      lambda: (fabs(self._state.position - position) < 
-                               self._params['dead_zone'] or
-                               self._state.gripping),
-                      time=timeout, args=arguments, msg=error_msg)
+        self._command(
+            cmd,
+            block,
+            lambda: (fabs(self._state.position - position) <
+                     self._params['dead_zone'] or
+                     self._state.gripping
+                     ),
+            time=timeout,
+            args=arguments,
+            msg=error_msg
+        )
 
     def set_velocity(self, velocity):
         """
@@ -184,7 +232,7 @@ class Gripper(object):
         @param velocity (float) - in % 0=stop 100=max
         """
         self._params['velocity'] = self._clip(velocity)
-        self.configure(defaults=False)
+        self._configure(defaults=False)
 
     def set_moving_force(self, force):
         """
@@ -193,7 +241,7 @@ class Gripper(object):
         @param force (float) - in % 0=none 100=max
         """
         self._params['force'] = self._clip(force)
-        self.configure(defaults=False)
+        self._configure(defaults=False)
 
     def set_holding_force(self, force):
         """
@@ -202,7 +250,7 @@ class Gripper(object):
         @param force (float) - in % 0=none 100=max
         """
         self._params['force'] = self._clip(force)
-        self.configure(defaults=False)
+        self._configure(defaults=False)
 
     def set_dead_band(self, dead_band):
         """
@@ -211,7 +259,7 @@ class Gripper(object):
         @param dead_band (float) - in % of full position
         """
         self._params['dead_band'] = self._clip(dead_band)
-        self.configure(defaults=False)
+        self._configure(defaults=False)
 
     def inc_position_command(self, position, block=False):
         """
@@ -227,9 +275,9 @@ class Gripper(object):
 
         @param velocity (float) - percentage to increment by
         """
-        self._params['velocity'] = self._clip(self._params['velocity'] +
-                                              velocity)
-        self.configure(defaults=False)
+        self._params['velocity'] = self._clip(self._params['velocity']
+                                              + velocity)
+        self._configure(defaults=False)
 
     def inc_moving_force(self, force):
         """
@@ -237,8 +285,9 @@ class Gripper(object):
 
         @param force (float) - percentage to increment by
         """
-        self._params['moving_force'] = self._clip(self._params['moving_force'] +
-                                                  force)
+        self._params['moving_force'] = self._clip(self._params['moving_force']
+                                                  + force)
+        self._configure(defaults=False)
 
     def inc_holding_force(self, force):
         """
@@ -248,7 +297,7 @@ class Gripper(object):
         """
         self._params['holding_force'] = self._clip(self._params['holding_force']
                                                    + force)
-        self.configure(defaults=False)
+        self._configure(defaults=False)
 
     def inc_dead_band(self, dead_band):
         """
@@ -258,7 +307,10 @@ class Gripper(object):
         """
         self._params['dead_band'] = self._clip(self._params['dead_band']
                                                    + dead_band)
-        self.configure(defaults=False)
+        self._configure(defaults=False)
+
+    def parameters(self):
+        return deepcopy(self._params)
 
     def open(self, block=False):
         self.command_position(100.0, block)
