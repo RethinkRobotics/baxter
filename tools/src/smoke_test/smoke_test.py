@@ -118,8 +118,6 @@ if __name__ == '__main__':
     test_dict = {
         'version': None,
         'valid_tests': {
-            '0.6.0': ['BlinkLEDs'],
-            '0.6.1': ['BlinkLEDs', 'Cameras'],
             '0.7.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms',
                 'Grippers', 'BlinkLEDs', 'Cameras'],
             }
