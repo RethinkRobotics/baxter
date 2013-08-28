@@ -26,3 +26,4 @@ float64[] velocity
 float64[] effort
 float64[] gravity_model_effort
 float64[] hysteresis_model_effort
+float64[] crosstalk_model_effort
