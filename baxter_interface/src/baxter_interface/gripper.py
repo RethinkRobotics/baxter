@@ -138,7 +138,7 @@ class Gripper(object):
         Returns dict of available gripper parameters with default parameters.
         """
         valid = {'velocity':50.0,
-                 'moving_force':30.0,
+                 'moving_force':40.0,
                  'holding_force':30.0,
                  'dead_zone':5.0
                  }
@@ -199,6 +199,7 @@ class Gripper(object):
             time=timeout,
             msg=error_msg
         )
+        rospy.sleep(0.5) # Allow extra time for reboot to complete
         self.set_parameters(defaults=True)
 
     def calibrate(self, timeout=5.0, block=True):
@@ -242,7 +243,7 @@ class Gripper(object):
         @param position (float) - in % 0=close 100=open
 
         Command the gripper position movement.
-        from minimum (0.0) to maximum (1.0)
+        from minimum (0) to maximum (100)
         """
         cmd = EndEffectorCommand.CMD_GO
         arguments = {"position": self._clip(position)}
@@ -250,7 +251,8 @@ class Gripper(object):
         self.command(
             cmd,
             block,
-            test=lambda: (fabs(self._state.position - position) < self._params['dead_zone'] or self._state.gripping),
+            test=lambda: (fabs(self._state.position - position) <
+                          self._params['dead_zone'] or self._state.gripping),
             time=timeout,
             args=arguments,
             msg=error_msg
