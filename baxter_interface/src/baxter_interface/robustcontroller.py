@@ -31,7 +31,7 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-from baxter_msgs.msg import (
+from baxter_core_msgs.msg import (
     RobustControllerStatus,
 )
 

@@ -36,7 +36,7 @@ import roslib
 roslib.load_manifest('tools')
 import rospy
 
-from baxter_msgs.msg import (
+from baxter_maintenance_msgs.msg import (
     CalibrateArmEnable,
 )
 
@@ -56,7 +56,7 @@ class CalibrateArm(baxter_interface.robustcontroller.RobustController):
 
         # Initialize RobustController, use 10 minute timeout for the CalibrateArm process
         super(CalibrateArm, self).__init__(
-            '/sdk/robustcontroller/%s/CalibrateArm' % (limb,),
+            '/robustcontroller/%s/CalibrateArm' % (limb,),
             enable_msg,
             disable_msg,
             10 * 60)

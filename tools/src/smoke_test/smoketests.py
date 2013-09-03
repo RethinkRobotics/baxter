@@ -55,15 +55,15 @@ import cv
 import cv_bridge
 
 import baxter_interface
-from baxter_msgs.msg import (
+from baxter_core_msgs.msg import (
     AnalogIOStates,
-    GripperState,
-    GripperIdentity,
+    EndEffectorProperties,
+    EndEffectorState,
     )
-from baxter_msgs.srv import (
+from baxter_core_msgs.srv import (
+    ListCameras,
     SolvePositionIK,
     SolvePositionIKRequest,
-    ListCameras,
     )
 
 class SmokeTest(object):
@@ -142,10 +142,10 @@ class Messages(SmokeTest):
         try:
             print("Test: Subscribe to topic: /robot/joint_states")
             rospy.wait_for_message('/robot/joint_states', JointState, 5.0)
-            print("Test: Subscribe to topic: /sdk/robot/analog_io_states")
+            print("Test: Subscribe to topic: /robot/analog_io_states")
             rospy.wait_for_message(
-                '/sdk/robot/analog_io_states', 
-                AnalogIOStates, 
+                '/robot/analog_io_states',
+                AnalogIOStates,
                 5.0
                 )
             self.result[0] = True
@@ -162,7 +162,7 @@ class Services(SmokeTest):
         """Runs Services Smoke Test
         """
         try:
-            srv = '/sdk/robot/limb/left/solve_ik_position'
+            srv = '/ExternalTools/left/PositionKinematicsNode/IKService'
             print("Test: Service availability: %s" % srv)
             rospy.wait_for_service(srv, 5.0)
             print("Test: IK service call Solve IK")
@@ -178,7 +178,7 @@ class Services(SmokeTest):
                         z=0.0388352386502,
                         ),
                     orientation=Quaternion(
-                        x= -0.366894936773,
+                        x=-0.366894936773,
                         y=0.885980397775,
                         z=0.108155782462,
                         w=0.262162481772,
@@ -203,7 +203,7 @@ class Head(SmokeTest):
         try:
             print("Enabling robot...")
             self._rs.enable()
-            print("Test: Moving Head to Neutral Location.")
+            print("Test: Moving Head to Neutral Location")
             head = baxter_interface.Head()
             head.set_pan(0.0, 5.0)
             print("Test: Pan Head")
@@ -213,11 +213,11 @@ class Head(SmokeTest):
             print("Test: Nod Head")
             for x in range(3):
                 head.command_nod()
-            print("Test: Display Image on Screen - 5 seconds.")
+            print("Test: Display Image on Screen - 5 seconds")
             image_path = os.path.dirname(os.path.abspath(__file__))
             img = cv.LoadImage(image_path + '/baxterworking.png')
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
-            pub = rospy.Publisher('/sdk/xdisplay', Image, latch=True)
+            pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
             pub.publish(msg)
             rospy.sleep(5.0)
             img = cv.LoadImage(image_path + '/researchsdk.png')
@@ -262,10 +262,10 @@ class MoveArms(SmokeTest):
             # Min Joint Range (e0, e1, s0, s1, w0, w1, w2) 
             #     (-1.701, -2.147, -3.054, -0.050, -3.059, -1.571, -3.059)
             joint_moves = (
-                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26,  0.0],
-                [ 0.5,  -0.8, 2.8, 0.15, 0.0,  1.9,  2.8],
-                [-0.1,  -0.8,-1.0, 2.5,  0.0, -1.4, -2.8],
-                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26,  0.0],
+                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
+                [ 0.5, -0.8, 2.8, 0.15, 0.0, 1.9, 2.8],
+                [-0.1, -0.8, -1.0, 2.5, 0.0, -1.4, -2.8],
+                [ 0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0],
                 )
             for move in joint_moves:
                 print(
@@ -273,12 +273,15 @@ class MoveArms(SmokeTest):
                     ", ".join("%.2f" % x for x in move)
                     )
                 left_thread = threading.Thread(
-                    target=move_thread, 
+                    target=move_thread,
                     args=(left, dict(zip(left.joint_names(), move)), left_queue)
                     )
                 right_thread = threading.Thread(
-                    target=move_thread, 
-                    args=(right, dict(zip(right.joint_names(), move)), right_queue)
+                    target=move_thread,
+                    args=(right,
+                          dict(zip(right.joint_names(), move)),
+                          right_queue
+                          )
                     )
                 left_thread.daemon = True
                 right_thread.daemon = True
@@ -318,70 +321,49 @@ class Grippers(SmokeTest):
         try:
             print("Enabling robot, Moving to Neutral Location...")
             self._rs.enable()
-            right = baxter_interface.Limb('right')
-            left = baxter_interface.Limb('left')
-            right.move_to_neutral()
-            left.move_to_neutral()
-            rospy.sleep(2.0)
-            print("Test: Verify Gripper Identity")
-            gripper_id = rospy.wait_for_message(
-                '/sdk/robot/limb/right/accessory/gripper/identity',
-                GripperIdentity,
-                5.0
-                )
-            if not 'electric gripper' in gripper_id.name:
-                raise NameError("Grippers Test Requires Two Electric Grippers")
-            gripper_id = rospy.wait_for_message(
-                '/sdk/robot/limb/left/accessory/gripper/identity',
-                GripperIdentity,
-                5.0
-                )
-            if not 'electric gripper' in gripper_id.name:
-                raise NameError("Grippers Test Requires Two Electric Grippers")
-            print("Test: Subscribe to Gripper State.")
-            rospy.wait_for_message(
-                '/sdk/robot/limb/left/accessory/gripper/state',
-                GripperState,
-                5.0
-                )
-            rospy.wait_for_message(
-                '/sdk/robot/limb/right/accessory/gripper/state',
-                GripperState,
-                5.0
-                )
-            print("Test: Reboot Grippers.")
-            lg = baxter_interface.Gripper('left')
-            rg = baxter_interface.Gripper('right')
-            lg.reboot()
-            rg.reboot()
-            print("Test: Calibrating Grippers.")
-            lg.calibrate()
-            rg.calibrate()
-            print("Test: Open Grippers")
-            lg.open()
-            rg.open()
-            print("Test: Close Grippers")
-            rospy.sleep(2.0)
-            lg.close()
-            rg.close()
-            rospy.sleep(2.0)
-            print("Test: Open Grippers")
-            lg.open()
-            rg.open()
-            rospy.sleep(2.0)
-            print("Test: Position Moves")
-            lg.set_position(50.0)
-            rg.set_position(50.0)
-            rospy.sleep(1.0)
-            lg.set_position(75.0)
-            rg.set_position(75.0)
-            rospy.sleep(1.0)
-            lg.set_position(0.0)
-            rg.set_position(0.0)
-            rospy.sleep(1.0)
-            lg.set_position(100.0)
-            rg.set_position(100.0)
-            rospy.sleep(1.0)
+            for name in ['left', 'right']:
+                limb = baxter_interface.Limb(name)
+                gripper = baxter_interface.Gripper(name)
+                limb.move_to_neutral()
+                rospy.sleep(2.0)
+                print("Test: Verify %s Gripper Type" % (name.capitalize(),))
+                if gripper.type() is not 'electric':
+                    raise NameError("Test Requires Two Electric Grippers")
+                s_topic = 'robot/end_effector/' + name + '_gripper/state'
+                ee_state = rospy.wait_for_message(s_topic,
+                                                  EndEffectorState,
+                                                  5.0
+                                                  )
+                print("Test: Reboot %s Gripper" % (name.capitalize(),))
+                gripper.reboot()
+                print("Test: Calibrating %s Gripper" % (name.capitalize(),))
+                gripper.calibrate()
+                print("Test: Close %s Gripper" % (name.capitalize(),))
+                gripper.close(True)
+                print("Test: Open %s Gripper" % (name.capitalize(),))
+                gripper.open(True)
+                print("Test: Close %s Gripper" % (name.capitalize(),))
+                gripper.close(True)
+                print("Test: Open %s Gripper" % (name.capitalize(),))
+                gripper.open(True)
+                print("Test: %s Gripper Position Moves" % (name.capitalize(),))
+                gripper.command_position(50.0, True)
+                gripper.command_position(75.0, True)
+                gripper.command_position(0.0, True)
+                gripper.command_position(100.0, True)
+                print("Test: %s Gripper Velocity Moves" % (name.capitalize(),))
+                gripper.set_moving_force(100.0)
+                gripper.set_velocity(50.0)
+                gripper.close(True)
+                gripper.set_velocity(25.0)
+                gripper.open(True)
+                gripper.set_velocity(100.0)
+                gripper.close(True)
+                gripper.open(True)
+                gripper.set_velocity(50.0)
+                gripper.set_moving_force(30.0)
+                gripper.close(True)
+                gripper.open(True)
             print("Disabling robot...")
             self._rs.disable()
             self.result[0] = True
@@ -436,7 +418,7 @@ class Cameras(SmokeTest):
         """
 
         xpub_img = rospy.Publisher(
-            '/sdk/xdisplay',
+            '/robot/xdisplay',
             Image
         )
 

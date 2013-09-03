@@ -66,10 +66,10 @@ class Tuck(object):
         }
         self._disable_pub = {
             'left': rospy.Publisher(
-                 '/robot/limb/left/CollisionAvoidance/suppress_body_avoidance',
+                 '/robot/limb/left/suppress_collision_avoidance',
                  Empty),
             'right': rospy.Publisher(
-                 '/robot/limb/right/CollisionAvoidance/suppress_body_avoidance',
+                 '/robot/limb/right/suppress_collision_avoidance',
                  Empty)
         }
         self._rs = baxter_interface.RobotEnable()

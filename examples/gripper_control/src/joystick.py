@@ -61,10 +61,28 @@ def map_joystick(joystick):
                     doc = doc()
                 print("%s %s: %s" % (test[0].__name__, str(test[1]), doc))
 
+    def l_command(offset):
+        left.command_position(left.position() + offset)
+
+    def r_command(offset):
+        right.command_position(right.position() + offset)
+
+    def l_holding(offset):
+        left.set_holding_force(left.parameters()['holding_force'] + offset)
+
+    def r_holding(offset):
+        right.set_holding_force(right.parameters()['holding_force'] + offset)
+
+    def l_velocity(offset):
+        left_set_velocity(left.parameters()['velocity'] + offset)
+
+    def r_velocity(offset):
+        right.set_velocity(right.parameters()['velocity'] + offset)
+
     bindings_list = []
     bindings = (
-        ((bdn, ['btnDown']), (left.reboot, []), "left: reset"),
-        ((bdn, ['btnLeft']), (right.reboot, []), "right: reset"),
+        ((bdn, ['btnDown']), (left.reboot, []), "left: reboot"),
+        ((bdn, ['btnLeft']), (right.reboot, []), "right: reboot"),
         ((bdn, ['btnRight']), (left.calibrate, []), "left: calibrate"),
         ((bdn, ['btnUp']), (right.calibrate, []), "right: calibrate"),
         ((bdn, ['rightTrigger']), (left.close, []), "left: close"),
@@ -73,18 +91,30 @@ def map_joystick(joystick):
         ((bup, ['leftTrigger']), (right.open, []), "right: open"),
         ((bdn, ['rightBumper']), (left.stop, []), "left: stop"),
         ((bdn, ['leftBumper']), (right.stop, []), "right: stop"),
-        ((jlo, ['rightStickHorz']), (left.inc_position, [-5.0]), "left:  decrease position"),
-        ((jlo, ['leftStickHorz']), (right.inc_position, [-5.0]), "right:  decrease position"),
-        ((jhi, ['rightStickHorz']), (left.inc_position, [5.0]), "left:  increase position"),
-        ((jhi, ['leftStickHorz']), (right.inc_position, [5.0]), "right:  increase position"),
-        ((jlo, ['rightStickVert']), (left.inc_holding_force, [-5.0]), "left:  decrease holding force"),
-        ((jlo, ['leftStickVert']), (right.inc_holding_force, [-5.0]), "right:  decrease holding force"),
-        ((jhi, ['rightStickVert']), (left.inc_holding_force, [5.0]), "left:  increase holding force"),
-        ((jhi, ['leftStickVert']), (right.inc_holding_force, [5.0]), "right:  increase holding force"),
-        ((bdn, ['dPadDown']), (left.inc_velocity, [-5.0]), "left:  decrease velocity"),
-        ((bdn, ['dPadLeft']), (right.inc_velocity, [-5.0]), "right:  decrease velocity"),
-        ((bdn, ['dPadRight']), (left.inc_velocity, [5.0]), "left:  increase velocity"),
-        ((bdn, ['dPadUp']), (right.inc_velocity, [5.0]), "right:  increase velocity"),
+        ((jlo, ['rightStickHorz']), (l_command, [-7.5]),
+                                     "left:  decrease position"),
+        ((jlo, ['leftStickHorz']), (r_command, [-7.5]),
+                                    "right:  decrease position"),
+        ((jhi, ['rightStickHorz']), (l_command, [7.5]),
+                                     "left:  increase position"),
+        ((jhi, ['leftStickHorz']), (r_command, [7.5]),
+                                     "right:  increase position"),
+        ((jlo, ['rightStickVert']), (l_holding, [-5.0]),
+                                     "left:  decrease holding force"),
+        ((jlo, ['leftStickVert']), (r_holding, [-5.0]),
+                                    "right:  decrease holding force"),
+        ((jhi, ['rightStickVert']), (l_holding, [5.0]),
+                                     "left:  increase holding force"),
+        ((jhi, ['leftStickVert']), (r_holding, [5.0]),
+                                    "right:  increase holding force"),
+        ((bdn, ['dPadDown']), (l_velocity, [-5.0]),
+                               "left:  decrease velocity"),
+        ((bdn, ['dPadLeft']), (r_velocity, [-5.0]),
+                               "right:  decrease velocity"),
+        ((bdn, ['dPadRight']), (l_velocity, [5.0]),
+                                "left:  increase velocity"),
+        ((bdn, ['dPadUp']), (r_velocity, [5.0]),
+                             "right:  increase velocity"),
         ((bdn, ['function1']), (print_help, [bindings_list]), "help"),
         ((bdn, ['function2']), (print_help, [bindings_list]), "help"),
     )
@@ -112,15 +142,9 @@ def map_joystick(joystick):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("joystick", help="specify the type of joystick to use; xbox | logitech | ps3")
+    parser.add_argument('-j','--joystick', choices=['xbox', 'logitech', 'ps3'],
+                        help="specify the type of joystick to use")
     args, unknown = parser.parse_known_args()
-
-    print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_gripper_control_joystick")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
 
     joystick = None
     if args.joystick == 'xbox':
@@ -131,6 +155,13 @@ if __name__ == '__main__':
         joystick = iodevices.joystick.PS3Controller()
     else:
         parser.error("Unsupported joystick type '%s'" % (args.joystick))
+
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_gripper_control_joystick")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
 
     if map_joystick(joystick):
         print("Disabling robot... ")

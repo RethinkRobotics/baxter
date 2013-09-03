@@ -31,8 +31,13 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-import baxter_msgs.msg
-import std_msgs.msg
+from std_msgs.msg import (
+    Bool
+)
+from baxter_core_msgs.msg import (
+   HeadPanCommand,
+   HeadState,
+)
 
 import settings
 import dataflow
@@ -48,22 +53,22 @@ class Head(object):
         self._state = {}
 
         self._pub_pan = rospy.Publisher(
-            '/sdk/robot/head/command_head_pan',
-            baxter_msgs.msg.HeadPanCommand)
+            '/robot/head/command_head_pan',
+            HeadPanCommand)
 
         self._pub_nod = rospy.Publisher(
             '/robot/head/command_head_nod',
-            std_msgs.msg.Bool)
+            Bool)
 
         self._sub_state = rospy.Subscriber(
-            '/sdk/robot/head/head_state',
-            baxter_msgs.msg.HeadState,
+            '/robot/head/head_state',
+            HeadState,
             self._on_head_state)
 
         dataflow.wait_for(
             lambda: len(self._state) != 0,
             timeout=5.0,
-            timeout_msg="Failed to get current head state from /sdk/robot/head/head_state",
+            timeout_msg="Failed to get current head state from /robot/head/head_state",
         )
 
     def _on_head_state(self, msg):
@@ -105,7 +110,7 @@ class Head(object):
         @param timeout (float)  - Seconds to wait for the head to pan to the specified
                                   angle.  If 0, just command once and return.  [0]
         """
-        msg = baxter_msgs.msg.HeadPanCommand(angle, speed)
+        msg = HeadPanCommand(angle, speed)
         self._pub_pan.publish(msg)
 
         if not timeout == 0:

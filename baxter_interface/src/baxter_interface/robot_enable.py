@@ -33,9 +33,17 @@ import time
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
+
+from std_msgs.msg import (
+    Bool,
+    Empty,
+)
+
+from baxter_core_msgs.msg import (
+    AssemblyState,
+)
+
 import dataflow
-import std_msgs.msg
-import baxter_msgs.msg
 
 class RobotEnable(object):
     """
@@ -49,17 +57,16 @@ class RobotEnable(object):
     """
     def __init__(self):
         self._state = None
-        topic = '/sdk/robot/state'
-        self._state_sub = rospy.Subscriber(
-            topic,
-            baxter_msgs.msg.AssemblyState,
-            self._state_callback)
+        self._state_sub = rospy.Subscriber('/robot/state',
+                                           AssemblyState,
+                                           self._state_callback
+                                           )
 
-        dataflow.wait_for(
-            lambda: not self._state is None,
-            timeout=2.0,
-            timeout_msg="Failed to get current robot state from %s" % (topic,),
-        )
+        dataflow.wait_for(lambda: not self._state is None,
+                          timeout=2.0,
+                          timeout_msg=("Failed to get robot state on %s" %
+                                       ('/robot/state',)),
+                          )
 
     def _state_callback(self, msg):
         self._state = msg
@@ -86,47 +93,46 @@ class RobotEnable(object):
 
     def _toggle_enabled(self, status):
 
-        pub = rospy.Publisher('/robot/set_super_enable', std_msgs.msg.Bool)
+        pub = rospy.Publisher('/robot/set_super_enable', Bool)
 
-        dataflow.wait_for(
-            test=lambda: self._state.enabled == status,
-            timeout=2.0 if status else 5.0,
-            timeout_msg="Failed to %sable robot" % ('en' if status else 'dis',),
-            body=lambda: pub.publish(status),
-        )
+        dataflow.wait_for(test=lambda: self._state.enabled == status,
+                          timeout=2.0 if status else 5.0,
+                          timeout_msg=("Failed to %sable robot" % 
+                                       ('en' if status else 'dis',)),
+                          body=lambda: pub.publish(status),
+                          )
 
     def reset(self):
         """
         Reset all joints.  Trigger JRCP hardware to reset all faults.  Disable
         the robot.
         """
-        is_reset = lambda: self._state.enabled == False\
-            and self._state.stopped == False \
-            and self._state.error == False \
-            and self._state.estop_button == 0 \
-            and self._state.estop_source == 0
+        is_reset = lambda: (self._state.enabled == False and
+                            self._state.stopped == False and
+                            self._state.error == False and
+                            self._state.estop_button == 0 and
+                            self._state.estop_source == 0
+                            )
 
-        pub = rospy.Publisher('/robot/set_super_reset', std_msgs.msg.Empty)
+        pub = rospy.Publisher('/robot/set_super_reset', Empty)
 
-        dataflow.wait_for(
-            test=is_reset,
-            timeout=3.0,
-            timeout_msg="Failed to reset robot",
-            body=lambda: pub.publish(),
-        )
+        dataflow.wait_for(test=is_reset,
+                          timeout=3.0,
+                          timeout_msg="Failed to reset robot",
+                          body=lambda: pub.publish(),
+                          )
 
     def stop(self):
         """
         Simulate an e-stop button being pressed.  Robot must be reset to clear
         the stopped state.
         """
-        pub = rospy.Publisher('/robot/set_super_stop', std_msgs.msg.Empty)
-        dataflow.wait_for(
-            test=lambda: self._state.stopped == True,
-            timeout=3.0,
-            timeout_msg="Failed to stop the robot",
-            body=lambda: pub.publish(),
-        )
+        pub = rospy.Publisher('/robot/set_super_stop', Empty)
+        dataflow.wait_for(test=lambda: self._state.stopped == True,
+                          timeout=3.0,
+                          timeout_msg="Failed to stop the robot",
+                          body=lambda: pub.publish(),
+                          )
 
 def test():
     rospy.init_node("rethink_rsdk_robot_enable_test")

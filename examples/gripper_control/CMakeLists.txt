@@ -5,7 +5,7 @@ find_package(catkin
   REQUIRED
   rospy
   sensor_msgs
-  baxter_msgs
+  baxter_core_msgs
   baxter_interface
   utilities
 )
@@ -16,7 +16,7 @@ catkin_package(
   CATKIN_DEPENDS
   rospy
   sensor_msgs
-  baxter_msgs
+  baxter_core_msgs
   baxter_interface
   utilities
 )
