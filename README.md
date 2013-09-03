@@ -26,7 +26,7 @@ RSDK Wiki:  http://github.com/RethinkRobotics/sdk-docs/wiki
 ```
 .
 |-- init.sh                     # environment initialization script
-+-- baxter                      # the baxter rsdk stack
++-- baxter                      # the baxter rsdk meta-package
     +-- baxter_description          # .stl meshes for rendering
     +-- baxter_interface            # python interfaces to baxter
     +-- baxter_core_msgs            # ROS messages and services for robot control

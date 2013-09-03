@@ -150,6 +150,6 @@ if __name__ == '__main__':
         ros_init()
         run_test(args.test, filename, args.proceed)
     else:
-        print("Exiting: Invalid test provided: %s for %s version software" % 
-              (args.test, test_dict['version'],))
+        print("Exiting: Invalid test provided: %s for %s version software" %
+              (args.test, test_dict['version']))
         parser.print_help()

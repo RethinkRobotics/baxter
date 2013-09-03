@@ -79,7 +79,7 @@ class Limb(object):
         self._command_msg = JointCommand()
 
         self._pub_speed_ratio = rospy.Publisher(
-            ns + 'set_speep_ratio',
+            ns + 'set_speed_ratio',
             Float64)
 
         self._pub_joint_cmd = rospy.Publisher(
@@ -119,6 +119,7 @@ class Limb(object):
                 self._joint_effort[msg.name[i]] = msg.effort[i]
 
     def _on_endpoint_states(self, msg):
+        # Comments in this private method are for documentation purposes.
         # _pose = {'position': (x, y, z), 'orientation': (x, y, z, w)}
         self._cartesian_pose = {
             'position': self.Point(
@@ -254,7 +255,7 @@ class Limb(object):
         """
         @param positions dict({str:float})  - dictionary of joint_name:angle
 
-        Commands the joints of this limb to the specified positions
+        Commands the joints of this limb to the specified positions.
         """
         self._command_msg.names = positions.keys()
         self._command_msg.command = positions.values()
@@ -265,7 +266,11 @@ class Limb(object):
         """
         @param velocities dict({str:float})  - dictionary of joint_name:velocity
 
-        Commands the joints of this limb to the specified velocities
+        Commands the joints of this limb to the specified velocities.
+        Important: set_joint_velocities must be commanded at a rate great than
+        the timeout specified by set_command_timeout. If the timeout is
+        exceeded before a new set_joint_velocities command is received, the
+        controller will switch modes back to position mode for safety purposes.
         """
         self._command_msg.names = velocities.keys()
         self._command_msg.command = velocities.values()
@@ -276,7 +281,11 @@ class Limb(object):
         """
         @param torques dict({str:float})  - dictionary of joint_name:torque
 
-        Commands the joints of this limb to the specified torques
+        Commands the joints of this limb to the specified torques.
+        Important: set_joint_torques must be commanded at a rate great than
+        the timeout specified by set_command_timeout. If the timeout is
+        exceeded before a new set_joint_torques command is received, the
+        controller will switch modes back to position mode for safety purposes.
         """
         self._command_msg.names = torques.keys()
         self._command_msg.command = torques.values()
@@ -308,9 +317,9 @@ class Limb(object):
                  j in self._joint_angle]
 
         dataflow.wait_for(
-                          lambda: not
-                          any(diff() >= settings.JOINT_ANGLE_TOLERANCE for
-                              diff in diffs),
+                          lambda: (not
+                                   any(diff() >= settings.JOINT_ANGLE_TOLERANCE
+                                       for diff in diffs)),
                           timeout=timeout,
                           rate=100,
                           body=lambda: self.set_joint_positions(positions)

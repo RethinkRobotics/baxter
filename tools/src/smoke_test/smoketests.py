@@ -217,7 +217,7 @@ class Head(SmokeTest):
             image_path = os.path.dirname(os.path.abspath(__file__))
             img = cv.LoadImage(image_path + '/baxterworking.png')
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
-            pub = rospy.Publisher('/sdk/xdisplay', Image, latch=True)
+            pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
             pub.publish(msg)
             rospy.sleep(5.0)
             img = cv.LoadImage(image_path + '/researchsdk.png')
@@ -321,7 +321,7 @@ class Grippers(SmokeTest):
         try:
             print("Enabling robot, Moving to Neutral Location...")
             self._rs.enable()
-            for name in ['left', 'right']:
+            for name in ['right']:
                 limb = baxter_interface.Limb(name)
                 gripper = baxter_interface.Gripper(name)
                 limb.move_to_neutral()
@@ -336,7 +336,6 @@ class Grippers(SmokeTest):
                                                   )
                 print("Test: Reboot %s Gripper" % (name.capitalize(),))
                 gripper.reboot()
-                # gripper.configure()
                 print("Test: Calibrating %s Gripper" % (name.capitalize(),))
                 gripper.calibrate()
                 print("Test: Close %s Gripper" % (name.capitalize(),))
@@ -353,6 +352,7 @@ class Grippers(SmokeTest):
                 gripper.command_position(0.0, True)
                 gripper.command_position(100.0, True)
                 print("Test: %s Gripper Velocity Moves" % (name.capitalize(),))
+                gripper.set_moving_force(100.0)
                 gripper.set_velocity(50.0)
                 gripper.close(True)
                 gripper.set_velocity(25.0)
@@ -361,6 +361,7 @@ class Grippers(SmokeTest):
                 gripper.close(True)
                 gripper.open(True)
                 gripper.set_velocity(50.0)
+                gripper.set_moving_force(30.0)
                 gripper.close(True)
                 gripper.open(True)
             print("Disabling robot...")
@@ -417,7 +418,7 @@ class Cameras(SmokeTest):
         """
 
         xpub_img = rospy.Publisher(
-            '/sdk/xdisplay',
+            '/robot/xdisplay',
             Image
         )
 
