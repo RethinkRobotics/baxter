@@ -10,7 +10,7 @@ find_package(catkin
   control_msgs
   trajectory_msgs
   dynamic_reconfigure
-  baxter_msgs
+  baxter_core_msgs
   utilities
 )
 
@@ -29,6 +29,6 @@ catkin_package(
   control_msgs
   trajectory_msgs
   dynamic_reconfigure
-  baxter_msgs
+  baxter_core_msgs
   utilities
 )

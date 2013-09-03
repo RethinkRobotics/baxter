@@ -29,11 +29,16 @@ import errno
 
 import rospy
 
-from baxter_msgs.msg import (
+from baxter_core_msgs.msg import (
     CameraSettings,
-    CameraControl,)
+    CameraControl,
+)
 
-import baxter_msgs.srv
+from baxter_core_msgs.srv import (
+    OpenCamera,
+    CloseCamera,
+    ListCameras,
+)
 
 class CameraController(object):
     """
@@ -42,12 +47,13 @@ class CameraController(object):
 
     # Valid resolutions
     MODES = [
-        (1280,  800),
-        (960, 600),
-        (640, 400),
-        (480, 300),
-        (384, 240),
-        (320, 200),]
+             (1280,  800),
+             (960, 600),
+             (640, 400),
+             (480, 300),
+             (384, 240),
+             (320, 200),
+             ]
 
     # Used to represent when the camera is using automatic controls.
     # Valid for exposure, gain and white balance.
@@ -55,23 +61,23 @@ class CameraController(object):
 
     def __init__(self, name):
         """
-        @param name -   camera identifier.  You can get a list of valid identifiers
-                        by calling the ROS service /cameras/list.
+        @param name -   camera identifier.  You can get a list of valid
+                        identifiers by calling the ROS service /cameras/list.
 
-                        Typical names are right_hand_camera, left_hand_camera and
-                        head_camera.  However if the cameras are not identified via
-                        the parameter server, they are simply indexed starting at 0.
+                        Expected names are right_hand_camera, left_hand_camera
+                        and head_camera.  However if the cameras are not
+                        identified via the parameter server, they are simply
+                        indexed starting at 0.
         """
         self._id = name
 
-        list_svc = rospy.ServiceProxy('/cameras/list', baxter_msgs.srv.ListCameras)
+        list_svc = rospy.ServiceProxy('/cameras/list', ListCameras)
         rospy.wait_for_service('/cameras/list', timeout = 10)
-        resp = list_svc()
-        if not self._id in resp.cameras:
+        if not self._id in list_svc().cameras:
             raise AttributeError("Invalid camera name '%s'" % (self._id,))
 
-        self._open_svc = rospy.ServiceProxy('/cameras/open', baxter_msgs.srv.OpenCamera)
-        self._close_svc = rospy.ServiceProxy('/cameras/close', baxter_msgs.srv.CloseCamera)
+        self._open_svc = rospy.ServiceProxy('/cameras/open', OpenCamera)
+        self._close_svc = rospy.ServiceProxy('/cameras/close', CloseCamera)
 
         self._settings = CameraSettings()
         self._settings.width = 320
@@ -84,7 +90,7 @@ class CameraController(object):
             self.close()
             self.open()
 
-    def _get_control_value(self, control, default):
+    def _get_value(self, control, default):
         lookup = [c.value for c in self._settings.controls if c.id == control]
         try:
             return lookup[0]
@@ -134,9 +140,11 @@ class CameraController(object):
     @property
     def exposure(self):
         """
-        Camera exposure.  If autoexposure is on, returns CameraController.CONTROL_AUTO
+        Camera exposure.  If autoexposure is on, returns
+        CameraController.CONTROL_AUTO
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_EXPOSURE, self.CONTROL_AUTO)
+        return self._get_value(CameraControl.CAMERA_CONTROL_EXPOSURE,
+                               self.CONTROL_AUTO)
 
     @exposure.setter
     def exposure(self, exposure):
@@ -155,7 +163,8 @@ class CameraController(object):
         """
         Camera gain.  If autogain is on, returns CameraController.CONTROL_AUTO
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_GAIN, self.CONTROL_AUTO)
+        return self._get_value(CameraControl.CAMERA_CONTROL_GAIN,
+                               self.CONTROL_AUTO)
 
     @gain.setter
     def gain(self, gain):
@@ -172,9 +181,11 @@ class CameraController(object):
     @property
     def white_balance_red(self):
         """
-        White balance red.  If autocontrol is on, returns CameraController.CONTROL_AUTO
+        White balance red.  If autocontrol is on, returns
+        CameraController.CONTROL_AUTO
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_R, self.CONTROL_AUTO)
+        return self._get_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_R,
+                               self.CONTROL_AUTO)
 
     @white_balance_red.setter
     def white_balance_red(self, value):
@@ -185,15 +196,18 @@ class CameraController(object):
         if (value < 0 or value > 4095) and value != self.CONTROL_AUTO:
             raise ValueError("Invalid white balance value")
 
-        self._set_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_R, value)
+        self._set_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_R,
+                                value)
         self._reload()
 
     @property
     def white_balance_green(self):
         """
-        White balance green.  If autocontrol is on, returns CameraController.CONTROL_AUTO
+        White balance green.  If autocontrol is on, returns
+        CameraController.CONTROL_AUTO
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_G, self.CONTROL_AUTO)
+        return self._get_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_G,
+                               self.CONTROL_AUTO)
 
     @white_balance_green.setter
     def white_balance_green(self, value):
@@ -204,15 +218,18 @@ class CameraController(object):
         if (value < 0 or value > 4095) and value != self.CONTROL_AUTO:
             raise ValueError("Invalid white balance value")
 
-        self._set_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_G, value)
+        self._set_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_G,
+                                value)
         self._reload()
 
     @property
     def white_balance_blue(self):
         """
-        White balance blue.  If autocontrol is on, returns CameraController.CONTROL_AUTO
+        White balance blue.  If autocontrol is on, returns
+        CameraController.CONTROL_AUTO
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_B, self.CONTROL_AUTO)
+        return self._get_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_B,
+                               self.CONTROL_AUTO)
 
     @white_balance_blue.setter
     def white_balance_blue(self, value):
@@ -223,7 +240,8 @@ class CameraController(object):
         if (value < 0 or value > 4095) and value != self.CONTROL_AUTO:
             raise ValueError("Invalid white balance value")
 
-        self._set_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_B, value)
+        self._set_control_value(CameraControl.CAMERA_CONTROL_WHITE_BALANCE_B,
+                                value)
         self._reload()
 
     @property
@@ -231,11 +249,15 @@ class CameraController(object):
         """
         Camera windowing, returns a tuple, (x, y)
         """
-        x = self._get_control_value(CameraControl.CAMERA_CONTROL_WINDOW_X, self.CONTROL_AUTO)
-        if x == self.CONTROL_AUTO:
-            return tuple(map(lambda x: x / 2, self.resolution)) if self.half_resolution else self.resolution
+        x = self._get_value(CameraControl.CAMERA_CONTROL_WINDOW_X,
+                            self.CONTROL_AUTO)
+        if (x == self.CONTROL_AUTO):
+            return (tuple(map(lambda x: x / 2, self.resolution)) if
+            self.half_resolution else
+            self.resolution)
         else:
-            return (x, self._get_control_value(CameraControl.CAMERA_CONTROL_WINDOW_Y, self.CONTROL_AUTO))
+            return (x, self._get_value(CameraControl.CAMERA_CONTROL_WINDOW_Y,
+                                       self.CONTROL_AUTO))
 
     @window.setter
     def window(self, win):
@@ -267,11 +289,12 @@ class CameraController(object):
         """
         Camera flip. Returns True if flip is enabled on the camera.
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_FLIP, False)
+        return self._get_value(CameraControl.CAMERA_CONTROL_FLIP, False)
 
     @flip.setter
     def flip(self, value):
-        self._set_control_value(CameraControl.CAMERA_CONTROL_FLIP, int(value != 0))
+        self._set_control_value(CameraControl.CAMERA_CONTROL_FLIP,
+                                int(value != 0))
         self._reload()
 
     @property
@@ -279,11 +302,12 @@ class CameraController(object):
         """
         Camera mirror. Returns True if mirror is enabled on the camera.
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_MIRROR, False)
+        return self._get_value(CameraControl.CAMERA_CONTROL_MIRROR, False)
 
     @mirror.setter
     def mirror(self, value):
-        self._set_control_value(CameraControl.CAMERA_CONTROL_MIRROR, int(value != 0))
+        self._set_control_value(CameraControl.CAMERA_CONTROL_MIRROR,
+                                int(value != 0))
         self._reload()
 
     @property
@@ -291,11 +315,12 @@ class CameraController(object):
         """
         Return True if binning/half resolution is enabled on the camera.
         """
-        return self._get_control_value(CameraControl.CAMERA_CONTROL_RESOLUTION_HALF, False)
+        return self._get_value(CameraControl.CAMERA_CONTROL_RESOLUTION_HALF, False)
 
     @half_resolution.setter
     def half_resolution(self, value):
-        self._set_control_value(CameraControl.CAMERA_CONTROL_RESOLUTION_HALF, int(value != 0))
+        self._set_control_value(CameraControl.CAMERA_CONTROL_RESOLUTION_HALF,
+                                int(value != 0))
         self._reload()
 
     def open(self):

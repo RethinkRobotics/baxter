@@ -31,7 +31,7 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-from baxter_msgs.msg import (
+from baxter_core_msgs.msg import (
     AnalogIOState,
     AnalogOutputCommand,
 )
@@ -55,7 +55,7 @@ class AnalogIO(object):
 
         self._state = {}
 
-        type_ns = '/sdk/robot/' + self._component_type
+        type_ns = '/robot/' + self._component_type
         topic_base = type_ns + '/' + self._id
 
         self._sub_state = rospy.Subscriber(

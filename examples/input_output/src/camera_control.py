@@ -36,7 +36,10 @@ roslib.load_manifest('input_output')
 import rospy
 
 import baxter_interface
-import baxter_msgs.srv
+from baxter_core_msgs.srv import (
+    ListCameras
+)
+
 def usage():
     print """
 %s [ARGUMENTS]
@@ -49,7 +52,7 @@ def usage():
     """ % (os.path.basename(sys.argv[0]),)
 
 def list_cameras(*args, **kwds):
-    ls = rospy.ServiceProxy('/cameras/list', baxter_msgs.srv.ListCameras)
+    ls = rospy.ServiceProxy('/cameras/list', ListCameras)
     rospy.wait_for_service('/cameras/list', timeout = 10)
     resp = ls()
     if len(resp.cameras):

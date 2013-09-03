@@ -58,11 +58,11 @@ class Trajectory(object):
     def __init__(self):
         #create our action server clients
         self._left_client = actionlib.SimpleActionClient(
-            '/sdk/robot/limb/left/follow_joint_trajectory',
+            'robot/limb/left/follow_joint_trajectory',
             FollowJointTrajectoryAction,
         )
         self._right_client = actionlib.SimpleActionClient(
-            '/sdk/robot/limb/right/follow_joint_trajectory',
+            'robot/limb/right/follow_joint_trajectory',
             FollowJointTrajectoryAction,
         )
 

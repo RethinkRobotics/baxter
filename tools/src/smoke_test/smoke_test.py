@@ -59,9 +59,8 @@ def run_test(tname, fname, proceed):
 
     cur_test.start_test()
     cur_test.finish_test(fname)
-    if not proceed \
-    and cur_test.result[0] == False \
-    or 'KeyboardInterrupt' in cur_test.result[1]:
+    if (not proceed and cur_test.result[0] == False or
+    'KeyboardInterrupt' in cur_test.result[1]):
         print("Exiting: Failed Test %s" % tname)
         sys.exit(1)
 
@@ -84,20 +83,19 @@ def get_version():
     """Get current software version number from param server
     """
     try:
-        version_param = \
-        rospy.get_param('/rethink/software_version').split('_')[0]
+        version = rospy.get_param('/rethink/software_version').split('_')[0]
     except socket.error:
         print(
-            "Exiting: Could not communicate with ROS Master to determine " \
+            "Exiting: Could not communicate with ROS Master to determine " + 
             "Software version"
             )
         sys.exit(1)
     except:
-        print("Exiting: Could not determine SW version from param " \
+        print("Exiting: Could not determine SW version from param " + 
             "'/rethink/software_version'"
             )
         sys.exit(1)
-    return version_param
+    return version
 
 def ros_init():
     """Initialize rsdk_smoke_test ros node
@@ -110,9 +108,9 @@ if __name__ == '__main__':
         formatter_class=argparse.RawTextHelpFormatter
         )
     parser.add_argument(
-        '-p', 
-        '--proceed', 
-        action='store_true', 
+        '-p',
+        '--proceed',
+        action='store_true',
         help="Continue testing after a failed test until all tests complete")
     parser.add_argument('-t', '--test', help=test_help())
     args = parser.parse_args()
@@ -120,18 +118,15 @@ if __name__ == '__main__':
     test_dict = {
         'version': None,
         'valid_tests': {
-            '0.6.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
-                'Grippers', 'BlinkLEDs'],
-            '0.6.1': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+            '0.7.0': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms',
                 'Grippers', 'BlinkLEDs', 'Cameras'],
             }
         }
 
     test_dict['version'] = get_version()
     if not test_dict['version'] in test_dict['valid_tests'].keys():
-        print("Exiting: No tests specified for your software version: %s" % \
-            (test_dict['version'])
-            )
+        print("Exiting: No tests specified for your software version: %s" % 
+            (test_dict['version']))
         sys.exit(1)
 
     try:
@@ -140,14 +135,10 @@ if __name__ == '__main__':
         print("\nExiting.")
         sys.exit(1)
 
-    master_hostname = re.split(
-        'http://|.local',
-        rospy.get_master().getUri()[2]
-        )[1]
+    hostname = re.split('http://|.local', rospy.get_master().getUri()[2])[1]
     cur_time = time.localtime()
-    filename = (
-                "%s-%s.%s.%s-rsdk-%s.smoketest" % \
-                (master_hostname, cur_time.tm_mon, cur_time.tm_mday, \
+    filename = ("%s-%s.%s.%s-rsdk-%s.smoketest" % 
+                (hostname, cur_time.tm_mon, cur_time.tm_mday,
                  cur_time.tm_year, test_dict['version'],)
                 )
     if args.test == None:
@@ -159,5 +150,6 @@ if __name__ == '__main__':
         ros_init()
         run_test(args.test, filename, args.proceed)
     else:
-        print("Exiting: Invalid test provided: %s" % args.test)
+        print("Exiting: Invalid test provided: %s for %s version software" %
+              (args.test, test_dict['version']))
         parser.print_help()

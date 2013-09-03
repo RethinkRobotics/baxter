@@ -4,7 +4,7 @@ project(input_output)
 find_package(catkin
   REQUIRED
   rospy
-  baxter_msgs
+  baxter_core_msgs
   baxter_interface
 )
 
@@ -13,6 +13,6 @@ catkin_python_setup()
 catkin_package(
   CATKIN_DEPENDS
   rospy
-  baxter_msgs
+  baxter_core_msgs
   baxter_interface
 )

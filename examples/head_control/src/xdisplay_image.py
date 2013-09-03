@@ -50,7 +50,7 @@ def send_image(path):
     """
     img = cv.LoadImage(path)
     msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
-    pub = rospy.Publisher('/sdk/xdisplay', sensor_msgs.msg.Image, latch=True)
+    pub = rospy.Publisher('/robot/xdisplay', sensor_msgs.msg.Image, latch=True)
     pub.publish(msg)
     # Even with the latch, we seem to need to wait a bit before exiting to
     # make sure that the message got sent.  Using a service may be a better
