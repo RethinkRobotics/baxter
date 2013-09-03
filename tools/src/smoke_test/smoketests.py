@@ -321,7 +321,7 @@ class Grippers(SmokeTest):
         try:
             print("Enabling robot, Moving to Neutral Location...")
             self._rs.enable()
-            for name in ['right']:
+            for name in ['left', 'right']:
                 limb = baxter_interface.Limb(name)
                 gripper = baxter_interface.Gripper(name)
                 limb.move_to_neutral()
