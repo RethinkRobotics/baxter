@@ -25,6 +25,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import errno
 from copy import deepcopy
 from math import fabs
 
@@ -100,7 +101,7 @@ class Gripper(object):
         @param block (bool)   - command is blocking or non-blocking [False]
         @param test (func)   - test function for command validation
         @param time (float)   - timeout in seconds for command evaluation
-        @param args (string)   - JSON string arguments to gripper command
+        @param args dict({str:float}) - dictionary of parameter:value
         @param msg (string)   - error message string for failed command
 
         Set the parameters that will describe the position command execution.
@@ -245,6 +246,13 @@ class Gripper(object):
         Command the gripper position movement.
         from minimum (0) to maximum (100)
         """
+        if not self._state.calibrated:
+            msg = ("Unable to command %s positions until calibrated" %
+                   self.name)
+            raise IOError(errno.EPERM, msg)
+            rospy.logwarn(msg)
+            return
+
         cmd = EndEffectorCommand.CMD_GO
         arguments = {"position": self._clip(position)}
         error_msg = ("Unable to verify the %s position move" % (self.name,))
