@@ -95,7 +95,8 @@ class Gripper(object):
     def _clip(self, val):
         return max(min(val, 100.0), 0.0)
 
-    def command(self, cmd, block=False, test=lambda: True, time=0.0, args='', msg=''):
+    def command(self, cmd, block=False, test=lambda: True, time=0.0,
+                args=None, msg=''):
         """
         @param cmd (string)   - string of known gripper commands
         @param block (bool)   - command is blocking or non-blocking [False]
@@ -109,8 +110,8 @@ class Gripper(object):
         """
         self._cmd_msg.id = self.hardware_id()
         self._cmd_msg.command = cmd
-        self._cmd_msg.args = args
-        if len(args) != 0:
+        self._cmd_msg.args = ''
+        if args != None:
             self._cmd_msg.args = JSONEncoder().encode(args)
         self._pub_cmd.publish(self._cmd_msg)
         if block:
@@ -145,7 +146,7 @@ class Gripper(object):
                  }
         return valid
 
-    def set_parameters(self, params={}, defaults=False):
+    def set_parameters(self, params=None, defaults=False):
         """
         @param params dict({str:float}) - dictionary of parameter:value
 
@@ -156,6 +157,8 @@ class Gripper(object):
         if defaults:
             for param in valid_params.keys():
                 self._params[param] = valid_params[param]
+        if params is None:
+            params = {}
         for key in params.keys():
             if key in valid_params.keys():
                 self._params[key] = params[key]
