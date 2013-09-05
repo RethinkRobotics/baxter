@@ -28,47 +28,38 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-Baxter RSDK Joint Trajectory Controller Test
+Baxter RSDK Gripper Action Test
 """
 import sys
-from copy import copy
 import argparse
 
 import roslib
-roslib.load_manifest('joint_trajectory')
+roslib.load_manifest('gripper_action')
 import rospy
 import actionlib
 
-import iodevices
-import dataflow
 import baxter_interface
 from control_msgs.msg import (
-    FollowJointTrajectoryAction,
-    FollowJointTrajectoryGoal,
-)
-from trajectory_msgs.msg import (
-    JointTrajectory,
-    JointTrajectoryPoint,
+    GripperCommandAction,
+    GripperCommandGoal,
 )
 
-class Trajectory(object):
-    def __init__(self, limb):
-        ns = 'robot/limb/' + limb + '/'
+class GripperClient(object):
+    def __init__(self, gripper):
+        ns = 'robot/end_effector/' + gripper + '_gripper/'
         self._client = actionlib.SimpleActionClient(
-            ns + "follow_joint_trajectory",
-            FollowJointTrajectoryAction,
+            ns + "gripper_action",
+            GripperCommandAction,
         )
-        self._client.wait_for_server()
-        self.clear(limb)
+        # Wait 10 Seconds for the gripper action server to start or exit
+        if not self._client.wait_for_server(rospy.Duration(10.0)):
+            rospy.logerr("Exiting - Gripper Action Server Not Found")
+            sys.exit(1)
+        self.clear()
 
-    def add_point(self, positions, time):
-        point = JointTrajectoryPoint()
-        point.positions = copy(positions)
-        point.time_from_start = rospy.Duration(time)
-        self._goal.trajectory.points.append(point)
-
-    def start(self):
-        self._goal.trajectory.header.stamp = rospy.Time.now()
+    def command(self, position, effort):
+        self._goal.command.position = position
+        self._goal.command.max_effort = effort
         self._client.send_goal(self._goal)
 
     def stop(self):
@@ -76,37 +67,38 @@ class Trajectory(object):
 
     def wait(self):
         self._client.wait_for_result()
-        rospy.sleep(0.1)
+        return self._client.get_result()
 
-    def clear(self, limb):
-        self._goal = FollowJointTrajectoryGoal()
-        self._goal.trajectory.joint_names = [limb + '_' + joint for joint in \
-            ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']]
+    def clear(self):
+        self._goal = GripperCommandGoal()
 
-def main(limb):
+def main(gripper):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_trajectory_controller_test")
+    rospy.init_node("rethink_rsdk_gripper_action_test")
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")
     rs.enable()
     print("Running. Ctrl-c to quit")
-    positions = {
-        'left':  [-0.11, -0.62, -1.15, 1.32,  0.80, 1.27,  2.39],
-        'right': [ 0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
-    }
-    p1 = positions[limb]
-    traj = Trajectory(limb)
-    traj.add_point(p1, 7.0)
-    traj.add_point([x * 0.75 for x in p1], 9.0)
-    traj.add_point([x * 1.25 for x in p1], 12.0)
-    traj.start()
-    traj.wait()
+
+    gc = GripperClient(gripper)
+    gc.command(position=0.0, effort=70.0)
+    gc.wait()
+    gc.command(position=100.0, effort=50.0)
+    gc.wait()
+    gc.command(position=25.0, effort=40.0)
+    gc.wait()
+    gc.command(position=75.0, effort=20.0)
+    gc.wait()
+    gc.command(position=0.0, effort=80.0)
+    gc.wait()
+    gc.command(position=100.0, effort=40.0)
+    print gc.wait()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", dest="limb", required=True,
+    parser.add_argument("-g", "--gripper", dest="gripper", required=True,
                         choices=['left', 'right'],
-                        help="send joint trajectory to which limb")
+                        help="which gripper to send action commands")
     args = parser.parse_args()
-    main(args.limb)
+    main(args.gripper)

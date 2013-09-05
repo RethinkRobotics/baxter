@@ -30,7 +30,6 @@ from copy import deepcopy
 from math import fabs
 
 from json import (
-    JSONDecoder,
     JSONEncoder,
 )
 
@@ -61,7 +60,7 @@ class Gripper(object):
         self._prop = EndEffectorProperties()
         self._cmd_msg = EndEffectorCommand()
 
-        self._params = {}
+        self._parameters = {}
 
         self._pub_cmd = rospy.Publisher(ns + 'command', EndEffectorCommand)
 
@@ -139,35 +138,35 @@ class Gripper(object):
         """
         Returns dict of available gripper parameters with default parameters.
         """
-        valid = {'velocity':50.0,
-                 'moving_force':40.0,
-                 'holding_force':30.0,
-                 'dead_zone':5.0
-                 }
+        valid = dict({'velocity':50.0,
+                     'moving_force':40.0,
+                     'holding_force':30.0,
+                     'dead_zone':5.0
+                     })
         return valid
 
-    def set_parameters(self, params=None, defaults=False):
+    def set_parameters(self, parameters=None, defaults=False):
         """
-        @param params dict({str:float}) - dictionary of parameter:value
+        @param parameters dict({str:float}) - dictionary of parameter:value
 
         Set the parameters that will describe the position command execution.
         Percentage of maximum (0-100) for each parameter
         """
-        valid_params = self.valid_parameters()
+        valid_parameters = self.valid_parameters()
         if defaults:
-            for param in valid_params.keys():
-                self._params[param] = valid_params[param]
-        if params is None:
-            params = {}
-        for key in params.keys():
-            if key in valid_params.keys():
-                self._params[key] = params[key]
+            for param in valid_parameters.keys():
+                self._parameters[param] = valid_parameters[param]
+        if parameters is None:
+            parameters = {}
+        for key in parameters.keys():
+            if key in valid_parameters.keys():
+                self._parameters[key] = parameters[key]
             else:
                 msg = ("Invalid parameter: %s provided. %s" %
-                       (key, valid_parameters_text(),))
+                       (key, self.valid_parameters_text(),))
                 rospy.logwarn(msg)
         cmd = EndEffectorCommand.CMD_CONFIGURE
-        self.command(cmd, args=self._params)
+        self.command(cmd, args=self._parameters)
 
     def reset(self, timeout=2.0, block=True):
         """
@@ -263,7 +262,7 @@ class Gripper(object):
             cmd,
             block,
             test=lambda: (fabs(self._state.position - position) <
-                          self._params['dead_zone'] or self._state.gripping),
+                          self._parameters['dead_zone'] or self._state.gripping),
             time=timeout,
             args=arguments,
             msg=error_msg
@@ -276,7 +275,7 @@ class Gripper(object):
         Set the velocity at which the gripper position movement will execute.
         """
         velocity_param = dict(velocity=self._clip(velocity))
-        self.set_parameters(params=velocity_param, defaults=False)
+        self.set_parameters(parameters=velocity_param, defaults=False)
 
     def set_moving_force(self, force):
         """
@@ -287,7 +286,7 @@ class Gripper(object):
         position.
         """
         moving = dict(moving_force=self._clip(force))
-        self.set_parameters(params=moving, defaults=False)
+        self.set_parameters(parameters=moving, defaults=False)
 
     def set_holding_force(self, force):
         """
@@ -298,7 +297,7 @@ class Gripper(object):
         commanded position, or by exceeding the moving force threshold.
         """
         holding = dict(holding_force=self._clip(force))
-        self.set_parameters(params=holding, defaults=False)
+        self.set_parameters(parameters=holding, defaults=False)
 
     def set_dead_band(self, dead_band):
         """
@@ -307,8 +306,8 @@ class Gripper(object):
         Set the gripper dead band describing the position error threshold
         where a move will be considered successful.
         """
-        dead_band_param = dict(dead_band=self._clip(dead_band))
-        self.set_parameters(params=dead_band_param, defaults=False)
+        dead_band_param = dict(dead_zone=self._clip(dead_band))
+        self.set_parameters(parameters=dead_band_param, defaults=False)
 
     def open(self, block=False):
         """
@@ -330,41 +329,41 @@ class Gripper(object):
         """
         Returns dict of parameters describing the position command execution.
         """
-        return deepcopy(self._params)
+        return deepcopy(self._parameters)
 
     def calibrated(self):
         """
         Returns bool describing gripper calibration state.
         (0:Not Calibrated, 1:Calibrated)
         """
-        return self._state.calibrated is True
+        return self._state.calibrated == True
 
     def ready(self):
         """
         Returns bool describing if the gripper ready, i.e. is calibrated, not
         busy (as in resetting or rebooting), and not moving.
         """
-        return self._state.ready is True
+        return self._state.ready == True
 
     def moving(self):
         """
         Returns bool describing if the gripper is in motion
         """
-        return self._state.moving is True
+        return self._state.moving == True
 
     def gripping(self):
         """
         Returns bool describing if the position move has been preempted by a
         position command exceeding the moving_force threshold denoting a grasp.
         """
-        return self._state.gripping is True
+        return self._state.gripping == True
 
     def missed(self):
         """
         Returns bool describing if the position move has completed without
         exceeding the moving_force threshold denoting a grasp
         """
-        return self._state.missed is True
+        return self._state.missed == True
 
     def error(self):
         """
@@ -374,7 +373,7 @@ class Gripper(object):
         Errors can be cleared with a gripper reset/reboot. If persistent please
         contact Rethink Robotics for further debugging.
         """
-        return self._state.error is True
+        return self._state.error == True
 
     def position(self):
         """
@@ -394,13 +393,13 @@ class Gripper(object):
         """
         Returns bool describing if the gripper is capable of force control.
         """
-        return self._prop.controls_force is True
+        return self._prop.controls_force == True
 
     def has_position(self):
         """
         Returns bool describing if the gripper is capable of position control.
         """
-        return self._prop.controls_position is True
+        return self._prop.controls_position == True
 
     def type(self):
         """
