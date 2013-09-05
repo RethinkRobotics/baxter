@@ -114,7 +114,8 @@ class Trajectory(object):
         end_time = pnt_times[-1]
         control_rate = 20.0; #20Hz gripper control rate
         now_from_start = rospy.get_time() - start_time
-        while(now_from_start < end_time + (1.0 / control_rate)):
+        while(now_from_start < end_time + (1.0 / control_rate) and
+              not rospy.is_shutdown()):
             idx = bisect(pnt_times, now_from_start) - 1
             self._r_gripper.command_position(r_cmd[idx].positions[0])
             #self._l_gripper.command_position(l_cmd[idx].positions[0])
