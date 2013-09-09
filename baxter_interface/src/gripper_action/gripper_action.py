@@ -50,8 +50,13 @@ class GripperActionServer(object):
         self._ee = gripper + '_gripper'
         self._ns = 'robot/end_effector/' + self._ee + '/gripper_action'
         self._gripper = baxter_interface.Gripper(gripper)
-        # Allow grippers to fully come up
-        rospy.sleep(0.25)
+        # Store Gripper Type
+        self._type = self._gripper.type()
+        if self._type == 'custom':
+            msg = ("%s %s - not capable of gripper actions" %
+               (self._gripper.name, self._type))
+            rospy.logerr(msg)
+            return
 
         # Action Server
         self._server = actionlib.SimpleActionServer(
@@ -66,9 +71,6 @@ class GripperActionServer(object):
         self._feedback = GripperCommandFeedback()
         self._result = GripperCommandResult()
 
-        # Store Gripper Type
-        self._type = self._gripper.type()
-
         # Verify Grippers Have No Errors and are Calibrated
         if self._gripper.error():
             self._gripper.reboot()
@@ -78,15 +80,14 @@ class GripperActionServer(object):
         # Initialize Parameters
         init_params = self._gripper.parameters()
         self._timeout = 5.0
-        self._default_effort = 40.0
         if self._type == 'electric':
             self._dead_band = init_params['dead_zone']
             self._velocity = init_params['velocity']
             self._moving_force = init_params['moving_force']
             self._holding_force = init_params['holding_force']
-#         elif self._type == 'suction':
-#             self._suction = init_params['vacuum_sensor_threshold']
-#             self._blow_off = init_params['blow_off_seconds']
+        elif self._type == 'suction':
+            self._suction = init_params['vacuum_sensor_threshold']
+            self._blow_off = init_params['blow_off_seconds']
 
     def _get_gripper_parameters(self):
         self._timeout = self._param.config[self._ee + '_timeout']
@@ -101,32 +102,34 @@ class GripperActionServer(object):
                                  'holding_force': self._holding_force,
                                  })
             self._gripper.set_parameters(parameters=param_update)
-#         if self._type == 'suction':
-#             self._suction = self._param.config[self._ee + '_suction_threshold']
-#             self._blow_off = self._param.config[self._ee + '_blow_off']
-#             param_update = {'vacuum_suction_thresholf', self._suction,
-#                             'blow_off_seconds', self._blow_off,
-#                             }
-#             self._gripper.set_parameters(parameters=param_update)
+        elif self._type == 'suction':
+            self._suction = self._param.config[self._ee + '_suction_threshold']
+            self._blow_off = self._param.config[self._ee + '_blow_off']
+            param_update = dict({'vacuum_sensor_threshold': self._suction,
+                                 'blow_off_seconds': self._blow_off,
+                                 })
+            self._gripper.set_parameters(parameters=param_update)
 
     def _update_feedback(self, position):
-        self._feedback.position = self._gripper.position()
-        self._feedback.effort = self._gripper.force()
-        self._feedback.stalled = (self._gripper.force() >
-                                  self._gripper.parameters()['moving_force'])
         if self._type == 'electric':
+            self._feedback.position = self._gripper.position()
+            self._feedback.effort = self._gripper.force()
+            self._feedback.stalled = (self._gripper.force() >
+                                      self._gripper.parameters()['moving_force'])
             self._feedback.reached_goal = (fabs(self._gripper.position() -
                                                 position) < self._dead_band)
         if self._type == 'suction':
-            self._gripper.gripping()
+            self._feedback.effort = self._gripper.suction()
+            if position > 50.0:
+                self._feedback.reached_goal = (not self._gripper.sucking() and
+                                               not self._gripper.blowing())
+            else:
+                self._feedback.reached_goal = self._gripper.gripping()
         self._result = self._feedback
 
     def _on_gripper_action(self, goal):
         position = goal.command.position
         effort = goal.command.max_effort
-        # If effort not specified (0.0) set to default
-        if fabs(effort) < 0.0001:
-            effort = self._default_effort
         # Apply max effort if specified < 0
         if effort == -1.0:
             effort = 100.0;
@@ -150,8 +153,16 @@ class GripperActionServer(object):
         start_time = rospy.get_time()
 
         # Set the moving_force/suction_threshold based on max_effort provided
+        # If effort not specified (0.0) use parameter server value
         if self._type == 'electric':
-            self._gripper.set_moving_force(effort)
+            if fabs(effort) < 0.0001:
+                self._gripper.set_moving_force(self._moving_force)
+            else:
+                self._gripper.set_moving_force(effort)
+        elif self._type == 'suction':
+            if fabs(effort) < 0.0001:
+                effort = self._suction
+            self._gripper.set_suction_threshold(effort)
 
         def now_from_start(start):
             return rospy.get_time() - start
@@ -162,8 +173,24 @@ class GripperActionServer(object):
                         self._gripper.parameters()['moving_force'] or
                         fabs(self._gripper.position() - position) <
                         self._dead_band)
-#             if self._type == 'suction':
-#                 return (self._gripper.gripping())
+            elif self._type == 'suction':
+                if position > 50.0:
+                    return (not self._gripper.sucking() and
+                            not self._gripper.blowing())
+                else:
+                    return self._gripper.gripping()
+
+        def command_gripper():
+            if self._type == 'electric':
+                self._gripper.command_position(position, block=False)
+            elif self._type == 'suction':
+                if position > 50.0:
+                    self._gripper.open(block=False)
+                else:
+                    # if infinite timeout, command suction for 1 hour
+                    if self._timeout < 0.0:
+                        self._timeout = 3600.0
+                    self._gripper.close(block=False, timeout=self._timeout)
 
         # Continue commanding goal until success or timeout
         success = False
@@ -177,12 +204,13 @@ class GripperActionServer(object):
                 self._server.set_succeeded(self._result)
                 success = True
                 return
-            self._gripper.command_position(position, block=False)
+            command_gripper()
             self._server.publish_feedback(self._feedback)
             control_rate.sleep()
 
         # Check failure state
         if not success:
+            self._gripper.stop()
             rospy.logerr("%s: Gripper Command Not Achieved in Allotted Time" %
                          (self._action_name,))
             self._update_feedback(position)

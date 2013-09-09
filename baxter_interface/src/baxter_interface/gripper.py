@@ -30,6 +30,7 @@ from copy import deepcopy
 from math import fabs
 
 from json import (
+    JSONDecoder,
     JSONEncoder,
 )
 
@@ -58,11 +59,10 @@ class Gripper(object):
 
         self._state = None
         self._prop = EndEffectorProperties()
-        self._cmd_msg = EndEffectorCommand()
 
-        self._parameters = {}
+        self._parameters = dict()
 
-        self._pub_cmd = rospy.Publisher(ns + 'command', EndEffectorCommand)
+        self._cmd_pub = rospy.Publisher(ns + 'command', EndEffectorCommand)
 
         self._state_sub = rospy.Subscriber(
                               ns + 'state',
@@ -76,6 +76,7 @@ class Gripper(object):
                                    self._on_gripper_prop
                                )
 
+        # Wait for the gripper state message to be populated
         dataflow.wait_for(
             lambda: not self._state is None,
             timeout=5.0,
@@ -83,6 +84,13 @@ class Gripper(object):
                          (ns + 'state',))
         )
 
+        # Wait for the gripper type to be populated
+        dataflow.wait_for(
+            lambda: not self.type() is None,
+            timeout=5.0,
+            timeout_msg=("Failed to get current state from %s" % 
+                         (ns + 'state',))
+        )
         self.set_parameters(defaults=True)
 
     def _on_gripper_state(self, state):
@@ -94,55 +102,75 @@ class Gripper(object):
     def _clip(self, val):
         return max(min(val, 100.0), 0.0)
 
-    def command(self, cmd, block=False, test=lambda: True, time=0.0,
-                args=None, msg=''):
+    def _capablity_warning(self, cmd):
+        msg = ("%s %s - not capable of '%s' command" %
+               (self.name, self.type(), cmd))
+        rospy.logwarn(msg)
+
+    def command(self, cmd, block=False, test=lambda: True, time=0.0, args=None):
         """
         @param cmd (string)   - string of known gripper commands
         @param block (bool)   - command is blocking or non-blocking [False]
         @param test (func)   - test function for command validation
         @param time (float)   - timeout in seconds for command evaluation
         @param args dict({str:float}) - dictionary of parameter:value
-        @param msg (string)   - error message string for failed command
 
         Set the parameters that will describe the position command execution.
         Percentage of maximum (0-100) for each parameter
         """
-        self._cmd_msg.id = self.hardware_id()
-        self._cmd_msg.command = cmd
-        self._cmd_msg.args = ''
+        cmd_msg = EndEffectorCommand()
+        cmd_msg.id = self.hardware_id()
+        cmd_msg.command = cmd
+        cmd_msg.args = ''
         if args != None:
-            self._cmd_msg.args = JSONEncoder().encode(args)
-        self._pub_cmd.publish(self._cmd_msg)
+            cmd_msg.args = JSONEncoder().encode(args)
+        self._cmd_pub.publish(cmd_msg)
         if block:
-            dataflow.wait_for(
-                test=test,
-                timeout=time,
-                timeout_msg=msg,
-                body=lambda: self._pub_cmd.publish(self._cmd_msg)
-            )
+            return dataflow.wait_for(test=test, timeout=time,
+                                     raise_on_error=False,
+                                     body=lambda: self._cmd_pub.publish(cmd_msg)
+                                     )
+        else:
+            return True
 
     def valid_parameters_text(self):
         """
         Text describing valid gripper parameters.
         """
-        return """Valid gripper parameters are
-        PARAMETERS:
-        velocity      - Velocity at which a position move will execute
-        moving_force  - Force threshold at which a move will stop
-        holding_force - Force at which a grasp will continue holding
-        dead_zone     - Position dead band within move considered successful
-        ALL PARAMETERS (0-100)
-        """
+        if self.type() == 'electric':
+            return """Valid gripper parameters for the electric gripper are
+            PARAMETERS:
+            velocity      - Velocity at which a position move will execute
+            moving_force  - Force threshold at which a move will stop
+            holding_force - Force at which a grasp will continue holding
+            dead_zone     - Position dead band within move considered successful
+            ALL PARAMETERS (0-100)
+            """
+        elif self.type() == 'suction':
+            return """Valid gripper parameters for the suction gripper are
+            PARAMETERS:
+            vacuum_sensor_threshold - Measured suction threshold denoting grasp
+            blow_off_seconds - Time in seconds to blow air on release
+            ALL PARAMETERS (0-100)
+            """
+        else:
+            return ("No valid parameters for %s %s." % (self.type(), self.name))
 
     def valid_parameters(self):
         """
         Returns dict of available gripper parameters with default parameters.
         """
-        valid = dict({'velocity':50.0,
-                     'moving_force':40.0,
-                     'holding_force':30.0,
-                     'dead_zone':5.0
-                     })
+        valid = dict()
+        if self.type() == 'electric':
+            valid = dict({'velocity':50.0,
+                         'moving_force':40.0,
+                         'holding_force':30.0,
+                         'dead_zone':5.0
+                         })
+        elif self.type() == 'suction':
+            valid = dict({'vacuum_sensor_threshold':18.0,
+                          'blow_off_seconds':0.4,
+                          })
         return valid
 
     def set_parameters(self, parameters=None, defaults=False):
@@ -157,7 +185,7 @@ class Gripper(object):
             for param in valid_parameters.keys():
                 self._parameters[param] = valid_parameters[param]
         if parameters is None:
-            parameters = {}
+            parameters = dict()
         for key in parameters.keys():
             if key in valid_parameters.keys():
                 self._parameters[key] = parameters[key]
@@ -175,15 +203,16 @@ class Gripper(object):
 
         Resets the gripper state removing any errors.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('reset')
+
         cmd = EndEffectorCommand.CMD_RESET
-        error_msg = ("Unable to successfully reset the %s" % (self.name,))
-        self.command(
-            cmd,
-            block,
-            test=lambda: self._state.error == False,
-            time=timeout,
-            msg=error_msg
-        )
+        return self.command(
+                            cmd,
+                            block,
+                            test=lambda: self._state.error == False,
+                            time=timeout,
+                            )
 
     def reboot(self, timeout=2.0, block=True):
         """
@@ -192,16 +221,18 @@ class Gripper(object):
 
         Power cycle the gripper removing calibration information and any errors.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('reboot')
+
         cmd = EndEffectorCommand.CMD_REBOOT
-        error_msg = ("Unable to successfully reboot the %s" % (self.name,))
         self.command(
-            cmd,
-            block,
-            test=lambda: (self._state.calibrated == False and
-                     self._state.error == False),
-            time=timeout,
-            msg=error_msg
-        )
+                    cmd,
+                    block,
+                    test=lambda: (self._state.enabled == True and
+                                  self._state.error != True and
+                                  self._state.ready == True),
+                     time=timeout,
+                    )
         rospy.sleep(0.5) # Allow extra time for reboot to complete
         self.set_parameters(defaults=True)
 
@@ -212,14 +243,15 @@ class Gripper(object):
 
         Calibrate the gripper setting maximum and minimum travel distance.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('calibrate')
+
         cmd = EndEffectorCommand.CMD_CALIBRATE
-        error_msg = ("Unable to successfully calibrate the %s" % (self.name,))
         self.command(
             cmd,
             block,
             test=lambda: (self._state.calibrated == True),
             time=timeout,
-            msg=error_msg
         )
         self.set_parameters(defaults=True)
 
@@ -231,15 +263,22 @@ class Gripper(object):
 
         Stop the gripper at the current position and apply holding force.
         """
-        cmd = EndEffectorCommand.CMD_STOP
-        error_msg = ("Unable to verify the %s has stopped" % (self.name,))
-        self.command(
-            cmd,
-            block,
-            test=lambda: self._state.moving == False,
-            time=timeout,
-            msg=error_msg
-        )
+        if self.type() == 'custom':
+            return self._capablity_warning('stop')
+
+        if self.type() == 'electric':
+            cmd = EndEffectorCommand.CMD_STOP
+            stop_test = lambda: self._state.moving == False
+        elif self.type() == 'suction':
+            timeout = max(self._parameters['blow_off_seconds'], timeout)
+            cmd = EndEffectorCommand.CMD_RELEASE
+            stop_test = lambda: (not self.sucking() and not self.blowing())
+        return self.command(
+                            cmd,
+                            block,
+                            test=stop_test,
+                            time=timeout,
+                            )
 
     def command_position(self, position, block=False, timeout=5.0):
         """
@@ -248,25 +287,50 @@ class Gripper(object):
         Command the gripper position movement.
         from minimum (0) to maximum (100)
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('command_position')
+
         if not self._state.calibrated:
-            msg = ("Unable to command %s positions until calibrated" %
-                   self.name)
+            msg = ("Unable to command %s position until calibrated" % self.name)
             raise IOError(errno.EPERM, msg)
             rospy.logwarn(msg)
             return
 
         cmd = EndEffectorCommand.CMD_GO
         arguments = {"position": self._clip(position)}
-        error_msg = ("Unable to verify the %s position move" % (self.name,))
-        self.command(
-            cmd,
-            block,
-            test=lambda: (fabs(self._state.position - position) <
-                          self._parameters['dead_zone'] or self._state.gripping),
-            time=timeout,
-            args=arguments,
-            msg=error_msg
-        )
+        return self.command(
+                            cmd,
+                            block,
+                            test=lambda: (fabs(self._state.position - position)
+                                          < self._parameters['dead_zone']
+                                          or self._state.gripping),
+                            time=timeout,
+                            args=arguments,
+                            )
+
+    def command_suction(self, threshold=18.0, block=False, timeout=5.0):
+        """
+        @param threshold (float) - in % 0-100 across the measured suction range
+
+        Command the gripper suction.
+        Set threshold for determining grasp from (0) to maximum (100)
+        Timeout describes how long the suction will be applied while trying
+        to determine a grasp has been achieved.
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('command_suction')
+
+        cmd = EndEffectorCommand.CMD_GO
+        arguments = {"vacuum_sensor_threshold": self._clip(threshold),
+                     "grip_attempt_seconds": timeout,
+                     }
+        return self.command(
+                            cmd,
+                            block,
+                            test=lambda: self.vacuum(),
+                            time=timeout,
+                            args=arguments,
+                            )
 
     def set_velocity(self, velocity):
         """
@@ -274,6 +338,9 @@ class Gripper(object):
 
         Set the velocity at which the gripper position movement will execute.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('set_velocity')
+
         velocity_param = dict(velocity=self._clip(velocity))
         self.set_parameters(parameters=velocity_param, defaults=False)
 
@@ -285,6 +352,9 @@ class Gripper(object):
         When exceeded, the gripper will stop trying to achieve the commanded
         position.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('set_moving_force')
+
         moving = dict(moving_force=self._clip(force))
         self.set_parameters(parameters=moving, defaults=False)
 
@@ -296,6 +366,9 @@ class Gripper(object):
         position command has completed either from successfully achieving the
         commanded position, or by exceeding the moving force threshold.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('set_holding_force')
+
         holding = dict(holding_force=self._clip(force))
         self.set_parameters(parameters=holding, defaults=False)
 
@@ -306,28 +379,75 @@ class Gripper(object):
         Set the gripper dead band describing the position error threshold
         where a move will be considered successful.
         """
+        if self.type() != 'electric':
+            return self._capablity_warning('set_dead_band')
+
         dead_band_param = dict(dead_zone=self._clip(dead_band))
         self.set_parameters(parameters=dead_band_param, defaults=False)
 
-    def open(self, block=False):
+    def set_suction_threshold(self, threshold):
+        """
+        @param threshold (float) - in % of measured suction range [18.0]
+
+        Set the gripper suction threshold describing the threshold at which the
+        measured suction must exceed to denote a successful grasp.
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('set_suction_threshold')
+
+        threshold_param = dict(vacuum_sensor_threshold=self._clip(threshold))
+        self.set_parameters(parameters=threshold_param, defaults=False)
+
+    def set_blow_off(self, blow_off):
+        """
+        @param blow_off (float) - Time in seconds to blow air on release [0.4]
+
+        Sets the blow_off parameter. This parameter will be used on a stop
+        command with the suction gripper, ceasing suction and blowing air
+        from the suction gripper for the seconds specified by this method.
+
+        Note: This blow off will only be commanded after the previous suction
+        command returned a successful grasp (suction thresholf was exceeded)
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('set_blow_off')
+
+        blow_off_param = dict(blow_off_seconds=blow_off)
+        self.set_parameters(parameters=blow_off_param, defaults=False)
+
+    def open(self, block=False, timeout=5.0):
         """
         @param block (bool) - open command is blocking or non-blocking [False]
+        @param timeout (float) - timeout in seconds for open command success
 
         Commands maximum gripper position.
         """
-        self.command_position(100.0, block)
+        if self.type() == 'custom':
+            return self._capablity_warning('open')
+        elif self.type() == 'electric':
+            return self.command_position(position=100.0, block=block,
+                                         timeout=timeout)
+        elif self.type() == 'suction':
+            return self.stop(block=block, timeout=timeout)
 
-    def close(self, block=False):
+    def close(self, block=False, timeout=5.0):
         """
         @param block (bool) - close command is blocking or non-blocking [False]
+        @param timeout (float) - timeout in seconds for close command success
 
         Commands minimum gripper position.
         """
-        self.command_position(0.0, block)
+        if self.type() == 'custom':
+            return self._capablity_warning('close')
+        elif self.type() == 'electric':
+            return self.command_position(position=0.0, block=block,
+                                         timeout=timeout)
+        elif self.type() == 'suction':
+            return self.command_suction(block=block, timeout=timeout)
 
     def parameters(self):
         """
-        Returns dict of parameters describing the position command execution.
+        Returns dict of parameters describing the gripper command execution.
         """
         return deepcopy(self._parameters)
 
@@ -388,6 +508,44 @@ class Gripper(object):
         total force applicable.
         """
         return deepcopy(self._state.force)
+
+    def suction(self):
+        """
+        Returns the value (0-100) of the current vacuum sensor reading as a
+        percentage of the full vacuum sensor range.
+        The message field contains an 8-bit integer representation of the vacuum
+        sensor, this function converts that integer to the percentage of the
+        full sensor range.
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('suction')
+        return (JSONDecoder().decode(self._state.state)['vacuum sensor'] / 255.0
+                * 100.0)
+
+    def vacuum(self):
+        """
+        Returns bool describing if the vacuum sensor threshold has been exceeded
+        during a command_suction event.
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('vacuum')
+        return JSONDecoder().decode(self._state.state)['vacuum']
+
+    def blowing(self):
+        """
+        Returns bool describing if the gripper is currently blowing.
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('blowing')
+        return JSONDecoder().decode(self._state.state)['blowing']
+
+    def sucking(self):
+        """
+        Returns bool describing if the gripper is currently sucking.
+        """
+        if self.type() != 'suction':
+            return self._capablity_warning('sucking')
+        return JSONDecoder().decode(self._state.state)['sucking']
 
     def has_force(self):
         """
