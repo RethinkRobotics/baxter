@@ -53,6 +53,16 @@ class JointRecorder(object):
         self._io_right_lower = baxter_interface.DigitalIO('right_lower_button')
         self._io_right_upper = baxter_interface.DigitalIO('right_upper_button')
 
+        # Verify Grippers Have No Errors and are Calibrated
+        if self._gripper_left.error():
+            self._gripper_left.reboot()
+        if self._gripper_right.error():
+            self._gripper_right.reboot()
+        if not self._gripper_left.calibrated():
+            self._gripper_left.calibrate()
+        if not self._gripper_right.calibrated():
+            self._gripper_right.calibrate()
+
     def _time_stamp(self):
         return rospy.get_time() - self._start_time
 

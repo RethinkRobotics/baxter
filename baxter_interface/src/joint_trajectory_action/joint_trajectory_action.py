@@ -115,6 +115,7 @@ class JointTrajectoryActionServer(object):
         velocities = [0.0] * len(joint_names)
         cmd = dict(zip(joint_names, velocities))
         self._limb.set_joint_velocities(cmd)
+        self._limb.set_joint_positions(self._limb.joint_angles())
 
     def _command_velocities(self, joint_names, positions):
         velocities = []

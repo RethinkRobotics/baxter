@@ -73,6 +73,7 @@ class Trajectory(object):
         if not l_server_up or not r_server_up:
             msg = "Action server not available. Verify controller availability."
             rospy.logerr(msg)
+            rospy.signal_shutdown(msg)
             sys.exit(1)
         #create our goal request
         self._l_goal = FollowJointTrajectoryGoal()
@@ -112,14 +113,14 @@ class Trajectory(object):
         pnt_times = [pnt.time_from_start.to_sec() for pnt in r_cmd]
         start_time = rospy.get_time()
         end_time = pnt_times[-1]
-        control_rate = 20.0; #20Hz gripper control rate
+        control_rate = 20.0 #20Hz gripper control rate
         now_from_start = rospy.get_time() - start_time
         while(now_from_start < end_time + (1.0 / control_rate) and
               not rospy.is_shutdown()):
             idx = bisect(pnt_times, now_from_start) - 1
             self._r_gripper.command_position(r_cmd[idx].positions[0])
-            #self._l_gripper.command_position(l_cmd[idx].positions[0])
-            rospy.sleep(1.0 / control_rate)
+            self._l_gripper.command_position(l_cmd[idx].positions[0])
+            rospy.Rate(control_rate).sleep()
             now_from_start = rospy.get_time() - start_time
 
     def _clean_line(self, line, joint_names):
