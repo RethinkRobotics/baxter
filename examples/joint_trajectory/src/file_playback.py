@@ -33,10 +33,11 @@ Via joint_position example - joint_position recorder.py <filename>
 """
 
 
-import sys
+import argparse
+from bisect import bisect
 from copy import copy
 import operator
-import argparse
+import sys
 
 import roslib
 roslib.load_manifest('joint_trajectory')
@@ -72,7 +73,8 @@ class Trajectory(object):
         if not l_server_up or not r_server_up:
             msg = "Action server not available. Verify controller availability."
             rospy.logerr(msg)
-            sys.exit(0)
+            rospy.signal_shutdown(msg)
+            sys.exit(1)
         #create our goal request
         self._l_goal = FollowJointTrajectoryGoal()
         self._r_goal = FollowJointTrajectoryGoal()
@@ -81,13 +83,51 @@ class Trajectory(object):
         self._l_arm = baxter_interface.Limb('left')
         self._r_arm = baxter_interface.Limb('right')
 
-        #param namespace
-        self._param_ns = '/rethink_rsdk_joint_trajectory_controller/'
+        #gripper interface - for gripper command playback
+        self._l_gripper = baxter_interface.Gripper('left')
+        self._r_gripper = baxter_interface.Gripper('right')
 
-    def clean_line(self, line, joint_names):
+        # Verify Grippers Have No Errors and are Calibrated
+        if self._l_gripper.error():
+            self._l_gripper.reboot()
+        if self._r_gripper.error():
+            self._r_gripper.reboot()
+        if not self._l_gripper.calibrated():
+            self.__l_gripper.calibrate()
+        if not self._r_gripper.calibrated():
+            self._r_gripper.calibrate()
+
+        #gripper goal trajectories
+        self._l_grip = FollowJointTrajectoryGoal()
+        self._r_grip = FollowJointTrajectoryGoal()
+
+        #param namespace
+        self._param_ns = '/rethink_rsdk_joint_trajectory_action_server/'
+
+    def _execute_gripper_commands(self):
+        start_time = rospy.get_time()
+        r_cmd = self._r_grip.trajectory.points
+        l_cmd = self._l_grip.trajectory.points
+        pnt_times = [pnt.time_from_start.to_sec() for pnt in r_cmd]
+        end_time = pnt_times[-1]
+        control_rate = 20.0 #20Hz gripper control rate
+        rate = rospy.Rate(control_rate)
+        now_from_start = rospy.get_time() - start_time
+        while(now_from_start < end_time + (1.0 / control_rate) and
+              not rospy.is_shutdown()):
+            idx = bisect(pnt_times, now_from_start) - 1
+            self._r_gripper.command_position(r_cmd[idx].positions[0])
+            self._l_gripper.command_position(l_cmd[idx].positions[0])
+            rate.sleep()
+            now_from_start = rospy.get_time() - start_time
+
+    def _clean_line(self, line, joint_names):
         """ Cleans a single line of recorded joint positions
         @param line - the line described in a list to process
         @param joint_names - joint name keys
+
+        @return command - returns dictionary {joint: value} of valid commands
+        @return line - returns list of current line values stripped of commas
         """
         def try_float(x):
             try:
@@ -103,6 +143,25 @@ class Trajectory(object):
         #convert it to a dictionary with only valid commands
         command = dict(cleaned)
         return (command, line,)
+
+    def _add_point(self, positions, side, time):
+        """ Appends trajectory with new point
+        @param positions - joint positions
+        @param side - limb to command point
+        @param time - time from start for point in seconds
+        """
+        #creates a point in trajectory with time_from_start and positions
+        point = JointTrajectoryPoint()
+        point.positions = copy(positions)
+        point.time_from_start = rospy.Duration(time)
+        if side == 'left':
+            self._l_goal.trajectory.points.append(point)
+        elif side == 'right':
+            self._r_goal.trajectory.points.append(point)
+        elif side == 'left_gripper':
+            self._l_grip.trajectory.points.append(point)
+        elif side == 'right_gripper':
+            self._r_grip.trajectory.points.append(point)
 
     def parse_file(self, filename):
         """ Parses input file into FollowJointTrajectoryGoal format
@@ -147,36 +206,27 @@ class Trajectory(object):
 
         for idx, values in enumerate(lines[1:]):
             #clean each line of file
-            cmd, values = self.clean_line(values, joint_names)
+            cmd, values = self._clean_line(values, joint_names)
             #find allowable time offset for move to start position
             if idx == 0:
                 start_offset = find_start_offset(cmd)
             #add a point for this set of commands with recorded time
             cur_cmd = [cmd[jnt] for jnt in self._l_goal.trajectory.joint_names]
-            self.add_point(cur_cmd, 'left', values[0] + start_offset)
+            self._add_point(cur_cmd, 'left', values[0] + start_offset)
             cur_cmd = [cmd[jnt] for jnt in self._r_goal.trajectory.joint_names]
-            self.add_point(cur_cmd, 'right', values[0] + start_offset)
+            self._add_point(cur_cmd, 'right', values[0] + start_offset)
+            cur_cmd = [cmd['left_gripper']]
+            self._add_point(cur_cmd, 'left_gripper', values[0] + start_offset)
+            cur_cmd = [cmd['right_gripper']]
+            self._add_point(cur_cmd, 'right_gripper', values[0] + start_offset)
 
-    def add_point(self, positions, side, time):
-        """ Appends trajectory with new point
-        @param positions - joint positions
-        @param side - limb to command point
-        @param time - time from start for point in seconds
-        """
-        #creates a point in trajectory with time_from_start and positions
-        point = JointTrajectoryPoint()
-        point.positions = copy(positions)
-        point.time_from_start = rospy.Duration(time)
-        if side == 'left':
-            self._l_goal.trajectory.points.append(point)
-        elif side == 'right':
-            self._r_goal.trajectory.points.append(point)
 
     def start(self):
         """ Sends FollowJointTrajectoryAction request
         """
         self._left_client.send_goal(self._l_goal)
         self._right_client.send_goal(self._r_goal)
+        self._execute_gripper_commands()
 
     def stop(self):
         """ Preempts trajectory exection by sending cancel goals
