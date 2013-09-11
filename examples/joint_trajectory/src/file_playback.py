@@ -87,9 +87,6 @@ class Trajectory(object):
         self._l_gripper = baxter_interface.Gripper('left')
         self._r_gripper = baxter_interface.Gripper('right')
 
-        #allow grippers to fully come up
-        rospy.sleep(0.25)
-
         # Verify Grippers Have No Errors and are Calibrated
         if self._l_gripper.error():
             self._l_gripper.reboot()
@@ -108,25 +105,29 @@ class Trajectory(object):
         self._param_ns = '/rethink_rsdk_joint_trajectory_action_server/'
 
     def _execute_gripper_commands(self):
+        start_time = rospy.get_time()
         r_cmd = self._r_grip.trajectory.points
         l_cmd = self._l_grip.trajectory.points
         pnt_times = [pnt.time_from_start.to_sec() for pnt in r_cmd]
-        start_time = rospy.get_time()
         end_time = pnt_times[-1]
         control_rate = 20.0 #20Hz gripper control rate
+        rate = rospy.Rate(control_rate)
         now_from_start = rospy.get_time() - start_time
         while(now_from_start < end_time + (1.0 / control_rate) and
               not rospy.is_shutdown()):
             idx = bisect(pnt_times, now_from_start) - 1
             self._r_gripper.command_position(r_cmd[idx].positions[0])
             self._l_gripper.command_position(l_cmd[idx].positions[0])
-            rospy.Rate(control_rate).sleep()
+            rate.sleep()
             now_from_start = rospy.get_time() - start_time
 
     def _clean_line(self, line, joint_names):
         """ Cleans a single line of recorded joint positions
         @param line - the line described in a list to process
         @param joint_names - joint name keys
+
+        @return command - returns dictionary {joint: value} of valid commands
+        @return line - returns list of current line values stripped of commas
         """
         def try_float(x):
             try:
