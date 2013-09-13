@@ -88,8 +88,8 @@ class Gripper(object):
         dataflow.wait_for(
             lambda: not self.type() is None,
             timeout=5.0,
-            timeout_msg=("Failed to get current state from %s" % 
-                         (ns + 'state',))
+            timeout_msg=("Failed to get current properties from %s" % 
+                         (ns + 'properties',))
         )
         self.set_parameters(defaults=True)
 
@@ -285,7 +285,7 @@ class Gripper(object):
         @param position (float) - in % 0=close 100=open
 
         Command the gripper position movement.
-        from minimum (0) to maximum (100)
+        from minimum/closed (0) to maximum/open (100)
         """
         if self.type() != 'electric':
             return self._capablity_warning('command_position')
@@ -308,22 +308,17 @@ class Gripper(object):
                             args=arguments,
                             )
 
-    def command_suction(self, threshold=18.0, block=False, timeout=5.0):
+    def command_suction(self, block=False, timeout=5.0):
         """
-        @param threshold (float) - in % 0-100 across the measured suction range
-
         Command the gripper suction.
-        Set threshold for determining grasp from (0) to maximum (100)
         Timeout describes how long the suction will be applied while trying
-        to determine a grasp has been achieved.
+        to determine a grasp (vacuum threshold exceeded) has been achieved.
         """
         if self.type() != 'suction':
             return self._capablity_warning('command_suction')
 
         cmd = EndEffectorCommand.CMD_GO
-        arguments = {"vacuum_sensor_threshold": self._clip(threshold),
-                     "grip_attempt_seconds": timeout,
-                     }
+        arguments = {"grip_attempt_seconds": timeout}
         return self.command(
                             cmd,
                             block,
@@ -385,15 +380,15 @@ class Gripper(object):
         dead_band_param = dict(dead_zone=self._clip(dead_band))
         self.set_parameters(parameters=dead_band_param, defaults=False)
 
-    def set_suction_threshold(self, threshold):
+    def set_vacuum_threshold(self, threshold):
         """
-        @param threshold (float) - in % of measured suction range [18.0]
+        @param threshold (float) - in % of measured vacuum range [18.0]
 
         Set the gripper suction threshold describing the threshold at which the
-        measured suction must exceed to denote a successful grasp.
+        measured suction (vacuum achieved) must exceed to denote a successful grasp.
         """
         if self.type() != 'suction':
-            return self._capablity_warning('set_suction_threshold')
+            return self._capablity_warning('set_vacuum_threshold')
 
         threshold_param = dict(vacuum_sensor_threshold=self._clip(threshold))
         self.set_parameters(parameters=threshold_param, defaults=False)
@@ -407,7 +402,7 @@ class Gripper(object):
         from the suction gripper for the seconds specified by this method.
 
         Note: This blow off will only be commanded after the previous suction
-        command returned a successful grasp (suction thresholf was exceeded)
+        command returned a successful grasp (suction threshold was exceeded)
         """
         if self.type() != 'suction':
             return self._capablity_warning('set_blow_off')
@@ -509,7 +504,7 @@ class Gripper(object):
         """
         return deepcopy(self._state.force)
 
-    def suction(self):
+    def vacuum_sensor(self):
         """
         Returns the value (0-100) of the current vacuum sensor reading as a
         percentage of the full vacuum sensor range.
@@ -518,7 +513,7 @@ class Gripper(object):
         full sensor range.
         """
         if self.type() != 'suction':
-            return self._capablity_warning('suction')
+            return self._capablity_warning('vacuum_sensor')
         return (JSONDecoder().decode(self._state.state)['vacuum sensor'] / 255.0
                 * 100.0)
 
