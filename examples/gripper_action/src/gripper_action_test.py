@@ -82,7 +82,7 @@ def main(gripper):
     print("Running. Ctrl-c to quit")
 
     gc = GripperClient(gripper)
-    gc.command(position=0.0, effort=70.0)
+    gc.command(position=0.0, effort=50.0)
     gc.wait()
     gc.command(position=100.0, effort=50.0)
     gc.wait()
@@ -90,7 +90,7 @@ def main(gripper):
     gc.wait()
     gc.command(position=75.0, effort=20.0)
     gc.wait()
-    gc.command(position=0.0, effort=80.0)
+    gc.command(position=0.0, effort=30.0)
     gc.wait()
     gc.command(position=100.0, effort=40.0)
     print gc.wait()
