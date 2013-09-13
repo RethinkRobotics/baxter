@@ -103,7 +103,7 @@ class GripperActionServer(object):
                                  })
             self._gripper.set_parameters(parameters=param_update)
         elif self._type == 'suction':
-            self._suction = self._param.config[self._ee + '_suction_threshold']
+            self._suction = self._param.config[self._ee + '_vacuum_threshold']
             self._blow_off = self._param.config[self._ee + '_blow_off']
             param_update = dict({'vacuum_sensor_threshold': self._suction,
                                  'blow_off_seconds': self._blow_off,
