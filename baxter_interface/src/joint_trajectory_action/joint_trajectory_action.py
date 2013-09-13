@@ -54,8 +54,8 @@ import baxter_interface
 
 
 class JointTrajectoryActionServer(object):
-    def __init__(self, limb, parameters, rate=100.0):
-        self._param = parameters
+    def __init__(self, limb, reconfig_server, rate=100.0):
+        self._dyn = reconfig_server
         self._ns = 'robot/limb/' + limb + '/follow_joint_trajectory'
         self._server = actionlib.SimpleActionServer(
             self._ns,
@@ -94,12 +94,12 @@ class JointTrajectoryActionServer(object):
                 self._server.set_aborted()
                 return False
 
-            self._pid[jnt].set_kp(self._param.config[jnt + '_kp'])
-            self._pid[jnt].set_ki(self._param.config[jnt + '_ki'])
-            self._pid[jnt].set_kd(self._param.config[jnt + '_kd'])
-            self._goal_error[jnt] = self._param.config[jnt + '_goal']
-            self._error_threshold[jnt] = self._param.config[jnt + '_trajectory']
-            self._dflt_vel[jnt] = self._param.config[jnt + '_default_velocity']
+            self._pid[jnt].set_kp(self._dyn.config[jnt + '_kp'])
+            self._pid[jnt].set_ki(self._dyn.config[jnt + '_ki'])
+            self._pid[jnt].set_kd(self._dyn.config[jnt + '_kd'])
+            self._goal_error[jnt] = self._dyn.config[jnt + '_goal']
+            self._error_threshold[jnt] = self._dyn.config[jnt + '_trajectory']
+            self._dflt_vel[jnt] = self._dyn.config[jnt + '_default_velocity']
             self._pid[jnt].initialize()
         return True
 

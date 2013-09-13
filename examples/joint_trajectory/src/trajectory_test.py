@@ -85,7 +85,7 @@ class Trajectory(object):
 
 def main(limb):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_trajectory_controller_test")
+    rospy.init_node("rethink_rsdk_joint_trajectory_test_%s" % (limb,))
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")

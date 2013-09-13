@@ -182,8 +182,7 @@ class Gripper(object):
         """
         valid_parameters = self.valid_parameters()
         if defaults:
-            for param in valid_parameters.keys():
-                self._parameters[param] = valid_parameters[param]
+            self._parameters = valid_parameters
         if parameters is None:
             parameters = dict()
         for key in parameters.keys():
