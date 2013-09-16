@@ -58,7 +58,7 @@ class JointSprings(object):
     moving the limb to a neutral location, entering torque mode,
     and attaching virtual springs.
     """
-    def __init__(self, limb, reconfig_server,):
+    def __init__(self, limb, reconfig_server):
         self._dyn = reconfig_server
         # create our limb instance
         self._limb = baxter_interface.Limb(limb)
