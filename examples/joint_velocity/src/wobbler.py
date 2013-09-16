@@ -41,7 +41,7 @@ from std_msgs.msg import (
 import baxter_interface
 import iodevices
 
-class Wobbler():
+class Wobbler(object):
 
     def __init__(self):
         """

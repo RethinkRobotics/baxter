@@ -36,7 +36,7 @@ roslib.load_manifest('head_control')
 import rospy
 import baxter_interface
 
-class Wobbler():
+class Wobbler(object):
 
     def __init__(self):
         """
