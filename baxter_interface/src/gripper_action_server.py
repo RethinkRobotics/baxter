@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2013, Rethink Robotics
 # All rights reserved.
 #
@@ -25,4 +27,47 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from joint_trajectory_action_server import JointTrajectoryActionServer
+"""
+Baxter RSDK Gripper Action Server
+"""
+import argparse
+
+import roslib
+roslib.load_manifest('baxter_interface')
+import rospy
+
+from dynamic_reconfigure.server import Server
+from baxter_interface.cfg import (
+    GripperActionServerConfig
+)
+
+import baxter_interface
+from gripper_action import (
+    GripperActionServer,
+)
+
+def main(gripper):
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_gripper_action_server%s" %
+                    ("" if gripper == 'both' else "_" + gripper,))
+    print("Initializing gripper action server...")
+
+    dynamic_cfg_srv = Server(GripperActionServerConfig,
+                                 lambda config,level: config)
+
+    if gripper == 'both':
+        GripperActionServer('right', dynamic_cfg_srv)
+        GripperActionServer('left', dynamic_cfg_srv)
+    else:
+        GripperActionServer(gripper, dynamic_cfg_srv)
+    print("Running. Ctrl-c to quit")
+    rospy.spin()
+
+if __name__ == "__main__":
+    format = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=format)
+    parser.add_argument("-g", "--gripper", dest="gripper", default="both",
+                        choices=['both', 'left', 'right'],
+                        help="gripper action server limb",)
+    args = parser.parse_args()
+    main(args.gripper)
