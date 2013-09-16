@@ -65,32 +65,32 @@ class Gripper(object):
         self._cmd_pub = rospy.Publisher(ns + 'command', EndEffectorCommand)
 
         self._state_sub = rospy.Subscriber(
-                              ns + 'state',
-                              EndEffectorState,
-                              self._on_gripper_state
-                          )
+                                           ns + 'state',
+                                           EndEffectorState,
+                                           self._on_gripper_state
+                                           )
 
         self._prop_sub = rospy.Subscriber(
-                                   ns + 'properties',
-                                   EndEffectorProperties,
-                                   self._on_gripper_prop
-                               )
+                                          ns + 'properties',
+                                          EndEffectorProperties,
+                                          self._on_gripper_prop
+                                          )
 
         # Wait for the gripper state message to be populated
         dataflow.wait_for(
-            lambda: not self._state is None,
-            timeout=5.0,
-            timeout_msg=("Failed to get current state from %s" % 
-                         (ns + 'state',))
-        )
+                          lambda: not self._state is None,
+                          timeout=5.0,
+                          timeout_msg=("Failed to state from %s" % 
+                                       (ns + 'state',))
+                          )
 
         # Wait for the gripper type to be populated
         dataflow.wait_for(
-            lambda: not self.type() is None,
-            timeout=5.0,
-            timeout_msg=("Failed to get current properties from %s" % 
-                         (ns + 'properties',))
-        )
+                          lambda: not self.type() is None,
+                          timeout=5.0,
+                          timeout_msg=("Failed to get properties from %s" % 
+                                       (ns + 'properties',))
+                          )
         self.set_parameters(defaults=True)
 
     def _on_gripper_state(self, state):
@@ -103,7 +103,7 @@ class Gripper(object):
         return max(min(val, 100.0), 0.0)
 
     def _capablity_warning(self, cmd):
-        msg = ("%s %s - not capable of '%s' command" %
+        msg = ("%s %s - not capable of '%s' command" % 
                (self.name, self.type(), cmd))
         rospy.logwarn(msg)
 
@@ -189,7 +189,7 @@ class Gripper(object):
             if key in valid_parameters.keys():
                 self._parameters[key] = parameters[key]
             else:
-                msg = ("Invalid parameter: %s provided. %s" %
+                msg = ("Invalid parameter: %s provided. %s" % 
                        (key, self.valid_parameters_text(),))
                 rospy.logwarn(msg)
         cmd = EndEffectorCommand.CMD_CONFIGURE
@@ -225,14 +225,14 @@ class Gripper(object):
 
         cmd = EndEffectorCommand.CMD_REBOOT
         self.command(
-                    cmd,
-                    block,
-                    test=lambda: (self._state.enabled == True and
-                                  self._state.error != True and
-                                  self._state.ready == True),
+                     cmd,
+                     block,
+                     test=lambda: (self._state.enabled == True and
+                                   self._state.error != True and
+                                   self._state.ready == True),
                      time=timeout,
-                    )
-        rospy.sleep(0.5) # Allow extra time for reboot to complete
+                     )
+        rospy.sleep(0.5)  # Allow extra time for reboot to complete
         self.set_parameters(defaults=True)
 
     def calibrate(self, timeout=5.0, block=True):
@@ -247,11 +247,11 @@ class Gripper(object):
 
         cmd = EndEffectorCommand.CMD_CALIBRATE
         self.command(
-            cmd,
-            block,
-            test=lambda: (self._state.calibrated == True),
-            time=timeout,
-        )
+                     cmd,
+                     block,
+                     test=lambda: (self._state.calibrated == True),
+                     time=timeout,
+                     )
         self.set_parameters(defaults=True)
 
 
@@ -291,8 +291,8 @@ class Gripper(object):
 
         if not self._state.calibrated:
             msg = ("Unable to command %s position until calibrated" % self.name)
-            raise IOError(errno.EPERM, msg)
             rospy.logwarn(msg)
+            raise IOError(errno.EPERM, msg)
             return
 
         cmd = EndEffectorCommand.CMD_GO
@@ -384,7 +384,8 @@ class Gripper(object):
         @param threshold (float) - in % of measured vacuum range [18.0]
 
         Set the gripper suction threshold describing the threshold at which the
-        measured suction (vacuum achieved) must exceed to denote a successful grasp.
+        measured suction (vacuum achieved) must exceed to denote a successful
+        grasp.
         """
         if self.type() != 'suction':
             return self._capablity_warning('set_vacuum_threshold')
