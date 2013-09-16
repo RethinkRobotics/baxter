@@ -47,7 +47,7 @@ def test_interface(io_component = 'torso_fan'):
         rate.sleep()
     # max: 100.0
     print b.state()
-    
+
     # ramp down
     for i in range(100,-1,-10):
         b.set_output(i)
