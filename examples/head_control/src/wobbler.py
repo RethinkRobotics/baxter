@@ -67,13 +67,14 @@ class Wobbler(object):
         self._head.command_nod()
         rate = rospy.Rate(1);
         start = rospy.get_time()
-        while (rospy.get_time() - start < 5.0):
+        while not self._done and (rospy.get_time() - start < 5.0):
             angle = random.uniform(-1.5, 1.5)
             self._head.set_pan(angle)
             rate.sleep();
 
         #return to normal
-        self.set_neutral()
+        if not self._done:
+            self.set_neutral()
 
 if __name__ == '__main__':
     print("Initializing node... ")
