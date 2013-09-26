@@ -82,7 +82,13 @@ class RobotEnable(object):
         Enable all joints
         """
         if self._state.stopped:
-            self.reset()
+            if self._state.estop_button == AssemblyState.ESTOP_BUTTON_PRESSED:
+                rospy.logfatal("E-STOP is ASSERTED; Disengage and Reset robot")
+                raise IOError(errno.EREMOTEIO,
+                              "Failed to Enable: E-Stop Engaged")
+            else:
+                rospy.logwarn("Robot Stopped; Attempting Reset...")
+                self.reset()
         self._toggle_enabled(True)
 
     def disable(self):
@@ -101,6 +107,7 @@ class RobotEnable(object):
                                        ('en' if status else 'dis',)),
                           body=lambda: pub.publish(status),
                           )
+        rospy.loginfo("Robot %s", ('enabled' if status else 'disabled'))
 
     def reset(self):
         """
@@ -116,6 +123,7 @@ class RobotEnable(object):
 
         pub = rospy.Publisher('/robot/set_super_reset', Empty)
 
+        rospy.loginfo("Resetting robot...")
         dataflow.wait_for(test=is_reset,
                           timeout=3.0,
                           timeout_msg="Failed to reset robot",
