@@ -135,7 +135,7 @@ class RobustController(object):
             elif self._return == errno.ETIMEDOUT:
                 raise IOError(self._return, "Robust controller timed out")
             elif self._return == errno.ECONNABORTED:
-                raise IOError(self._return, "Robust controller interruped by user")
+                raise IOError(self._return, "Robust controller interrupted by user")
             else:
                 raise IOError(self._return)
 
