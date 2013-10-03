@@ -71,13 +71,25 @@ if __name__ == '__main__':
             if o in ('-s', '--state'):
                 print rs.state()
             elif o in ('-e', '--enable'):
-                rs.enable()
+                try:
+                    rs.enable()
+                except Exception, e:
+                    rospy.logerr(e[1])
             elif o in ('-d', '--disable'):
-                rs.disable()
+                try:
+                    rs.disable()
+                except Exception, e:
+                    rospy.logerr(e[1])
             elif o in ('-r', '--reset'):
-                rs.reset()
+                try:
+                    rs.reset()
+                except Exception, e:
+                    rospy.logerr(e[1])
             elif o in ('-S', '--stop'):
-                rs.stop()
+                try:
+                    rs.stop()
+                except Exception, e:
+                    rospy.logerr(e[1])
 
     sys.exit(0)
 
