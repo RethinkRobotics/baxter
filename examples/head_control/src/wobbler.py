@@ -78,7 +78,7 @@ class Wobbler(object):
 
 if __name__ == '__main__':
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_velocity")
+    rospy.init_node("rethink_rsdk_head_wobbler")
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")
