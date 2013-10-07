@@ -241,6 +241,16 @@ class Limb(object):
         """
         self._pub_joint_cmd_timeout.publish(Float64(timeout))
 
+    def exit_control_mode(self, timeout=0.2):
+        """
+        @param timeout float  - float control timeout in seconds [0.2]
+
+        Clean exit from advanced control modes (joint torque or velocity).
+        Resets control to joint position mode with current positions.
+        """
+        self.set_command_timeout(timeout)
+        self.set_joint_positions(self.joint_angles())
+
     def set_joint_position_speed(self, speed):
         """
         @param speed float  - speed ratio of maximum joint speed for execution
