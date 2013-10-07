@@ -71,6 +71,13 @@ class JointSprings(object):
         cuff_ns = 'robot/limb/' + limb + '/suppress_cuff_interaction'
         self._pub_cuff_disable = rospy.Publisher(cuff_ns, Empty)
 
+        # verify robot is enabled
+        print("Getting robot state... ")
+        self._rs = baxter_interface.RobotEnable()
+        print("Enabling robot... ")
+        self._rs.enable()
+        print("Running. Ctrl-c to quit")
+
     def _update_parameters(self):
         for joint in self._limb.joint_names():
             self._springs[joint] = self._dyn.config[joint[-2:] +
@@ -118,11 +125,11 @@ class JointSprings(object):
         control_rate = rospy.Rate(rate)
 
         # for safety purposes set command timeout
-        # if 5 command cycles missed - timeout and disable robot
-        self._limb.set_command_timeout(1.0 / (rate / 5))
+        # if 20 command cycles missed - timeout and disable robot
+        self._limb.set_command_timeout(1.0 / (rate / 20))
 
         # loop at specified rate commanding new joint torques
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown() and self._rs.state().enabled:
             self._update_forces()
             control_rate.sleep()
 
@@ -134,12 +141,7 @@ class JointSprings(object):
 
 def main(limb):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_torque_springs")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
-    print("Running. Ctrl-c to quit")
+    rospy.init_node("rethink_rsdk_joint_torque_springs_%s" % (limb,))
     dynamic_cfg_srv = Server(JointSpringsExampleConfig,
                              lambda config,level: config)
     js = JointSprings(limb, dynamic_cfg_srv)
