@@ -142,9 +142,11 @@ def map_joystick(joystick):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-j','--joystick', choices=['xbox', 'logitech', 'ps3'],
-                        help="specify the type of joystick to use")
-    args, unknown = parser.parse_known_args()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-j','--joystick', required=True,
+                          choices=['xbox', 'logitech', 'ps3'],
+                          help="specify the type of joystick to use")
+    args = parser.parse_args(rospy.myargv()[1:])
 
     joystick = None
     if args.joystick == 'xbox':
@@ -154,6 +156,7 @@ if __name__ == '__main__':
     elif args.joystick == 'ps3':
         joystick = iodevices.joystick.PS3Controller()
     else:
+        # Should never reach this case with proper argparse usage
         parser.error("Unsupported joystick type '%s'" % (args.joystick))
 
     print("Initializing node... ")

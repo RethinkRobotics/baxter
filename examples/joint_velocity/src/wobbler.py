@@ -36,7 +36,8 @@ roslib.load_manifest('joint_velocity')
 import rospy
 
 from std_msgs.msg import (
-    UInt16,)
+    UInt16,
+)
 
 import baxter_interface
 import iodevices

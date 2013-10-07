@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import getopt
+import argparse
 import os
 import sys
 
@@ -62,34 +62,9 @@ class Tare(baxter_interface.robustcontroller.RobustController):
             disable_msg,
             5 * 60)
 
-def usage():
-        print """
-%s [ARGUMENTS]
-
-    -h, --help          This screen
-    -t, --tare [LIMB]   Tare the specified limb [left/right]
-    """ % (os.path.basename(sys.argv[0]),)
-
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'ht:',
-            ['help', 'tare=',])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(2)
-
-    limb = None
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit(0)
-        elif o in ('-t', '--tare'):
-            limb = a
-
+def main(limb = None):
     if not limb:
-        usage()
-        rospy.logerr("No limb specified")
+        rospy.logerr("No limb specified. See help with [-h]")
         sys.exit(1)
 
     rospy.init_node('tare_sdk', anonymous=True)
@@ -117,4 +92,11 @@ def main():
     sys.exit(0 if error == None else 1)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('--limb', '-l', required=True,
+                        choices=['left', 'right'],
+                        help='Tare the specified limb [left|right]')
+    args = parser.parse_args(rospy.myargv()[1:])
+
+    main(args.limb)

@@ -75,5 +75,5 @@ if __name__ == "__main__":
                         help="joint trajectory action server limb")
     parser.add_argument("-r", "--rate", dest="rate", default=100.0,
                         type=float, help="trajectory control rate (Hz)")
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv()[1:])
     main(args.limb, args.rate)

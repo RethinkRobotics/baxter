@@ -27,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import getopt
+import argparse
 import os
 import sys
 
@@ -36,15 +36,6 @@ roslib.load_manifest('input_output')
 import rospy
 
 import baxter_interface
-
-def usage():
-    print """
-%s [ARGUMENTS]
-
-    -h, --help          This screen
-    -b, --blink         Blink navigator lights for 10 seconds
-    -i, --input         Show input for 10 seconds
-    """ % (os.path.basename(sys.argv[0]),)
 
 def blink():
     navs = (
@@ -86,29 +77,9 @@ def echo_input():
         rate.sleep()
         i += 1
 
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hbi',
-            ['help', 'blink', 'input',])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(2)
-
-    action = None
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit(0)
-        elif o in ('-b', '--blink'):
-            action = blink
-        elif o in ('-i', '--input'):
-            action = echo_input
-
+def main(action=None):
     if action == None:
-        print ("No action defined")
-        usage()
+        print ("No action defined. See help with [-h]")
         sys.exit(2)
 
     rospy.init_node('navigator_example', anonymous = True)
@@ -116,5 +87,14 @@ def main():
     sys.exit(0)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    action_grp = parser.add_mutually_exclusive_group(required=True)
+    action_grp.add_argument("-b", "--blink", dest='action',
+                            action='store_const', const=blink,
+                            help="Blink navigator lights for 10 seconds")
+    action_grp.add_argument("-i", "--input", dest='action',
+                            action='store_const', const=echo_input,
+                            help="Show input of left arm for 10 seconds")
+    args = parser.parse_args(rospy.myargv()[1:])
 
+    main(args.action)

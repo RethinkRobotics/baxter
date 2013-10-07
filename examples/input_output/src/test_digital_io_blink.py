@@ -27,6 +27,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -49,7 +51,14 @@ def test_interface(io_component = 'left_itb_light_outer'):
     b.set_output(False)
 
 if __name__ == '__main__':
+    show_defaults = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=show_defaults)
+    parser.add_argument('-c','--component', dest='component_id',
+                        default='left_itb_light_outer',
+                        help='name of Digital IO component to use')
+    args = parser.parse_args(rospy.myargv()[1:])
+
     rospy.init_node('test_dio', anonymous=True)
-    io_component = rospy.get_param('~component_id', 'left_itb_light_outer')
+    io_component = rospy.get_param('~component_id', args.component_id)
     test_interface(io_component)
 

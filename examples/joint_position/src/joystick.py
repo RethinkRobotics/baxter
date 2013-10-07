@@ -143,15 +143,11 @@ def map_joystick(joystick):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("joystick", help="specify the type of joystick to use; xbox | logitech | ps3")
-    args, unknown = parser.parse_known_args()
-
-    print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_position_joystick")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-j','--joystick', required=True,
+                          choices=['xbox', 'logitech', 'ps3'],
+                          help="specify the type of joystick to use")
+    args = parser.parse_args(rospy.myargv()[1:])
 
     joystick = None
     if args.joystick == 'xbox':
@@ -162,6 +158,13 @@ if __name__ == '__main__':
         joystick = iodevices.joystick.PS3Controller()
     else:
         parser.error("Unsupported joystick type '%s'" % (args.joystick))
+
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_joint_position_joystick")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
 
     if map_joystick(joystick):
         print("Disabling robot... ")
