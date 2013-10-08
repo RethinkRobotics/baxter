@@ -124,11 +124,11 @@ class RobotEnable(object):
         pub = rospy.Publisher('/robot/set_super_reset', Empty)
 
         rospy.loginfo("Resetting robot...")
-        error_msg = """Failed to reset robot. Please verify that the ROS_IP or
-        ROS_HOSTNAME environment variables are set and resolvable.
-        For more information please visit:
-        https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
-        """
+        error_msg = """Failed to reset robot.
+Please verify that the ROS_IP or ROS_HOSTNAME environment variables are set and
+resolvable. For more information please visit:
+https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
+"""
         dataflow.wait_for(test=is_reset,
                           timeout=3.0,
                           timeout_msg=error_msg,

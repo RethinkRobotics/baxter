@@ -67,29 +67,17 @@ if __name__ == '__main__':
         else:
             rospy.init_node('robot_control')
             rs = baxter_interface.RobotEnable()
-
-            if o in ('-s', '--state'):
-                print rs.state()
-            elif o in ('-e', '--enable'):
-                try:
+            try:
+                if o in ('-s', '--state'):
+                    print rs.state()
+                elif o in ('-e', '--enable'):
                     rs.enable()
-                except Exception, e:
-                    rospy.logerr(e[1])
-            elif o in ('-d', '--disable'):
-                try:
+                elif o in ('-d', '--disable'):
                     rs.disable()
-                except Exception, e:
-                    rospy.logerr(e[1])
-            elif o in ('-r', '--reset'):
-                try:
+                elif o in ('-r', '--reset'):
                     rs.reset()
-                except Exception, e:
-                    rospy.logerr(e[1])
-            elif o in ('-S', '--stop'):
-                try:
+                elif o in ('-S', '--stop'):
                     rs.stop()
-                except Exception, e:
-                    rospy.logerr(e[1])
-
+            except Exception, e:
+                rospy.logerr(e.strerror)
     sys.exit(0)
-
