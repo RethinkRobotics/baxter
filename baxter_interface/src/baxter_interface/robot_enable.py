@@ -71,6 +71,18 @@ class RobotEnable(object):
     def _state_callback(self, msg):
         self._state = msg
 
+    def _toggle_enabled(self, status):
+
+        pub = rospy.Publisher('/robot/set_super_enable', Bool)
+
+        dataflow.wait_for(test=lambda: self._state.enabled == status,
+                          timeout=2.0 if status else 5.0,
+                          timeout_msg=("Failed to %sable robot" % 
+                                       ('en' if status else 'dis',)),
+                          body=lambda: pub.publish(status),
+                          )
+        rospy.loginfo("Robot %s", ('Enabled' if status else 'Disabled'))
+
     def state(self):
         """
         Returns the last known robot state.
@@ -87,7 +99,7 @@ class RobotEnable(object):
                 raise IOError(errno.EREMOTEIO,
                               "Failed to Enable: E-Stop Engaged")
             else:
-                rospy.logwarn("Robot Stopped; Attempting Reset...")
+                rospy.loginfo("Robot Stopped: Attempting Reset...")
                 self.reset()
         self._toggle_enabled(True)
 
@@ -96,18 +108,6 @@ class RobotEnable(object):
         Disable all joints
         """
         self._toggle_enabled(False)
-
-    def _toggle_enabled(self, status):
-
-        pub = rospy.Publisher('/robot/set_super_enable', Bool)
-
-        dataflow.wait_for(test=lambda: self._state.enabled == status,
-                          timeout=2.0 if status else 5.0,
-                          timeout_msg=("Failed to %sable robot" % 
-                                       ('en' if status else 'dis',)),
-                          body=lambda: pub.publish(status),
-                          )
-        rospy.loginfo("Robot %s", ('enabled' if status else 'disabled'))
 
     def reset(self):
         """
@@ -124,9 +124,14 @@ class RobotEnable(object):
         pub = rospy.Publisher('/robot/set_super_reset', Empty)
 
         rospy.loginfo("Resetting robot...")
+        error_msg = """Failed to reset robot.
+Please verify that the ROS_IP or ROS_HOSTNAME environment variables are set and
+resolvable. For more information please visit:
+https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
+"""
         dataflow.wait_for(test=is_reset,
                           timeout=3.0,
-                          timeout_msg="Failed to reset robot",
+                          timeout_msg=error_msg,
                           body=lambda: pub.publish(),
                           )
 
@@ -141,25 +146,3 @@ class RobotEnable(object):
                           timeout_msg="Failed to stop the robot",
                           body=lambda: pub.publish(),
                           )
-
-def test():
-    rospy.init_node("rethink_rsdk_robot_enable_test")
-    print("Getting robot state... ")
-    rs = RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
-    print("Enabling robot again... ")
-    rs.enable()
-
-    print("Stopping Robot... ")
-    rs.stop()
-    print("Enabling robot again... ")
-    rs.enable()
-
-    print("Disabling robot... ")
-    rs.disable()
-    print("Disabling robot again... ")
-    rs.disable()
-
-if __name__ == '__main__':
-    test()
