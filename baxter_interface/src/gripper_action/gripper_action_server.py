@@ -28,11 +28,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-Baxter RSDK Joint Trajectory Controller
-    Unlike other robots running ROS, this is not a Motor Controller plugin,
-    but a regular node using the SDK interface.
+Baxter RSDK Gripper Action Server
 """
-import sys
 import argparse
 
 import roslib
@@ -40,40 +37,42 @@ roslib.load_manifest('baxter_interface')
 import rospy
 
 from dynamic_reconfigure.server import Server
+
 from baxter_interface.cfg import (
-    JointTrajectoryActionServerConfig
+    GripperActionServerConfig
+)
+from gripper_action.gripper_action import (
+    GripperActionServer,
 )
 
-import iodevices
-import dataflow
-import baxter_interface
-from joint_trajectory_action import (
-    JointTrajectoryActionServer,
-)
 
-def main(limb, rate):
+def start_server(gripper):
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_trajectory_action_server%s" %
-                    ("" if limb == 'both' else "_" + limb,))
-    print("Initializing joint trajectory action server...")
+    rospy.init_node("rethink_rsdk_gripper_action_server%s" %
+                    ("" if gripper == 'both' else "_" + gripper,))
+    print("Initializing gripper action server...")
 
-    dynamic_cfg_srv = Server(JointTrajectoryActionServerConfig,
-                                 lambda config,level: config)
-    if limb == 'both':
-        JointTrajectoryActionServer('right', dynamic_cfg_srv, rate)
-        JointTrajectoryActionServer('left', dynamic_cfg_srv, rate)
+    dynamic_cfg_srv = Server(GripperActionServerConfig,
+                             lambda config, level: config)
+
+    if gripper == 'both':
+        GripperActionServer('right', dynamic_cfg_srv)
+        GripperActionServer('left', dynamic_cfg_srv)
     else:
-        JointTrajectoryActionServer(limb, dynamic_cfg_srv, rate)
+        GripperActionServer(gripper, dynamic_cfg_srv)
     print("Running. Ctrl-c to quit")
     rospy.spin()
 
-if __name__ == "__main__":
-    format = argparse.ArgumentDefaultsHelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=format)
-    parser.add_argument("-l", "--limb", dest="limb", default="both",
+
+def main():
+    arg_fmt = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=arg_fmt)
+    parser.add_argument("-g", "--gripper", dest="gripper", default="both",
                         choices=['both', 'left', 'right'],
-                        help="joint trajectory action server limb")
-    parser.add_argument("-r", "--rate", dest="rate", default=100.0,
-                        type=float, help="trajectory control rate (Hz)")
+                        help="gripper action server limb",)
     args = parser.parse_args()
-    main(args.limb, args.rate)
+    start_server(args.gripper)
+
+
+if __name__ == "__main__":
+    main()

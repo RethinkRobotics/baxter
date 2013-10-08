@@ -25,8 +25,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import errno
-
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -34,13 +32,14 @@ import rospy
 from std_msgs.msg import (
     Bool
 )
+
 from baxter_core_msgs.msg import (
    HeadPanCommand,
    HeadState,
 )
+from baxter_interface import settings
+from utilities import dataflow
 
-import settings
-import dataflow
 
 class Head(object):
     def __init__(self):
@@ -68,7 +67,8 @@ class Head(object):
         dataflow.wait_for(
             lambda: len(self._state) != 0,
             timeout=5.0,
-            timeout_msg="Failed to get current head state from /robot/head/head_state",
+            timeout_msg=("Failed to get current head state from "
+                         "/robot/head/head_state"),
         )
 
     def _on_head_state(self, msg):
@@ -88,7 +88,8 @@ class Head(object):
         """
         Check if the head is currently nodding.
 
-        @returns (bool) - True if the head is currently nodding, False otherwise.
+        @returns (bool) - True if the head is currently nodding, False
+                          otherwise.
         """
         return self._state['nodding']
 
@@ -96,26 +97,28 @@ class Head(object):
         """
         Check if the head is currently panning.
 
-        @returns (bool) - True if the head is currently panning, False otherwise.
+        @returns (bool) - True if the head is currently panning, False
+                          otherwise.
         """
         return self._state['panning']
-
 
     def set_pan(self, angle, speed=100, timeout=10.0):
         """
         Pan at the given speed to the desired angle.
 
-        @param angle (float)    - Desired pan angle in radians.
-        @param speed (int)      - Desired speed to pan at, range is 0-100 [100]
-        @param timeout (float)  - Seconds to wait for the head to pan to the specified
-                                  angle.  If 0, just command once and return.  [0]
+        @param angle (float)   - Desired pan angle in radians.
+        @param speed (int)     - Desired speed to pan at, range is 0-100 [100]
+        @param timeout (float) - Seconds to wait for the head to pan to the
+                                 specified angle.  If 0, just command once and
+                                 return.  [0]
         """
         msg = HeadPanCommand(angle, speed)
         self._pub_pan.publish(msg)
 
         if not timeout == 0:
             dataflow.wait_for(
-                lambda: abs(self.pan()-angle) <= settings.HEAD_PAN_ANGLE_TOLERANCE,
+                lambda: (abs(self.pan() - angle) <=
+                         settings.HEAD_PAN_ANGLE_TOLERANCE),
                 timeout=timeout,
                 rate=100,
                 timeout_msg="Failed to move head to pan command %f" % angle,
@@ -134,7 +137,7 @@ class Head(object):
         if not timeout == 0:
             # Wait for nod to initiate
             dataflow.wait_for(
-                test=lambda: self.nodding(),
+                test=self.nodding,
                 timeout=timeout,
                 rate=100,
                 timeout_msg="Failed to initiate head nod command",

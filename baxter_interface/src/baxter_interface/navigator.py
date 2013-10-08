@@ -29,32 +29,30 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-import dataflow
-import digital_io
+from baxter_core_msgs.msg import ITBState
+from baxter_interface import digital_io
+from utilities import dataflow
 
-from baxter_core_msgs.msg import (
-    ITBState,
-)
 
 class Navigator(object):
     """
     Interface class for a Navigator on the Baxter robot.
 
     Inputs:
-        Button 0        - press wheel
-        Button 1        - above wheel
-        Button 2        - below wheel
-        Scroll wheel    - 0-255
+        Button 0     - press wheel
+        Button 1     - above wheel
+        Button 2     - below wheel
+        Scroll wheel - 0-255
 
     Outputs:
         Inner LED
         Outer LED
 
     Signals:
-        button0_changed     - True/False
-        button1_changed     - True/False
-        button2_changed     - True/False
-        wheel_changed       - New wheel value
+        button0_changed - True/False
+        button1_changed - True/False
+        button2_changed - True/False
+        wheel_changed   - New wheel value
 
     Valid identifiers:
         left, right, torso_left, torso_right

@@ -35,11 +35,13 @@ from baxter_core_msgs.msg import (
     DigitalIOState,
     DigitalOutputCommand,
 )
-import dataflow
+from utilities import dataflow
+
 
 class DigitalIO(object):
     """
-    Interface class for a simple Digital Input and/or Output on the Baxter robot
+    Interface class for a simple Digital Input and/or Output on the
+    Baxter robot
 
     Input       - read input state
     Output      - turn output On/Off
@@ -99,9 +101,9 @@ class DigitalIO(object):
         """
         Control the state of the Digital Output.
 
-        @param value bool    - new state {True, False} of the Output.
-        @param timeout (float)  - Seconds to wait for the io to reflect command.
-                                  If 0, just command once and return.  [0]
+        @param value bool      - new state {True, False} of the Output.
+        @param timeout (float) - Seconds to wait for the io to reflect command.
+                                 If 0, just command once and return.  [0]
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
@@ -119,4 +121,3 @@ class DigitalIO(object):
                 timeout_msg=("Failed to command digital io to: %r" % (value,)),
                 body=lambda: self._pub_output.publish(cmd)
                 )
-

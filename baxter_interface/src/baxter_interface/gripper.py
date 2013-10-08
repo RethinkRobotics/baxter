@@ -43,13 +43,14 @@ from baxter_core_msgs.msg import (
     EndEffectorProperties,
     EndEffectorState,
 )
+from utilities import dataflow
 
-import dataflow
 
 class Gripper(object):
     def __init__(self, gripper):
         """
-        @param gripper - robot limb <left/right> on which the gripper is mounted
+        @param gripper - robot limb <left/right> on which the gripper
+                         is mounted
 
         Interface class for a gripper on the Baxter Research Robot.
         """
@@ -80,7 +81,7 @@ class Gripper(object):
         dataflow.wait_for(
                           lambda: not self._state is None,
                           timeout=5.0,
-                          timeout_msg=("Failed to state from %s" % 
+                          timeout_msg=("Failed to state from %s" %
                                        (ns + 'state',))
                           )
 
@@ -88,7 +89,7 @@ class Gripper(object):
         dataflow.wait_for(
                           lambda: not self.type() is None,
                           timeout=5.0,
-                          timeout_msg=("Failed to get properties from %s" % 
+                          timeout_msg=("Failed to get properties from %s" %
                                        (ns + 'properties',))
                           )
         self.set_parameters(defaults=True)
@@ -103,11 +104,12 @@ class Gripper(object):
         return max(min(val, 100.0), 0.0)
 
     def _capablity_warning(self, cmd):
-        msg = ("%s %s - not capable of '%s' command" % 
+        msg = ("%s %s - not capable of '%s' command" %
                (self.name, self.type(), cmd))
         rospy.logwarn(msg)
 
-    def command(self, cmd, block=False, test=lambda: True, time=0.0, args=None):
+    def command(self, cmd, block=False, test=lambda: True,
+                time=0.0, args=None):
         """
         @param cmd (string)   - string of known gripper commands
         @param block (bool)   - command is blocking or non-blocking [False]
@@ -118,17 +120,17 @@ class Gripper(object):
         Set the parameters that will describe the position command execution.
         Percentage of maximum (0-100) for each parameter
         """
-        cmd_msg = EndEffectorCommand()
-        cmd_msg.id = self.hardware_id()
-        cmd_msg.command = cmd
-        cmd_msg.args = ''
+        ee_cmd = EndEffectorCommand()
+        ee_cmd.id = self.hardware_id()
+        ee_cmd.command = cmd
+        ee_cmd.args = ''
         if args != None:
-            cmd_msg.args = JSONEncoder().encode(args)
-        self._cmd_pub.publish(cmd_msg)
+            ee_cmd.args = JSONEncoder().encode(args)
+        self._cmd_pub.publish(ee_cmd)
         if block:
             return dataflow.wait_for(test=test, timeout=time,
                                      raise_on_error=False,
-                                     body=lambda: self._cmd_pub.publish(cmd_msg)
+                                     body=lambda: self._cmd_pub.publish(ee_cmd)
                                      )
         else:
             return True
@@ -143,7 +145,7 @@ class Gripper(object):
             velocity      - Velocity at which a position move will execute
             moving_force  - Force threshold at which a move will stop
             holding_force - Force at which a grasp will continue holding
-            dead_zone     - Position dead band within move considered successful
+            dead_zone     - Position deadband within move considered successful
             ALL PARAMETERS (0-100)
             """
         elif self.type() == 'suction':
@@ -154,7 +156,7 @@ class Gripper(object):
             ALL PARAMETERS (0-100)
             """
         else:
-            return ("No valid parameters for %s %s." % (self.type(), self.name))
+            return "No valid parameters for %s %s." % (self.type(), self.name)
 
     def valid_parameters(self):
         """
@@ -162,14 +164,14 @@ class Gripper(object):
         """
         valid = dict()
         if self.type() == 'electric':
-            valid = dict({'velocity':50.0,
-                         'moving_force':40.0,
-                         'holding_force':30.0,
-                         'dead_zone':5.0
+            valid = dict({'velocity': 50.0,
+                         'moving_force': 40.0,
+                         'holding_force': 30.0,
+                         'dead_zone': 5.0,
                          })
         elif self.type() == 'suction':
-            valid = dict({'vacuum_sensor_threshold':18.0,
-                          'blow_off_seconds':0.4,
+            valid = dict({'vacuum_sensor_threshold': 18.0,
+                          'blow_off_seconds': 0.4,
                           })
         return valid
 
@@ -189,7 +191,7 @@ class Gripper(object):
             if key in valid_parameters.keys():
                 self._parameters[key] = parameters[key]
             else:
-                msg = ("Invalid parameter: %s provided. %s" % 
+                msg = ("Invalid parameter: %s provided. %s" %
                        (key, self.valid_parameters_text(),))
                 rospy.logwarn(msg)
         cmd = EndEffectorCommand.CMD_CONFIGURE
@@ -218,7 +220,8 @@ class Gripper(object):
         @param timeout (float)   - timeout in seconds for reboot success
         @param block (bool) - command is blocking or non-blocking [False]
 
-        Power cycle the gripper removing calibration information and any errors.
+        Power cycle the gripper removing calibration information and any
+        errors.
         """
         if self.type() != 'electric':
             return self._capablity_warning('reboot')
@@ -253,7 +256,6 @@ class Gripper(object):
                      time=timeout,
                      )
         self.set_parameters(defaults=True)
-
 
     def stop(self, timeout=5.0, block=True):
         """
@@ -290,10 +292,9 @@ class Gripper(object):
             return self._capablity_warning('command_position')
 
         if not self._state.calibrated:
-            msg = ("Unable to command %s position until calibrated" % self.name)
+            msg = "Unable to command %s position until calibrated" % self.name
             rospy.logwarn(msg)
             raise IOError(errno.EPERM, msg)
-            return
 
         cmd = EndEffectorCommand.CMD_GO
         arguments = {"position": self._clip(position)}
@@ -321,7 +322,7 @@ class Gripper(object):
         return self.command(
                             cmd,
                             block,
-                            test=lambda: self.vacuum(),
+                            test=self.vacuum,
                             time=timeout,
                             args=arguments,
                             )
@@ -483,8 +484,10 @@ class Gripper(object):
     def error(self):
         """
         Returns bool describing if the gripper is in an error state.
+
         Error states can be caused by over/undervoltage, over/under current,
         motor faults, etc.
+
         Errors can be cleared with a gripper reset/reboot. If persistent please
         contact Rethink Robotics for further debugging.
         """
@@ -508,19 +511,20 @@ class Gripper(object):
         """
         Returns the value (0-100) of the current vacuum sensor reading as a
         percentage of the full vacuum sensor range.
-        The message field contains an 8-bit integer representation of the vacuum
-        sensor, this function converts that integer to the percentage of the
-        full sensor range.
+
+        The message field contains an 8-bit integer representation of the
+        vacuum sensor, this function converts that integer to the percentage of
+        the full sensor range.
         """
         if self.type() != 'suction':
             return self._capablity_warning('vacuum_sensor')
-        return (JSONDecoder().decode(self._state.state)['vacuum sensor'] / 255.0
-                * 100.0)
+        sensor = JSONDecoder().decode(self._state.state)['vacuum sensor']
+        return (sensor / 255.0) * 100.0
 
     def vacuum(self):
         """
-        Returns bool describing if the vacuum sensor threshold has been exceeded
-        during a command_suction event.
+        Returns bool describing if the vacuum sensor threshold has been
+        exceeded during a command_suction event.
         """
         if self.type() != 'suction':
             return self._capablity_warning('vacuum')
@@ -557,9 +561,9 @@ class Gripper(object):
     def type(self):
         """
         Returns string describing the gripper type.
-        Known types are 'suction', 'electric', and 'custom'.
-        An unknown or no gripper attached to the research robot will be
-        reported as 'custom'.
+
+        Known types are 'suction', 'electric', and 'custom'. An unknown or no
+        gripper attached to the research robot will be reported as 'custom'.
         """
         return {
         EndEffectorProperties.SUCTION_CUP_GRIPPER: 'suction',
@@ -569,8 +573,8 @@ class Gripper(object):
 
     def hardware_id(self):
         """
-        Returns unique hardware id number. This is required for sending commands
-        to the gripper.
+        Returns unique hardware id number. This is required for sending
+        commands to the gripper.
         """
         return deepcopy(self._state.id)
 

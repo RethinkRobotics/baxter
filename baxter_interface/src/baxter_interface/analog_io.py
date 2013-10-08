@@ -35,15 +35,17 @@ from baxter_core_msgs.msg import (
     AnalogIOState,
     AnalogOutputCommand,
 )
-import dataflow
+from utilities import dataflow
+
 
 class AnalogIO(object):
     """
-    Interface class for a simple Analog Input and/or Output on the Baxter robot.
+    Interface class for a simple Analog Input and/or Output on the
+    Baxter robot.
 
-    Input       - read input state
-    Output      - set new output state
-                - read current output state
+    Input  - read input state
+    Output - set new output state
+           - read current output state
     """
     def __init__(self, component_id):
         """
@@ -100,8 +102,8 @@ class AnalogIO(object):
         Control the state of the Analog Output.
 
         @param value uint16    - new state of the Output.
-        @param timeout (float)  - Seconds to wait for the io to reflect command.
-                                  If 0, just command once and return.  [0]
+        @param timeout (float) - Seconds to wait for the io to reflect command.
+                                 If 0, just command once and return.  [0]
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
