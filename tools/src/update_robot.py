@@ -175,8 +175,6 @@ def run_update(updater, uuid):
     return nl.rc
 
 def main(cmd = None, uuid = ''):
-    print cmd
-
     rospy.init_node('update_robot')
     updater = Updater()
 
