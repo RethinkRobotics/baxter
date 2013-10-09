@@ -47,7 +47,7 @@ def wait_for(test, timeout=1.0, raise_on_error=True, rate=100, timeout_msg="time
     while not test():
         if rospy.is_shutdown():
             if raise_on_error:
-                raise OSError(errno.ESHUTDOWN, "ROS shutdown")
+                raise OSError(errno.ESHUTDOWN, "ROS Shutdown")
             return False
         elif (not notimeout) and (rospy.get_time() >= end_time):
             if raise_on_error:
@@ -57,26 +57,3 @@ def wait_for(test, timeout=1.0, raise_on_error=True, rate=100, timeout_msg="time
             body()
         rate.sleep()
     return True
-
-def test():
-    import sys
-    rospy.init_node("wait_for_test")
-    x = [0]
-    def test():
-        x[0] += 1
-        sys.stdout.write("%d, " % (x[0],))
-        return x[0] > 20
-    try:
-        print("waiting up to 1.0s for x > 20")
-        wait_for(test)
-        print("success")
-        x[0] = 0
-        print("waiting up to 0.1s for x > 20")
-        wait_for(test, 0.1)
-        print("success")
-    except OSError as e:
-        print e.strerror
-    print("done.")
-
-if __name__ == '__main__':
-    test()

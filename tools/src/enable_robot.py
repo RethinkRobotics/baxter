@@ -63,16 +63,18 @@ if __name__ == '__main__':
     rospy.init_node('robot_enable', anonymous=True)
     rs = baxter_interface.RobotEnable()
 
-    for act in args.actions:
-        if act == 'state':
-            print rs.state()
-        elif act == 'enable':
-            rs.enable()
-        elif act == 'disable':
-            rs.disable()
-        elif act == 'reset':
-            rs.reset()
-        elif act == 'stop':
-            rs.stop()
-
+    try:
+        for act in args.actions:
+            if act == 'state':
+                print rs.state()
+            elif act == 'enable':
+                rs.enable()
+            elif act == 'disable':
+                rs.disable()
+            elif act == 'reset':
+                rs.reset()
+            elif act == 'stop':
+                rs.stop()
+    except Exception, e:
+        rospy.logerr(e.strerror)
     sys.exit(0)

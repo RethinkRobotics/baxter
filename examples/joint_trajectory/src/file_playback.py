@@ -288,7 +288,7 @@ def main(file, loops):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', '-f', metavar='PATH', required=True,
+    parser.add_argument('-f', '--file', metavar='PATH', required=True,
                         help="path to input file")
     parser.add_argument('-l', '--loops', type=int, default=1,
                         help="number of playback loops. 0=infinite.")

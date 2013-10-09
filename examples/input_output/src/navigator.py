@@ -77,11 +77,7 @@ def echo_input():
         rate.sleep()
         i += 1
 
-def main(action=None):
-    if action == None:
-        print ("No action defined. See help with [-h]")
-        sys.exit(2)
-
+def main(action):
     rospy.init_node('navigator_example', anonymous = True)
     action()
     sys.exit(0)

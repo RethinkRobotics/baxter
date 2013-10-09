@@ -61,11 +61,7 @@ class CalibrateArm(baxter_interface.robustcontroller.RobustController):
             disable_msg,
             10 * 60)
 
-def main(arm = None):
-    if not arm:
-        rospy.logerr("No arm specified. See help with [-h]")
-        sys.exit(1)
-
+def main(arm):
     rospy.init_node('calibrate_arm_sdk', anonymous=True)
     rs = baxter_interface.RobotEnable()
     rs.enable()
@@ -93,9 +89,9 @@ def main(arm = None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('--limb', '-l', required=True,
-                        choices=['left','right'],
-                        help="Calibrate the specified arm [left|right]")
+    required.add_argument('-l', '--limb', required=True,
+                        choices=['left', 'right'],
+                        help="Calibrate the specified arm")
     args = parser.parse_args(rospy.myargv()[1:])
 
     main(args.limb)

@@ -62,11 +62,7 @@ class Tare(baxter_interface.robustcontroller.RobustController):
             disable_msg,
             5 * 60)
 
-def main(limb = None):
-    if not limb:
-        rospy.logerr("No limb specified. See help with [-h]")
-        sys.exit(1)
-
+def main(limb):
     rospy.init_node('tare_sdk', anonymous=True)
     rs = baxter_interface.RobotEnable()
     rs.enable()
@@ -94,9 +90,9 @@ def main(limb = None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('--limb', '-l', required=True,
+    required.add_argument('-l', '--limb', required=True,
                         choices=['left', 'right'],
-                        help='Tare the specified limb [left|right]')
+                        help='Tare the specified limb')
     args = parser.parse_args(rospy.myargv()[1:])
 
     main(args.limb)
