@@ -104,16 +104,12 @@ def ros_init():
     rospy.init_node('rsdk_smoke_test', disable_signals=True)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter
-        )
-    parser.add_argument(
-        '-p',
-        '--proceed',
-        action='store_true',
+    format = argparse.RawTextHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=format)
+    parser.add_argument('-p', '--proceed', action='store_true',
         help="Continue testing after a failed test until all tests complete")
     parser.add_argument('-t', '--test', help=test_help())
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv()[1:])
 
     test_dict = {
         'version': None,

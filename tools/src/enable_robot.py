@@ -27,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import getopt
+import argparse
 import os
 import sys
 
@@ -37,47 +37,45 @@ import rospy
 
 import baxter_interface
 
-def usage():
-    print """
-%s [ARGUMENTS]
-
-    -h, --help      This screen
-    -s, --state     Print current robot state
-
-    -e, --enable    Enable the robot
-    -d, --disable   Disable the robot
-    -r, --reset     Reset the robot
-    -S, --stop      Stop the robot
-    """ % (os.path.basename(sys.argv[0]),)
-
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--state', const='state',
+                        dest='actions', action='append_const',
+                        help='Print current robot state')
+    parser.add_argument('-e', '--enable', const='enable',
+                        dest='actions', action='append_const',
+                        help='Enable the robot')
+    parser.add_argument('-d', '--disable', const='disable',
+                        dest='actions', action='append_const',
+                        help='Disable the robot')
+    parser.add_argument('-r', '--reset', const='reset',
+                        dest='actions', action='append_const',
+                        help='Reset the robot')
+    parser.add_argument('-S', '--stop', const='stop',
+                        dest='actions', action='append_const',
+                        help='Stop the robot')
+    args = parser.parse_args(rospy.myargv()[1:])
+
+    if args.actions == None:
+        parser.print_usage()
+        parser.exit(0, "No action defined")
+
+    rospy.init_node('robot_enable', anonymous=True)
+    rs = baxter_interface.RobotEnable()
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hsedrS',
-            ['help', 'state', 'enable', 'disable', 'reset', 'stop'])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(2)
+        for act in args.actions:
+            if act == 'state':
+                print rs.state()
+            elif act == 'enable':
+                rs.enable()
+            elif act == 'disable':
+                rs.disable()
+            elif act == 'reset':
+                rs.reset()
+            elif act == 'stop':
+                rs.stop()
+    except Exception, e:
+        rospy.logerr(e.strerror)
 
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit(0)
-        else:
-            rospy.init_node('robot_control')
-            rs = baxter_interface.RobotEnable()
-            try:
-                if o in ('-s', '--state'):
-                    print rs.state()
-                elif o in ('-e', '--enable'):
-                    rs.enable()
-                elif o in ('-d', '--disable'):
-                    rs.disable()
-                elif o in ('-r', '--reset'):
-                    rs.reset()
-                elif o in ('-S', '--stop'):
-                    rs.stop()
-            except Exception, e:
-                rospy.logerr(e.strerror)
     sys.exit(0)

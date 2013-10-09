@@ -108,16 +108,20 @@ if __name__ == '__main__':
     min_gain = 0.1
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("limb", help="specify the limb to puppet: left or right")
-    parser.add_argument("-a", "--amplification", dest="amplification", type=float,
-        default=1.0, help=("amplification to apply to the puppeted arm [%g, %g]" % (min_gain, max_gain)))
-    args, unknown = parser.parse_known_args()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument("-l", "--limb", required=True,
+                          choices=['left', 'right'],
+                          help="specify the puppeteer limb (the control limb)")
+    parser.add_argument("-a", "--amplification", type=float, default=1.0,
+                help=("amplification to apply to the puppeted arm [%g, %g]"
+                       % (min_gain, max_gain)))
+    args = parser.parse_args(rospy.myargv()[1:])
     if (args.amplification < min_gain or max_gain < args.amplification):
         print("Exiting: Amplification must be between: [%g, %g]" % (min_gain, max_gain))
         sys.exit(1)
 
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_velocity_puppet", anonymous=True)
+    rospy.init_node("rethink_rsdk_joint_velocity_puppet")
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")

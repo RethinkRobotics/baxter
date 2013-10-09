@@ -28,9 +28,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import getopt
 import os
 import sys
+import argparse
 
 import roslib
 roslib.load_manifest('head_control')
@@ -52,55 +52,34 @@ def send_image(path):
     msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
     pub = rospy.Publisher('/robot/xdisplay', sensor_msgs.msg.Image, latch=True)
     pub.publish(msg)
-    # Even with the latch, we seem to need to wait a bit before exiting to
-    # make sure that the message got sent.  Using a service may be a better
-    # idea.
+    # Even with latching, we seem to need to wait a bit before exiting to make
+    # sure that the message got sent.  Using a service may be a better idea.
     # See also: http://answers.ros.org/question/9665/test-for-when-a-rospy-publisher-become-available/
-    rospy.Rate(1).sleep()
+    rospy.sleep(1)
 
-
-def usage():
-        print """
-%s [ARGUMENTS]
-
-    -h, --help          This screen
-    -f, --file [PATH]   Path to image file to send
-    -d, --delay [SEC]   Time in seconds to wait before publishing image
-    """ % (os.path.basename(sys.argv[0]),)
-
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hf:',
-            ['help', 'file=', 'delay='])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(2)
-
-    path = None
-    delay = 0.0
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit(0)
-        elif o in ('-f', '--file'):
-            path = a
-        elif o in ('-d', '--delay'):
-            delay = a
+def main(path=None, delay=0.0):
+    rospy.init_node('xdisplay_image', anonymous=True)
 
     if not os.access(path, os.R_OK):
         rospy.logerr("Cannot read file at '%s'" % (path,))
         sys.exit(1)
 
-    rospy.init_node('xdisplay_image', anonymous=True)
-
     # Wait for specified time
-    if float(delay) > 0:
+    if delay > 0:
         rospy.loginfo("Waiting for %s seconds before publishing image to face" % (delay,))
-        rospy.Rate(1/float(delay)).sleep()
+        rospy.sleep(delay)
 
     send_image(path)
     sys.exit(0)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-f', '--file', metavar='PATH', required=True,
+                  help='Path to image file to send')
+    parser.add_argument('-d', '--delay', metavar='SEC', type=float,
+                  default=0.0,
+                  help='Time in seconds to wait before publishing image')
+    args = parser.parse_args(rospy.myargv()[1:])
+
+    main(args.file, args.delay)

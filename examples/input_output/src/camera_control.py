@@ -27,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import getopt
+import argparse
 import os
 import sys
 
@@ -37,19 +37,9 @@ import rospy
 
 import baxter_interface
 from baxter_core_msgs.srv import (
-    ListCameras
+    ListCameras,
 )
 
-def usage():
-    print """
-%s [ARGUMENTS]
-
-    -h, --help                  This screen
-    -o, --open [CAMERA]         Open specified camera
-    -c, --close [CAMERA]        Close specified camera
-    -r, --resolution [X]x[Y]    Set camera resolution
-    -l, --list                  List available cameras
-    """ % (os.path.basename(sys.argv[0]),)
 
 def list_cameras(*args, **kwds):
     ls = rospy.ServiceProxy('/cameras/list', ListCameras)
@@ -71,47 +61,45 @@ def close_camera(camera, *args, **kwds):
     cam = baxter_interface.CameraController(camera)
     cam.close()
 
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'ho:c:r:l',
-            ['help', 'open=', 'close=', 'resolution=', 'list'])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(2)
-
-    action = None
-    camera = None
-    res = (1280, 800)
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit(0)
-        elif o in ('-o', '--open'):
-            camera = a
-            action = open_camera
-        elif o in ('-c', '--close'):
-            camera = a
-            action = close_camera
-        elif o in ('-r', '--resolution'):
-            res = a.split('x')
-            if len(res) != 2:
-                print ("Invalid resolution.")
-                sys.exit(1)
-            res = (int(res[0]), int(res[1]))
-        elif o in ('-l', '--list'):
-            action = list_cameras
-
-    if action == None:
-        print ("No action defined")
-        usage()
-        sys.exit(2)
+def main(action = None, camera = None, res = (1280, 800)):
 
     rospy.init_node('cameras_example', anonymous = True)
     action(camera, res)
     sys.exit(0)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    action_grp = parser.add_mutually_exclusive_group(required=True)
+    action_grp.add_argument('-o', '--open', metavar='CAMERA',
+                        help='Open specified camera')
+    action_grp.add_argument('-c', '--close', metavar='CAMERA',
+                        help='Close specified camera')
+    action_grp.add_argument('-l', '--list', action='store_true',
+                        help='List available cameras')
+    parser.add_argument('-r', '--resolution', metavar='[X]x[Y]',
+                        default='1280x800',
+                        help='Set camera resolution (default: 1280x800)')
+    args = parser.parse_args(rospy.myargv()[1:])
 
+    action = None
+    camera = None
+    res = (1280, 800)
+
+    if args.list:
+        action = list_cameras
+    elif args.open:
+        action = open_camera
+        camera = args.open
+        lres = args.resolution.split('x')
+        if len(lres) != 2:
+            parser.error("Invalid resolution format: %s. Use [X]x[Y].")
+        res = (int(lres[0]), int(lres[1]))
+    elif args.close:
+        action = close_camera
+        camera = args.close
+    else:
+        # Should not reach here with required action_grp
+        parser.print_usage()
+        parser.error("No action defined.")
+
+    main(action, camera, res)

@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import errno
-import getopt
+import argparse
 import os
 import sys
 
@@ -174,37 +174,10 @@ def run_update(updater, uuid):
 
     return nl.rc
 
-def usage():
-    print """
-%s [ARGUMENTS]
+def main(cmd = None, uuid = ''):
+    print cmd
 
-    -h, --help          This screen
-    -l, --list          List available updates
-    -u, --update [UUID] Launch the given update
-    """ % (os.path.basename(sys.argv[0]),)
-
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hlu:',
-            ['help', 'list', 'update=',])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(2)
-
-    cmd = None
-    uuid = ''
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit(0)
-        elif o in ('-l', '--list'):
-            cmd = 'list'
-        elif o in ('-u', '--update'):
-            cmd = 'update'
-            uuid = a
-
-    rospy.init_node('update_robot', anonymous=True)
+    rospy.init_node('update_robot')
     updater = Updater()
 
     if cmd == 'list':
@@ -224,4 +197,13 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    required = parser.add_mutually_exclusive_group(required=True)
+    required.add_argument('-l', '--list', action='store_const',
+                          dest='cmd', const='list', default='update',
+                          help="List available updates and UUID's")
+    required.add_argument('-u', '--update', dest='uuid', default='',
+                          help='Launch the given update')
+    args = parser.parse_args(rospy.myargv()[1:])
+
+    main(args.cmd, args.uuid)

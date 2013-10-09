@@ -110,7 +110,9 @@ def main(limb):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("limb", help="the limb to test <left | right>")
-    args = parser.parse_args()
+    parser.add_argument("-l", "--limb", choices=['left','right'],
+                        required=True,
+                        help="the limb to test")
+    args = parser.parse_args(rospy.myargv()[1:])
 
     main(args.limb)

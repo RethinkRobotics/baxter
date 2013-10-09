@@ -125,10 +125,11 @@ def map_file(filename, loops=1):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("file", help="input file")
-    parser.add_argument("-l", "--loops", type=int, default=1, \
-        help="number of times to loop the input file. 0=infinite.")
-    args = parser.parse_args()
+    parser.add_argument('-f', '--file', metavar="PATH", required=True,
+                        help="path to input file")
+    parser.add_argument('-l', '--loops', type=int, default=1,
+                help="number of times to loop the input file. 0=infinite.")
+    args = parser.parse_args(rospy.myargv()[1:])
 
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_position_file_playback")

@@ -100,5 +100,5 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--gripper", dest="gripper", required=True,
                         choices=['left', 'right'],
                         help="which gripper to send action commands")
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv()[1:])
     main(args.gripper)

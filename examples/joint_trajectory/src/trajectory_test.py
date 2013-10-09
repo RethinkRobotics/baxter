@@ -105,8 +105,10 @@ def main(limb):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", dest="limb", required=True,
+    required = parser.add_argument_group('required arguments')
+    required.add_argument("-l", "--limb", required=True,
                         choices=['left', 'right'],
                         help="send joint trajectory to which limb")
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv()[1:])
+
     main(args.limb)
