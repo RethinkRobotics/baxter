@@ -27,6 +27,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -34,16 +36,19 @@ import rospy
 import baxter_interface.analog_io as AIO
 
 def test_interface(io_component = 'torso_fan'):
-    """ Ramps an Analog component from 0 to 100, then back down to 0. """
+    """Ramps an Analog component from 0 to 100, then back down to 0."""
+    rospy.loginfo("Ramping output of Analog IO component: %s", io_component)
+
     b = AIO.AnalogIO(io_component)
+    rate = rospy.Rate(2)
+
     # start: 0.0
     print b.state()
 
     # ramp up
-    rate = rospy.Rate(2)
     for i in range(0,101,10):
         b.set_output(i)
-        if i % 10 == 0: print i
+        print i
         rate.sleep()
     # max: 100.0
     print b.state()
@@ -51,14 +56,20 @@ def test_interface(io_component = 'torso_fan'):
     # ramp down
     for i in range(100,-1,-10):
         b.set_output(i)
-        if i % 10 == 0: print i
+        print i
         rate.sleep()
     # (fans off)
     b.set_output(0)
 
+
 if __name__ == '__main__':
+    arg_fmt = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=arg_fmt)
+    parser.add_argument('-c','--component', dest='component_id',
+                        default='torso_fan',
+                        help='name of Analog IO component to use')
+    args = parser.parse_args(rospy.myargv()[1:])
+
     rospy.init_node('test_aio', anonymous=True)
-    io_component = rospy.get_param('~component_id', 'torso_fan')
+    io_component = rospy.get_param('~component_id', args.component_id)
     test_interface(io_component)
-
-

@@ -146,5 +146,6 @@ if __name__ == "__main__":
         action='store_true', default=False, help="tuck arms")
     tuck_group.add_argument("-u", "--untuck", dest="untuck", \
         action='store_true', default=False, help="untuck arms")
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv()[1:])
+
     main(args.tuck)

@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+
 import roslib
 roslib.load_manifest('joint_position')
 import rospy
@@ -37,10 +38,13 @@ from jointrecorder import JointRecorder
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("filename", help="the file name to record to")
-    parser.add_argument("-r", "--record-rate", dest="recordRate", type=int, \
-        default=10, help="rate at which to record")
-    args = parser.parse_args()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument("-f","--file", dest="filename", required=True,
+                        help="the file name to record to")
+    parser.add_argument("-r", "--record-rate", type=int, default=10,
+                        metavar="RECORDRATE",
+                        help="rate at which to record")
+    args = parser.parse_args(rospy.myargv()[1:])
 
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_recorder")
@@ -49,7 +53,7 @@ if __name__ == '__main__':
     print("Enabling robot... ")
     rs.enable()
 
-    recorder = JointRecorder(args.filename, args.recordRate)
+    recorder = JointRecorder(args.filename, args.record_rate)
     print("Recording. Press any key to stop.")
     recorder.record()
 
