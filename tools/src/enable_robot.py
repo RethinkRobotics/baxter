@@ -77,4 +77,5 @@ if __name__ == '__main__':
                 rs.stop()
     except Exception, e:
         rospy.logerr(e.strerror)
+
     sys.exit(0)
