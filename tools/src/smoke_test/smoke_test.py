@@ -124,6 +124,8 @@ if __name__ == '__main__':
                 'Grippers', 'BlinkLEDs'],
             '0.6.1': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
                 'Grippers', 'BlinkLEDs', 'Cameras'],
+            '0.6.2': ['Enable', 'Messages', 'Services', 'Head', 'MoveArms', \
+                'Grippers', 'BlinkLEDs', 'Cameras'],
             }
         }
 
