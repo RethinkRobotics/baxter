@@ -195,9 +195,9 @@ class Trajectory(object):
             cur_cmd = [cmd[jnt] for jnt in self._r_goal.trajectory.joint_names]
             self.add_point(cur_cmd, 'right', values[0] + start_offset)
             cur_cmd = [cmd['left_gripper']]
-            self._add_point(cur_cmd, 'left_gripper', values[0] + start_offset)
+            self.add_point(cur_cmd, 'left_gripper', values[0] + start_offset)
             cur_cmd = [cmd['right_gripper']]
-            self._add_point(cur_cmd, 'right_gripper', values[0] + start_offset)
+            self.add_point(cur_cmd, 'right_gripper', values[0] + start_offset)
 
     def add_point(self, positions, side, time):
         """ Appends trajectory with new point
