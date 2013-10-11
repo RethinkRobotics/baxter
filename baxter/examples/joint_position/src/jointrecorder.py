@@ -49,6 +49,20 @@ class JointRecorder(object):
         self._limb_right = baxter_interface.Limb("right")
         self._gripper_left = baxter_interface.Gripper("left")
         self._gripper_right = baxter_interface.Gripper("right")
+        self._io_left_lower = baxter_interface.DigitalIO('left_lower_button')
+        self._io_left_upper = baxter_interface.DigitalIO('left_upper_button')
+        self._io_right_lower = baxter_interface.DigitalIO('right_lower_button')
+        self._io_right_upper = baxter_interface.DigitalIO('right_upper_button')
+
+        # Verify Grippers Have No Errors and are Calibrated
+        if self._gripper_left.error():
+            self._gripper_left.reboot()
+        if self._gripper_right.error():
+            self._gripper_right.reboot()
+        if not self._gripper_left.calibrated():
+            self._gripper_left.calibrate()
+        if not self._gripper_right.calibrated():
+            self._gripper_right.calibrate()
 
     def _time_stamp(self):
         return rospy.get_time() - self._start_time
@@ -88,6 +102,15 @@ class JointRecorder(object):
                 f.write('right_gripper\n')
 
                 while not self.done():
+                    # Look for gripper button presses
+                    if self._io_left_lower.state():
+                        self._gripper_left.open()
+                    if self._io_right_lower.state():
+                        self._gripper_right.open()
+                    if self._io_left_upper.state():
+                        self._gripper_left.close()
+                    if self._io_right_upper.state():
+                        self._gripper_right.close()
                     angles_left = [self._limb_left.joint_angle(j) \
                         for j in joints_left]
                     angles_right = [self._limb_right.joint_angle(j) \
