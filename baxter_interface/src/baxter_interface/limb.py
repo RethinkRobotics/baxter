@@ -99,7 +99,7 @@ class Limb(object):
             self._on_joint_states)
 
         cartesian_state_sub = rospy.Subscriber(
-            ns + 'endpoint/state',
+            ns + 'endpoint_state',
             EndpointState,
             self._on_endpoint_states)
 

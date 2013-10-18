@@ -108,7 +108,7 @@ class Head(object):
         @param angle (float)    - Desired pan angle in radians.
         @param speed (int)      - Desired speed to pan at, range is 0-100 [100]
         @param timeout (float)  - Seconds to wait for the head to pan to the specified
-                                  angle.  If 0, just command once and return.  [0]
+                                  angle. If 0, just command once and return. [10]
         """
         msg = HeadPanCommand(angle, speed)
         self._pub_pan.publish(msg)
