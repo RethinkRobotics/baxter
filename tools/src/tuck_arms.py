@@ -186,7 +186,7 @@ class Tuck(object):
                 return
             else:
                 rospy.loginfo("Tucking: One or more arms not Tucked.")
-                any_flipped = not any(self._arm_state['flipped'].values())
+                any_flipped = not all(self._arm_state['flipped'].values())
                 if any_flipped:
                     rospy.loginfo(
                         "Moving to neutral start position with collision %s.",
