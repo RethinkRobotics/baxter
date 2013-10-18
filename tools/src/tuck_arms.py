@@ -135,7 +135,7 @@ class Tuck(object):
         at_goal = lambda: (abs(head.pan()) <=
                         baxter_interface.settings.HEAD_PAN_ANGLE_TOLERANCE)
 
-        print("Moving head to neutral position")
+        rospy.loginfo("Moving head to neutral position")
         while not at_goal() and not rospy.is_shutdown():
             if disabled:
                 [pub.publish(Empty()) for pub in self._disable_pub.values()]
@@ -151,11 +151,6 @@ class Tuck(object):
                 self._tuck_rate.sleep()
 
     def _move_to(self, tuck, disabled):
-        if type(tuck) == str:
-            tuck = dict(zip(self._limbs,(tuck,tuck)))
-        if type(disabled) == bool:
-            disabled = dict(zip(self._limbs,(disabled,disabled)))
-
         if any(disabled.values()):
             [pub.publish(Empty()) for pub in self._disable_pub.values()]
         while (any(self._arm_state['tuck'][limb] != goal
@@ -248,13 +243,13 @@ class Tuck(object):
                 self._tuck_rate.sleep()
 
 def main(tuck):
-    print("Initializing node... ")
+    rospy.loginfo("Initializing node... ")
     rospy.init_node("tuck_arms")
-    print("%sucking arms" % ("T" if tuck else "Unt",))
+    rospy.loginfo("%sucking arms" % ("T" if tuck else "Unt",))
     tucker = Tuck(tuck)
     rospy.on_shutdown(tucker.clean_shutdown)
     tucker.supervised_tuck()
-    print("Finished tuck")
+    rospy.loginfo("Finished tuck")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
