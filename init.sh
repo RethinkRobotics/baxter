@@ -27,16 +27,31 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# This file is to be used in the *root* of your Catkin workspace.
+
+# This is a convenient script which will set up your ROS environment and
+# should be sourced with every new instance of a shell in which you plan on
+# working with Baxter.
+
+#--------------------------------------------------------------------------#
+#               USER CONFIGURABLE ROS ENVIRONMENT VARIABLES                #
+#--------------------------------------------------------------------------#
+# Specify Baxter's hostname
+baxter_hostname="baxter.local"
+
+# Set *Either* your ros_ip or ros_hostname. Please note if using ros_hostname
+# that this must be resolvable to Baxter.
+ros_ip="192.168.XXX.XXX"
+#ros_hostname="my_computer.local"
+
+# Specify ROS distribution (e.g. groovy, hydro)
+ros_version="groovy"
+#--------------------------------------------------------------------------#
+
 tf=$(tempfile)
 trap "rm -f -- '${tf}'" EXIT
 
 topdir=$(dirname $(readlink -m ${0}))
-master_uri=""
-ipaddr=""
-
-if [ -n "${1}" ]; then
-	master_uri="${1}"
-fi
 
 cat <<-EOF > ${tf}
 	if [ -s "\${HOME}"/.bashrc ]; then
@@ -47,51 +62,86 @@ cat <<-EOF > ${tf}
 		source "\${HOME}"/.bash_profile
 	fi
 
-	eval version=${2}
-	if [ -z "\${version}" ]; then
-		auto=$(ls -1 /opt/ros | tail -n 1)
-		if [ -z "\${auto}" ]; then
-			echo "No ROS installation found in /opt/ros/"
-			exit 1
-		fi
-		ros_setup="/opt/ros/\${auto}"
-	elif [ "\${version:0:1}" == "/" ]; then
-		ros_setup="\${version}"
-	else
-		ros_setup="/opt/ros/\${version}"
+	# verify ros_version lowercase
+	ros_version="$(tr [A-Z] [a-z] <<< "${ros_version}")"
+
+	if [ ! -d "/opt/ros" ] || [ ! "$(ls -A /opt/ros)" ]; then
+		echo "EXITING - No ROS ros installation found in /opt/ros."
+		echo "Is ROS installed?"
+		exit 1
+	fi
+
+	if [ -n ${ros_ip} ] && [[ "${ros_ip}" == "192.168.XXX.XXX" ]]; then
+		echo -ne "EXITING - Please edit this file, modifying the ros_ip to \
+reflect your current IP address.\n"
+		exit 1
+	fi
+
+	if [ -n "${ros_ip}" ] && [ -n "${ros_hostname}" ]; then
+		echo -ne "EXITING - Please edit this file, modifying to specify \
+*EITHER* ros_ip or ros_hostname.\n"
+		exit 1
+	fi
+
+	if [ ! -n "${ros_ip}" ] && [ ! -n "${ros_hostname}" ]; then
+		echo -ne "EXITING - Please edit this file, modifying to specify your \
+ros_ip or ros_hostname.\n"
+		exit 1	
+	fi
+	ros_setup="/opt/ros/\${ros_version}"
+
+	if [ ! -d "\${ros_setup}" ]; then
+		echo -ne "EXITING - Failed to find ROS \${ros_version} installation at \
+\${ros_setup}.\n"
+		exit 1
 	fi
 
 	if [ ! -s "\${ros_setup}"/setup.sh ]; then
-		echo "Failed to find the ROS environment script: "\${ros_setup}"/setup.bash"
+		echo -ne "EXITING - Failed to find the ROS environment script: \
+"\${ros_setup}"/setup.sh.\n"
+		exit 1
+	fi
+
+	if [ ! -s "devel/setup.bash" ]; then
+		echo -ne "EXITING - Please verify that this script is being run in the \
+root of your catkin workspace, and that your workspace has been built \
+(catkin_make).\nSource this script again upon completion of your workspace \
+build.\n"
 		exit 1
 	fi
 
 	source \${ros_setup}/setup.bash 2>/dev/null || source \${ros_setup}/setup.sh
 
-	export ROS_PACKAGE_PATH=${topdir}:\${ROS_PACKAGE_PATH}
-	[[ -n "${master_uri}" ]] && export ROS_MASTER_URI="http://${master_uri}:11311"
-	[[ -n "${ipaddr}" ]] && export ROS_IP="${ipaddr}"
+	[ -n "${ros_ip}" ] && export ROS_IP="${ros_ip}"
+	[ -n "${ros_hostname}" ] && export ROS_HOSTNAME="${ros_hostname}"
+
+    export ROS_MASTER_URI="http://${baxter_hostname}:11311"
+
+	source devel/setup.bash
 
 	# setup the bash prompt
 	export __ROS_PROMPT=\${__ROS_PROMPT:-0}
 	if [ \${__ROS_PROMPT} -eq 0 -a -n "\${PROMPT_COMMAND}" ]; then
 		export __ORIG_PROMPT_COMMAND=\${PROMPT_COMMAND}
 	fi
+
 	__ros_prompt () {
 		if [ -n "\${__ORIG_PROMPT_COMMAND}" ]; then
 			eval \${__ORIG_PROMPT_COMMAND}
 		fi
-		if ! echo \${PS1} | grep 'ros -' &>/dev/null; then
-			export PS1="\[\033[00;33m\][ros - \${ROS_MASTER_URI}]\[\033[00m\] \${PS1}"
+		if ! echo \${PS1} | grep 'ros' &>/dev/null; then
+			export PS1="\[\033[00;33m\][ros \${ros_version} - \
+\${ROS_MASTER_URI}]\[\033[00m\] \${PS1}"
 		fi
 	}
 
 	if [ "\${TERM}" != "dumb" ]; then
 		export PROMPT_COMMAND=__ros_prompt
 		__ROS_PROMPT=1
-	elif ! echo \${PS1} | grep 'ros -' &>/dev/null; then
-		export PS1="[ros - \${ROS_MASTER_URI}] \${PS1}"
+	elif ! echo \${PS1} | grep 'ros' &>/dev/null; then
+		export PS1="[ros \${ros_version} - \${ROS_MASTER_URI}] \${PS1}"
 	fi
+
 EOF
 
 ${SHELL} --rcfile ${tf}
