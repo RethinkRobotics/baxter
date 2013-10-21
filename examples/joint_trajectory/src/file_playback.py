@@ -92,7 +92,7 @@ class Trajectory(object):
         if self._r_gripper.error():
             self._r_gripper.reboot()
         if not self._l_gripper.calibrated():
-            self.__l_gripper.calibrate()
+            self._l_gripper.calibrate()
         if not self._r_gripper.calibrated():
             self._r_gripper.calibrate()
 
@@ -228,7 +228,7 @@ class Trajectory(object):
         self._execute_gripper_commands()
 
     def stop(self):
-        """ Preempts trajectory exection by sending cancel goals
+        """ Preempts trajectory execution by sending cancel goals
         """
         if (self._left_client.gh is not None and
             self._left_client.get_state() == actionlib.GoalStatus.ACTIVE):
