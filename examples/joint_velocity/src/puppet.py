@@ -96,8 +96,8 @@ class Puppeteer(object):
             for i in range(100):
                 if rospy.is_shutdown():
                     return False
-                self._control_arm.set_joint_position_mode()
-                self._puppet_arm.set_joint_position_mode()
+                self._control_arm.exit_control_mode()
+                self._puppet_arm.exit_control_mode()
                 rate.sleep()
             #return to normal
             self.set_neutral()

@@ -107,8 +107,8 @@ class Wobbler(object):
             for i in range(100):
                 if rospy.is_shutdown():
                     return False
-                self._left_arm.set_joint_position_mode()
-                self._right_arm.set_joint_position_mode()
+                self._left_arm.exit_control_mode()
+                self._right_arm.exit_control_mode()
                 self._pub_rate.publish(100)
                 rate.sleep()
             #return to normal
