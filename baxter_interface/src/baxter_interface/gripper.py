@@ -111,11 +111,11 @@ class Gripper(object):
     def command(self, cmd, block=False, test=lambda: True,
                 time=0.0, args=None):
         """
-        @param cmd (string)   - string of known gripper commands
-        @param block (bool)   - command is blocking or non-blocking [False]
-        @param test (func)   - test function for command validation
-        @param time (float)   - timeout in seconds for command evaluation
-        @param args dict({str:float}) - dictionary of parameter:value
+        @param cmd (string) - string of known gripper commands
+        @param block (bool) - command is blocking or non-blocking [False]
+        @param test (func) - test function for command validation
+        @param time (float) - timeout in seconds for command evaluation
+        @param args (dict({str:float})) - dictionary of parameter:value
 
         Set the parameters that will describe the position command execution.
         Percentage of maximum (0-100) for each parameter
@@ -142,10 +142,10 @@ class Gripper(object):
         if self.type() == 'electric':
             return """Valid gripper parameters for the electric gripper are
             PARAMETERS:
-            velocity      - Velocity at which a position move will execute
-            moving_force  - Force threshold at which a move will stop
+            velocity - Velocity at which a position move will execute
+            moving_force - Force threshold at which a move will stop
             holding_force - Force at which a grasp will continue holding
-            dead_zone     - Position deadband within move considered successful
+            dead_zone - Position deadband within move considered successful
             ALL PARAMETERS (0-100)
             """
         elif self.type() == 'suction':
@@ -199,7 +199,7 @@ class Gripper(object):
 
     def reset(self, timeout=2.0, block=True):
         """
-        @param timeout (float)   - timeout in seconds for reset success
+        @param timeout (float) - timeout in seconds for reset success
         @param block (bool) - command is blocking or non-blocking [False]
 
         Resets the gripper state removing any errors.
@@ -217,7 +217,7 @@ class Gripper(object):
 
     def reboot(self, timeout=2.0, block=True):
         """
-        @param timeout (float)   - timeout in seconds for reboot success
+        @param timeout (float) - timeout in seconds for reboot success
         @param block (bool) - command is blocking or non-blocking [False]
 
         Power cycle the gripper removing calibration information and any
@@ -240,7 +240,7 @@ class Gripper(object):
 
     def calibrate(self, timeout=5.0, block=True):
         """
-        @param timeout (float)   - timeout in seconds for calibration success
+        @param timeout (float) - timeout in seconds for calibration success
         @param block (bool) - command is blocking or non-blocking [False]
 
         Calibrate the gripper setting maximum and minimum travel distance.
@@ -259,7 +259,7 @@ class Gripper(object):
 
     def stop(self, timeout=5.0, block=True):
         """
-        @param timeout (float)   - timeout in seconds for stop success
+        @param timeout (float) - timeout in seconds for stop success
         @param block (bool) - command is blocking or non-blocking [False]
 
         Stop the gripper at the current position and apply holding force.

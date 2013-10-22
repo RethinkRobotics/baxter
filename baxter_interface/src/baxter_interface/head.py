@@ -59,16 +59,17 @@ class Head(object):
             '/robot/head/command_head_nod',
             Bool)
 
+        state_topic = '/robot/head/head_state'
         self._sub_state = rospy.Subscriber(
-            '/robot/head/head_state',
+            state_topic,
             HeadState,
             self._on_head_state)
 
         dataflow.wait_for(
             lambda: len(self._state) != 0,
             timeout=5.0,
-            timeout_msg=("Failed to get current head state from "
-                         "/robot/head/head_state"),
+            timeout_msg=("Failed to get current head state from %s" %
+                         (state_topic,)),
         )
 
     def _on_head_state(self, msg):
@@ -104,13 +105,13 @@ class Head(object):
 
     def set_pan(self, angle, speed=100, timeout=10.0):
         """
-        Pan at the given speed to the desired angle.
-
         @param angle (float)   - Desired pan angle in radians.
         @param speed (int)     - Desired speed to pan at, range is 0-100 [100]
         @param timeout (float) - Seconds to wait for the head to pan to the
                                  specified angle. If 0, just command once and
                                  return. [10]
+
+        Pan at the given speed to the desired angle.
         """
         msg = HeadPanCommand(angle, speed)
         self._pub_pan.publish(msg)
@@ -127,10 +128,10 @@ class Head(object):
 
     def command_nod(self, timeout=5.0):
         """
-        Command the head to nod once.
-
         @param timeout (float)  - Seconds to wait for the head to nod.
                                   If 0, just command once and return.  [0]
+
+        Command the head to nod once.
         """
         self._pub_nod.publish(True)
 

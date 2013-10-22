@@ -29,9 +29,15 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-from baxter_core_msgs.msg import ITBState
-from baxter_interface import digital_io
-from utilities import dataflow
+from baxter_core_msgs.msg import (
+    ITBState,
+)
+from baxter_interface import (
+    digital_io,
+)
+from utilities import (
+    dataflow,
+)
 
 
 class Navigator(object):
@@ -121,9 +127,9 @@ class Navigator(object):
     @inner_led.setter
     def inner_led(self, enable):
         """
-        Control the inner LED.
-
         @param enable   - True to enable the light, False otherwise
+
+        Control the inner LED.
         """
         self._inner_led.set_output(enable)
 
@@ -137,9 +143,9 @@ class Navigator(object):
     @outer_led.setter
     def outer_led(self, enable):
         """
-        Control the outer LED.
-
         @param enable   - True to enable the light, False otherwise
+
+        Control the outer LED.
         """
         return self._outer_led.set_output(enable)
 

@@ -99,11 +99,11 @@ class AnalogIO(object):
 
     def set_output(self, value, timeout=2.0):
         """
-        Control the state of the Analog Output.
-
         @param value uint16    - new state of the Output.
         @param timeout (float) - Seconds to wait for the io to reflect command.
                                  If 0, just command once and return.  [0]
+
+        Control the state of the Analog Output.
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %

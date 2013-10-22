@@ -195,7 +195,6 @@ class GripperActionServer(object):
                 self._server.set_succeeded(self._result)
                 return
             self._command_gripper(position)
-            #self._server.publish_feedback(self._fdbk)
             control_rate.sleep()
 
         # Gripper failed to achieve goal before timeout/shutdown

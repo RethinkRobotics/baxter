@@ -73,7 +73,7 @@ class RobotEnable(object):
 
         dataflow.wait_for(test=lambda: self._state.enabled == status,
                           timeout=2.0 if status else 5.0,
-                          timeout_msg=("Failed to %sable robot" % 
+                          timeout_msg=("Failed to %sable robot" %
                                        ('en' if status else 'dis',)),
                           body=lambda: pub.publish(status),
                           )

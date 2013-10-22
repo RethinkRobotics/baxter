@@ -55,7 +55,8 @@ def start_server(limb, rate):
     print("Initializing joint trajectory action server...")
 
     dynamic_cfg_srv = Server(JointTrajectoryActionServerConfig,
-                                 lambda config, level: config)
+                          lambda config, level: config
+                      )
     if limb == 'both':
         JointTrajectoryActionServer('right', dynamic_cfg_srv, rate)
         JointTrajectoryActionServer('left', dynamic_cfg_srv, rate)
@@ -68,11 +69,15 @@ def start_server(limb, rate):
 def main():
     arg_fmt = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=arg_fmt)
-    parser.add_argument("-l", "--limb", dest="limb", default="both",
-                        choices=['both', 'left', 'right'],
-                        help="joint trajectory action server limb")
-    parser.add_argument("-r", "--rate", dest="rate", default=100.0,
-                        type=float, help="trajectory control rate (Hz)")
+    parser.add_argument(
+        "-l", "--limb", dest="limb", default="both",
+        choices=['both', 'left', 'right'],
+        help="joint trajectory action server limb"
+    )
+    parser.add_argument(
+        "-r", "--rate", dest="rate", default=100.0,
+        type=float, help="trajectory control rate (Hz)"
+    )
     args = parser.parse_args(rospy.myargv()[1:])
     start_server(args.limb, args.rate)
 

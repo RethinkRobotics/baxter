@@ -44,12 +44,12 @@ class RobustController(object):
 
     def __init__(self, namespace, enable_msg, disable_msg, timeout=60):
         """
-        Wrapper around controlling a RobustController
-
         @param namespace   - namespace containing the enable and status topics
         @param enable_msg  - message to send to enable the RC
         @param disable_msg - message to send to disable the RC
         @param timeout     - seconds to wait for the RC to finish [60]
+
+        Wrapper around controlling a RobustController
         """
         self._command_pub = rospy.Publisher(
             namespace + '/enable',
