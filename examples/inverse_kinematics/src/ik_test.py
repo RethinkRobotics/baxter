@@ -35,9 +35,9 @@ Baxter RSDK Inverse Kinematics Example:
 
 """
 import argparse
-import sys
 
-import roslib; roslib.load_manifest('inverse_kinematics')
+import roslib
+roslib.load_manifest('inverse_kinematics')
 import rospy
 
 from geometry_msgs.msg import (
@@ -47,12 +47,14 @@ from geometry_msgs.msg import (
     Quaternion,
 )
 from std_msgs.msg import Header
+
 from baxter_core_msgs.srv import (
     SolvePositionIK,
     SolvePositionIKRequest,
 )
 
-def main(limb):
+
+def ik_test(limb):
     rospy.init_node("rethink_rsdk_inverse_kinematics_test")
     ns = "robot/limb/" + limb + "/solve_ik_position"
     rospy.wait_for_service(ns)
@@ -97,7 +99,7 @@ def main(limb):
     ikreq.pose_stamp.append(poses[limb])
     try:
         resp = iksvc(ikreq)
-    except rospy.ServiceException,e :
+    except rospy.ServiceException, e:
         rospy.loginfo("Service call failed: %s" % (e,))
     if (resp.isValid[0]):
         print("SUCCESS - Valid Joint Solution Found:")
@@ -108,11 +110,14 @@ def main(limb):
         print("INVALID POSE - No Valid Joint Solution Found.")
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", choices=['left','right'],
+    parser.add_argument('-l', '--limb', choices=['left', 'right'],
                         required=True,
                         help="the limb to test")
     args = parser.parse_args(rospy.myargv()[1:])
 
-    main(args.limb)
+    ik_test(args.limb)
+
+if __name__ == '__main__':
+    main()

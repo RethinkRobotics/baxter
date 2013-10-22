@@ -37,6 +37,7 @@ import rospy
 import baxter_interface
 import iodevices
 
+
 def map_keyboard():
     left = baxter_interface.Limb('left')
     right = baxter_interface.Limb('right')
@@ -105,7 +106,8 @@ def map_keyboard():
                 print("key bindings: ")
                 print("  Esc: Quit")
                 print("  ?: Help")
-                for key, val in sorted(bindings.items(), key=lambda x: x[1][2]):
+                for key, val in sorted(bindings.items(),
+                                       key=lambda x: x[1][2]):
                     print("  %s: %s" % (key, val[2]))
 
 

@@ -36,10 +36,11 @@ import rospy
 import baxter_interface
 from jointrecorder import JointRecorder
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument("-f","--file", dest="filename", required=True,
+    required.add_argument("-f", "--file", dest="filename", required=True,
                         help="the file name to record to")
     parser.add_argument("-r", "--record-rate", type=int, default=10,
                         metavar="RECORDRATE",
@@ -58,3 +59,6 @@ if __name__ == '__main__':
     recorder.record()
 
     print("done.")
+
+if __name__ == '__main__':
+    main()

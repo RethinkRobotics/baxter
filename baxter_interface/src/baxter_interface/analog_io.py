@@ -31,11 +31,12 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
+import dataflow
+
 from baxter_core_msgs.msg import (
     AnalogIOState,
     AnalogOutputCommand,
 )
-from utilities import dataflow
 
 
 class AnalogIO(object):

@@ -35,7 +35,7 @@ from baxter_core_msgs.msg import (
     DigitalIOState,
     DigitalOutputCommand,
 )
-from utilities import dataflow
+import dataflow
 
 
 class DigitalIO(object):

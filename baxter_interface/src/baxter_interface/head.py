@@ -33,12 +33,13 @@ from std_msgs.msg import (
     Bool
 )
 
+import dataflow
+
 from baxter_core_msgs.msg import (
    HeadPanCommand,
    HeadState,
 )
 from baxter_interface import settings
-from utilities import dataflow
 
 
 class Head(object):

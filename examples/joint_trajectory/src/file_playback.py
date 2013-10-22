@@ -43,16 +43,17 @@ roslib.load_manifest('joint_trajectory')
 import rospy
 import actionlib
 
-import dataflow
-import baxter_interface
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
     FollowJointTrajectoryGoal,
 )
 from trajectory_msgs.msg import (
-    JointTrajectory,
     JointTrajectoryPoint,
 )
+
+import baxter_interface
+import dataflow
+
 
 class Trajectory(object):
     def __init__(self):
@@ -70,7 +71,8 @@ class Trajectory(object):
         l_server_up = self._left_client.wait_for_server(rospy.Duration(1.0))
         r_server_up = self._right_client.wait_for_server(rospy.Duration(1.0))
         if not l_server_up or not r_server_up:
-            msg = "Action server not available. Verify controller availability."
+            msg = ("Action server not available."
+                   " Verify controller availability.")
             rospy.logerr(msg)
             rospy.signal_shutdown(msg)
             sys.exit(1)
@@ -109,7 +111,7 @@ class Trajectory(object):
         l_cmd = self._l_grip.trajectory.points
         pnt_times = [pnt.time_from_start.to_sec() for pnt in r_cmd]
         end_time = pnt_times[-1]
-        control_rate = 20.0 #20Hz gripper control rate
+        control_rate = 20.0  # 20Hz gripper control rate
         rate = rospy.Rate(control_rate)
         now_from_start = rospy.get_time() - start_time
         while(now_from_start < end_time + (1.0 / control_rate) and
@@ -121,12 +123,14 @@ class Trajectory(object):
             now_from_start = rospy.get_time() - start_time
 
     def _clean_line(self, line, joint_names):
-        """ Cleans a single line of recorded joint positions
+        """
         @param line - the line described in a list to process
         @param joint_names - joint name keys
 
         @return command - returns dictionary {joint: value} of valid commands
         @return line - returns list of current line values stripped of commas
+
+        Cleans a single line of recorded joint positions
         """
         def try_float(x):
             try:
@@ -144,10 +148,12 @@ class Trajectory(object):
         return (command, line,)
 
     def _add_point(self, positions, side, time):
-        """ Appends trajectory with new point
+        """
         @param positions - joint positions
         @param side - limb to command point
         @param time - time from start for point in seconds
+
+        Appends trajectory with new point
         """
         #creates a point in trajectory with time_from_start and positions
         point = JointTrajectoryPoint()
@@ -163,8 +169,10 @@ class Trajectory(object):
             self._r_grip.trajectory.points.append(point)
 
     def parse_file(self, filename):
-        """ Parses input file into FollowJointTrajectoryGoal format
+        """
         @param filename - input filename
+
+        Parses input file into FollowJointTrajectoryGoal format
         """
         #open recorded file
         with open(filename, 'r') as f:
@@ -219,16 +227,17 @@ class Trajectory(object):
             cur_cmd = [cmd['right_gripper']]
             self._add_point(cur_cmd, 'right_gripper', values[0] + start_offset)
 
-
     def start(self):
-        """ Sends FollowJointTrajectoryAction request
+        """
+        Sends FollowJointTrajectoryAction request
         """
         self._left_client.send_goal(self._l_goal)
         self._right_client.send_goal(self._r_goal)
         self._execute_gripper_commands()
 
     def stop(self):
-        """ Preempts trajectory execution by sending cancel goals
+        """
+        Preempts trajectory execution by sending cancel goals
         """
         if (self._left_client.gh is not None and
             self._left_client.get_state() == actionlib.GoalStatus.ACTIVE):
@@ -242,7 +251,8 @@ class Trajectory(object):
         rospy.sleep(0.1)
 
     def wait(self):
-        """ Waits for and verifies trajectory execution result
+        """
+        Waits for and verifies trajectory execution result
         """
         #create a timeout for our trajectory execution
         #total time trajectory expected for trajectory execution plus a buffer
@@ -261,7 +271,16 @@ class Trajectory(object):
             rospy.logwarn(msg)
             return False
 
-def main(file, loops):
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', metavar='PATH', required=True,
+                        help='path to input file')
+    parser.add_argument('-l', '--loops', type=int, default=1,
+                        help='number of playback loops. 0=infinite.')
+    # remove ROS args and filename (sys.arv[0]) for argparse
+    args = parser.parse_args(rospy.myargv()[1:])
+
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_file_playback")
     print("Getting robot state... ")
@@ -271,28 +290,21 @@ def main(file, loops):
     print("Running. Ctrl-c to quit")
 
     traj = Trajectory()
-    traj.parse_file(file)
+    traj.parse_file(args.file)
     #for safe interrupt handling
     rospy.on_shutdown(lambda: traj.stop())
     result = True
     loop_cnt = 1
-    loopstr = str(loops)
-    if loops == 0:
-        loops = float('inf')
+    loopstr = str(args.loops)
+    if args.loops == 0:
+        args.loops = float('inf')
         loopstr = "forever"
-    while result == True and loop_cnt <= loops and not rospy.is_shutdown():
+    while (result == True and loop_cnt <= args.loops
+           and not rospy.is_shutdown()):
         print("Playback loop %d of %s" % (loop_cnt, loopstr,))
         traj.start()
         result = traj.wait()
         loop_cnt = loop_cnt + 1
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', metavar='PATH', required=True,
-                        help="path to input file")
-    parser.add_argument('-l', '--loops', type=int, default=1,
-                        help="number of playback loops. 0=infinite.")
-    # remove ROS args and filename (sys.arv[0]) for argparse
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    main(args.file, args.loops)
+    main()

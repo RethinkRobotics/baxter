@@ -30,7 +30,6 @@
 """
 Baxter RSDK Joint Trajectory Controller Test
 """
-import sys
 from copy import copy
 import argparse
 
@@ -39,17 +38,18 @@ roslib.load_manifest('joint_trajectory')
 import rospy
 import actionlib
 
-import iodevices
-import dataflow
 import baxter_interface
+import dataflow
+import iodevices
+
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
     FollowJointTrajectoryGoal,
 )
 from trajectory_msgs.msg import (
-    JointTrajectory,
     JointTrajectoryPoint,
 )
+
 
 class Trajectory(object):
     def __init__(self, limb):
@@ -58,6 +58,7 @@ class Trajectory(object):
             ns + "follow_joint_trajectory",
             FollowJointTrajectoryAction,
         )
+        self._goal = FollowJointTrajectoryGoal()
         self._client.wait_for_server()
         self.clear(limb)
 
@@ -83,7 +84,16 @@ class Trajectory(object):
         self._goal.trajectory.joint_names = [limb + '_' + joint for joint in \
             ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']]
 
+
 def main(limb):
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument("-l", "--limb", required=True,
+                        choices=['left', 'right'],
+                        help="send joint trajectory to which limb")
+    args = parser.parse_args(rospy.myargv()[1:])
+    limb = args.limb
+
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_test_%s" % (limb,))
     print("Getting robot state... ")
@@ -93,8 +103,9 @@ def main(limb):
     print("Running. Ctrl-c to quit")
     positions = {
         'left':  [-0.11, -0.62, -1.15, 1.32,  0.80, 1.27,  2.39],
-        'right': [ 0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
+        'right':  [0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
     }
+
     p1 = positions[limb]
     traj = Trajectory(limb)
     traj.add_point(p1, 7.0)
@@ -104,11 +115,4 @@ def main(limb):
     traj.wait()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    required = parser.add_argument_group('required arguments')
-    required.add_argument("-l", "--limb", required=True,
-                        choices=['left', 'right'],
-                        help="send joint trajectory to which limb")
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    main(args.limb)
+    main()

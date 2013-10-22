@@ -32,11 +32,11 @@ import rospy
 import baxter_interface
 import iodevices
 
+
 class JointRecorder(object):
-
-    def __init__(self, filename, rate, connection_timeout=2.0):
-        """ records joint data to a file at a specified rate
-
+    def __init__(self, filename, rate):
+        """
+        Records joint data to a file at a specified rate.
         """
         self._filename = filename
         self._raw_rate = rate
@@ -68,13 +68,13 @@ class JointRecorder(object):
 
     def stop(self):
         """
-        Stop recording
+        Stop recording.
         """
         self._done = True
 
     def done(self):
         """
-        Return whether or not recording is done
+        Return whether or not recording is done.
         """
         if rospy.is_shutdown():
             self.stop()
@@ -83,12 +83,13 @@ class JointRecorder(object):
         return self._done
 
     def record(self):
-        """ Records the current joint positions to a csv file
-        if outputFilename was provided at construction
-        this function will record the latest set of joint angles
-        in a csv format.
-        This function does not test to see if a file exists and
-        will overwrite existing files.
+        """
+        Records the current joint positions to a csv file if outputFilename was
+        provided at construction this function will record the latest set of
+        joint angles in a csv format.
+
+        This function does not test to see if a file exists and will overwrite
+        existing files.
         """
         if self._filename:
             joints_left = self._limb_left.joint_names()
@@ -110,10 +111,10 @@ class JointRecorder(object):
                         self._gripper_left.close()
                     if self._io_right_upper.state():
                         self._gripper_right.close()
-                    angles_left = [self._limb_left.joint_angle(j) \
-                        for j in joints_left]
-                    angles_right = [self._limb_right.joint_angle(j) \
-                        for j in joints_right]
+                    angles_left = [self._limb_left.joint_angle(j)
+                                   for j in joints_left]
+                    angles_right = [self._limb_right.joint_angle(j)
+                                    for j in joints_right]
 
                     f.write("%f," % (self._time_stamp(),))
 
@@ -124,4 +125,3 @@ class JointRecorder(object):
                     f.write(str(self._gripper_right.position()) + '\n')
 
                     self._rate.sleep()
-

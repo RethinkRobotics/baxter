@@ -39,7 +39,10 @@ import rospy
 import cv
 import cv_bridge
 
-import sensor_msgs.msg
+from sensor_msgs.msg import (
+    Image,
+)
+
 
 def send_image(path):
     """
@@ -50,36 +53,40 @@ def send_image(path):
     """
     img = cv.LoadImage(path)
     msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
-    pub = rospy.Publisher('/robot/xdisplay', sensor_msgs.msg.Image, latch=True)
+    pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
     pub.publish(msg)
-    # Even with latching, we seem to need to wait a bit before exiting to make
-    # sure that the message got sent.  Using a service may be a better idea.
-    # See also: http://answers.ros.org/question/9665/test-for-when-a-rospy-publisher-become-available/
     rospy.sleep(1)
 
-def main(path=None, delay=0.0):
+
+def main():
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument(
+        '-f', '--file', metavar='PATH', required=True,
+        help='Path to image file to send'
+    )
+    parser.add_argument(
+        '-d', '--delay', metavar='SEC', type=float, default=0.0,
+        help='Time in seconds to wait before publishing image'
+    )
+    args = parser.parse_args(rospy.myargv()[1:])
+
     rospy.init_node('xdisplay_image', anonymous=True)
 
-    if not os.access(path, os.R_OK):
-        rospy.logerr("Cannot read file at '%s'" % (path,))
+    if not os.access(args.file, os.R_OK):
+        rospy.logerr("Cannot read file at '%s'" % (args.file,))
         sys.exit(1)
 
     # Wait for specified time
-    if delay > 0:
-        rospy.loginfo("Waiting for %s seconds before publishing image to face" % (delay,))
-        rospy.sleep(delay)
+    if args.delay > 0:
+        rospy.loginfo(
+            "Waiting for %s second(s) before publishing image to face" %
+            (args.delay,)
+        )
+        rospy.sleep(args.delay)
 
-    send_image(path)
+    send_image(args.file)
     sys.exit(0)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    required = parser.add_argument_group('required arguments')
-    required.add_argument('-f', '--file', metavar='PATH', required=True,
-                  help='Path to image file to send')
-    parser.add_argument('-d', '--delay', metavar='SEC', type=float,
-                  default=0.0,
-                  help='Time in seconds to wait before publishing image')
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    main(args.file, args.delay)
+    main()
