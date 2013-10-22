@@ -32,7 +32,6 @@ Plays back joint positions honoring timestamps recorded
 Via joint_position example - joint_position recorder.py <filename>
 """
 
-
 import argparse
 from bisect import bisect
 from copy import copy
@@ -93,7 +92,7 @@ class Trajectory(object):
         if self._r_gripper.error():
             self._r_gripper.reboot()
         if not self._l_gripper.calibrated():
-            self.__l_gripper.calibrate()
+            self._l_gripper.calibrate()
         if not self._r_gripper.calibrated():
             self._r_gripper.calibrate()
 
@@ -229,7 +228,7 @@ class Trajectory(object):
         self._execute_gripper_commands()
 
     def stop(self):
-        """ Preempts trajectory exection by sending cancel goals
+        """ Preempts trajectory execution by sending cancel goals
         """
         if (self._left_client.gh is not None and
             self._left_client.get_state() == actionlib.GoalStatus.ACTIVE):
@@ -289,10 +288,11 @@ def main(file, loops):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', dest='file', required=True,
-        help="input file")
-    parser.add_argument('-l', '--loops', dest='loops', type=int, default=1,
-        help="number of playback loops. 0=infinite.")
-    args = parser.parse_args()
+    parser.add_argument('-f', '--file', metavar='PATH', required=True,
+                        help="path to input file")
+    parser.add_argument('-l', '--loops', type=int, default=1,
+                        help="number of playback loops. 0=infinite.")
+    # remove ROS args and filename (sys.arv[0]) for argparse
+    args = parser.parse_args(rospy.myargv()[1:])
 
     main(args.file, args.loops)

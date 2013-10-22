@@ -70,7 +70,7 @@ def main():
     parser.add_argument("-g", "--gripper", dest="gripper", default="both",
                         choices=['both', 'left', 'right'],
                         help="gripper action server limb",)
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv()[1:])
     start_server(args.gripper)
 
 

@@ -109,8 +109,8 @@ class Head(object):
         @param angle (float)   - Desired pan angle in radians.
         @param speed (int)     - Desired speed to pan at, range is 0-100 [100]
         @param timeout (float) - Seconds to wait for the head to pan to the
-                                 specified angle.  If 0, just command once and
-                                 return.  [0]
+                                 specified angle. If 0, just command once and
+                                 return. [10]
         """
         msg = HeadPanCommand(angle, speed)
         self._pub_pan.publish(msg)
@@ -142,7 +142,7 @@ class Head(object):
                 rate=100,
                 timeout_msg="Failed to initiate head nod command",
                 body=lambda: self._pub_nod.publish(True)
-                )
+            )
 
             # Wait for nod to complete
             dataflow.wait_for(
@@ -151,4 +151,4 @@ class Head(object):
                 rate=100,
                 timeout_msg="Failed to complete head nod command",
                 body=lambda: self._pub_nod.publish(True)
-                )
+            )
