@@ -30,19 +30,23 @@
 # This file is to be used in the *root* of your Catkin workspace.
 
 # This is a convenient script which will set up your ROS environment and
-# should be sourced with every new instance of a shell in which you plan on
+# should be executed with every new instance of a shell in which you plan on
 # working with Baxter.
 
 #--------------------------------------------------------------------------#
 #               USER CONFIGURABLE ROS ENVIRONMENT VARIABLES                #
 #--------------------------------------------------------------------------#
-# Specify Baxter's hostname
-baxter_hostname="baxter.local"
+# Note: If ROS_MASTER_URI, ROS_IP, or ROS_HOSTNAME environment variables were
+# previously set (typically in your .bashrc or .bash_profile), those settings
+# will be overwritten by any variables set here.
 
-# Set *Either* your ros_ip or ros_hostname. Please note if using ros_hostname
-# that this must be resolvable to Baxter.
-ros_ip="192.168.XXX.XXX"
-#ros_hostname="my_computer.local"
+# Specify Baxter's hostname
+baxter_hostname="baxter_hostname.local"
+
+# Set *Either* your computers ip address or hostname. Please note if using
+# your_hostname that this must be resolvable to Baxter.
+your_ip="192.168.XXX.XXX"
+#your_hostname="my_computer.local"
 
 # Specify ROS distribution (e.g. groovy, hydro)
 ros_version="groovy"
@@ -51,79 +55,104 @@ ros_version="groovy"
 tf=$(tempfile)
 trap "rm -f -- '${tf}'" EXIT
 
-topdir=$(dirname $(readlink -m ${0}))
+# If this file specifies an ip address or hostname - unset any previously set
+# ROS_IP and/or ROS_HOSTNAME.
+# If this file does not specify an ip address or hostname - use the
+# previously specified ROS_IP/ROS_HOSTNAME environment variables.
+if [ -n "${your_ip}" ] || [ -n "${your_hostname}" ]; then
+	unset ROS_IP && unset ROS_HOSTNAME
+else
+	your_ip="${ROS_IP}" && your_hostname="${ROS_HOSTNAME}"
+fi
 
 cat <<-EOF > ${tf}
-	if [ -s "\${HOME}"/.bashrc ]; then
-		source "\${HOME}"/.bashrc
-	fi
-
-	if [ -s "\${HOME}"/.bash_profile ]; then
-		source "\${HOME}"/.bash_profile
-	fi
+	[ -s "\${HOME}"/.bashrc ] && source "\${HOME}"/.bashrc
+	[ -s "\${HOME}"/.bash_profile ] && source "\${HOME}"/.bash_profile
 
 	# verify ros_version lowercase
 	ros_version="$(tr [A-Z] [a-z] <<< "${ros_version}")"
 
+	# check for ros installation
 	if [ ! -d "/opt/ros" ] || [ ! "$(ls -A /opt/ros)" ]; then
-		echo "EXITING - No ROS ros installation found in /opt/ros."
+		echo "EXITING - No ROS installation found in /opt/ros."
 		echo "Is ROS installed?"
 		exit 1
 	fi
 
-	if [ -n ${ros_ip} ] && [[ "${ros_ip}" == "192.168.XXX.XXX" ]]; then
-		echo -ne "EXITING - Please edit this file, modifying the ros_ip to \
-reflect your current IP address.\n"
+	# if set, verify user has modified the baxter_hostname
+	if [ -n ${baxter_hostname} ] && \
+	[[ "${baxter_hostname}" == "baxter_hostname.local" ]]; then
+		echo -ne "EXITING - Please edit this file, modifying the \
+'baxter_hostname' variable to reflect Baxter's current hostname.\n"
 		exit 1
 	fi
 
-	if [ -n "${ros_ip}" ] && [ -n "${ros_hostname}" ]; then
+	# if set, verify user has modified their ip address (your_ip)
+	if [ -n ${your_ip} ] && [[ "${your_ip}" == "192.168.XXX.XXX" ]]; then
+		echo -ne "EXITING - Please edit this file, modifying the 'your_ip' \
+variable to reflect your current IP address.\n"
+		exit 1
+	fi
+
+	# if set, verify user has modified their computer hostname (your_hostname)
+	if [ -n ${your_hostname} ] && \
+	[[ "${your_hostname}" == "my_computer.local" ]]; then
+		echo -ne "EXITING - Please edit this file, modifying the \
+'your_hostname' variable to reflect your current IP address.\n"
+		exit 1
+	fi
+
+	# verify user does not have both their ip *and* hostname set
+	if [ -n "${your_ip}" ] && [ -n "${your_hostname}" ]; then
 		echo -ne "EXITING - Please edit this file, modifying to specify \
-*EITHER* ros_ip or ros_hostname.\n"
+*EITHER* your_ip or your_hostname.\n"
 		exit 1
 	fi
 
-	if [ ! -n "${ros_ip}" ] && [ ! -n "${ros_hostname}" ]; then
-		echo -ne "EXITING - Please edit this file, modifying to specify your \
-ros_ip or ros_hostname.\n"
+	# verify that one of your_ip, your_hostname, ROS_IP, or ROS_HOSTNAME is set
+	if [ -z "${your_ip}" ] && [ -z "${your_hostname}" ]; then
+		echo -ne "EXITING - Please edit this file, modifying to specify \
+your_ip or your_hostname.\n"
 		exit 1	
 	fi
-	ros_setup="/opt/ros/\${ros_version}"
 
+	# verify specified ros version is installed
+	ros_setup="/opt/ros/\${ros_version}"
 	if [ ! -d "\${ros_setup}" ]; then
-		echo -ne "EXITING - Failed to find ROS \${ros_version} installation at \
-\${ros_setup}.\n"
+		echo -ne "EXITING - Failed to find ROS \${ros_version} installation \
+in \${ros_setup}.\n"
 		exit 1
 	fi
 
+	# verify the ros setup.sh file exists
 	if [ ! -s "\${ros_setup}"/setup.sh ]; then
 		echo -ne "EXITING - Failed to find the ROS environment script: \
 "\${ros_setup}"/setup.sh.\n"
 		exit 1
 	fi
 
+	# verify the user is running this script in the root of the catkin
+	# workspace and that the workspace has been compiled.
 	if [ ! -s "devel/setup.bash" ]; then
-		echo -ne "EXITING - Please verify that this script is being run in the \
-root of your catkin workspace, and that your workspace has been built \
-(catkin_make).\nSource this script again upon completion of your workspace \
-build.\n"
+		echo -ne "EXITING - \n1) Please verify that this script is being run \
+in the root of your catkin workspace.\n2) Please verify that your workspace \
+has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
+3) Run this script again upon completion of your workspace build.\n"
 		exit 1
 	fi
 
-	source \${ros_setup}/setup.bash 2>/dev/null || source \${ros_setup}/setup.sh
+	[ -n "${your_ip}" ] && export ROS_IP="${your_ip}"
+	[ -n "${your_hostname}" ] && export ROS_HOSTNAME="${your_hostname}"
+	[ -n "${baxter_hostname}" ] && \
+		export ROS_MASTER_URI="http://${baxter_hostname}:11311"
 
-	[ -n "${ros_ip}" ] && export ROS_IP="${ros_ip}"
-	[ -n "${ros_hostname}" ] && export ROS_HOSTNAME="${ros_hostname}"
-
-    export ROS_MASTER_URI="http://${baxter_hostname}:11311"
-
+	# source the catkin setup bash script
 	source devel/setup.bash
 
 	# setup the bash prompt
 	export __ROS_PROMPT=\${__ROS_PROMPT:-0}
-	if [ \${__ROS_PROMPT} -eq 0 -a -n "\${PROMPT_COMMAND}" ]; then
+	[ \${__ROS_PROMPT} -eq 0 -a -n "\${PROMPT_COMMAND}" ] && \
 		export __ORIG_PROMPT_COMMAND=\${PROMPT_COMMAND}
-	fi
 
 	__ros_prompt () {
 		if [ -n "\${__ORIG_PROMPT_COMMAND}" ]; then
