@@ -81,7 +81,7 @@ class Gripper(object):
         dataflow.wait_for(
                           lambda: not self._state is None,
                           timeout=5.0,
-                          timeout_msg=("Failed to state from %s" %
+                          timeout_msg=("Failed to get state from %s" %
                                        (ns + 'state',))
                           )
 
