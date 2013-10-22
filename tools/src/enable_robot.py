@@ -37,7 +37,8 @@ import rospy
 
 import baxter_interface
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--state', const='state',
                         dest='actions', action='append_const',
@@ -78,4 +79,7 @@ if __name__ == '__main__':
     except Exception, e:
         rospy.logerr(e.strerror)
 
-    sys.exit(0)
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

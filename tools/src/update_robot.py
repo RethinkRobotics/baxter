@@ -35,13 +35,16 @@ import sys
 import roslib
 roslib.load_manifest('tools')
 import rospy
+
 import std_msgs.msg
 
 import dataflow
+
 from baxter_maintenance_msgs.msg import (
     UpdateSources,
     UpdateStatus,
 )
+
 
 class Updater(object):
     """
@@ -77,8 +80,9 @@ class Updater(object):
 
         dataflow.wait_for(
             lambda: self._avail_updates.uuid != '',
-            timeout = 1.0,
-            timeout_msg = "Failed to get list of available updates")
+            timeout=1.0,
+            timeout_msg="Failed to get list of available updates"
+        )
 
     def _on_update_sources(self, msg):
         if msg.uuid != self._avail_updates.uuid:
@@ -112,6 +116,7 @@ class Updater(object):
         """
         self._updater_stop.publish()
 
+
 def run_update(updater, uuid):
     """
     Run and monitor the progress of an update.
@@ -121,7 +126,9 @@ def run_update(updater, uuid):
     """
 
     # Work around lack of a nonlocal keyword in python 2.x
-    class NonLocal(object): pass
+    class NonLocal(object):
+        pass
+
     nl = NonLocal
     nl.rc = 1
     nl.done = False
@@ -158,23 +165,35 @@ def run_update(updater, uuid):
         updater.command_update(uuid)
     except OSError, e:
         if e.errno == errno.EINVAL:
-            print(str(e))
+            print e.strerror
             return 1
         raise
 
     try:
         dataflow.wait_for(
             lambda: nl.done == True,
-            timeout = 5 * 60,
-            timeout_msg = "Timeout waiting for update to succeed")
+            timeout=5 * 60,
+            timeout_msg="Timeout waiting for update to succeed")
     except Exception, e:
         if not (hasattr(e, 'errno') and e.errno == errno.ESHUTDOWN):
-            print (str(e))
+            print e.strerror
         nl.rc = 1
 
     return nl.rc
 
-def main(cmd = None, uuid = ''):
+
+def main():
+    parser = argparse.ArgumentParser()
+    required = parser.add_mutually_exclusive_group(required=True)
+    required.add_argument('-l', '--list', action='store_const',
+                          dest='cmd', const='list', default='update',
+                          help="List available updates and UUID's")
+    required.add_argument('-u', '--update', dest='uuid', default='',
+                          help='Launch the given update')
+    args = parser.parse_args(rospy.myargv()[1:])
+    cmd = args.cmd
+    uuid = args.uuid
+
     rospy.init_node('update_robot')
     updater = Updater()
 
@@ -186,22 +205,12 @@ def main(cmd = None, uuid = ''):
             print ("%-30s%s" % ("Version", "UUID"))
             for update in updates:
                 print("%-30s%s" % (update[0], update[1]))
-        sys.exit(0)
+        return 0
     elif cmd == 'update':
         if uuid == '':
             print "Error:  no update uuid specified"
-            sys.exit(1)
-        sys.exit(run_update(updater, uuid))
-
+            return 1
+        return run_update(updater, uuid)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    required = parser.add_mutually_exclusive_group(required=True)
-    required.add_argument('-l', '--list', action='store_const',
-                          dest='cmd', const='list', default='update',
-                          help="List available updates and UUID's")
-    required.add_argument('-u', '--update', dest='uuid', default='',
-                          help='Launch the given update')
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    main(args.cmd, args.uuid)
+    sys.exit(main())
