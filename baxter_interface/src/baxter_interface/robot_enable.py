@@ -26,9 +26,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import errno
-import os
-import sys
-import time
 
 import roslib
 roslib.load_manifest('baxter_interface')
@@ -42,18 +39,17 @@ from std_msgs.msg import (
 from baxter_core_msgs.msg import (
     AssemblyState,
 )
+from utilities import dataflow
 
-import dataflow
 
 class RobotEnable(object):
     """
     Class RobotEnable - simple control/status wrapper around robot state
 
-    enable()    - enable all joints
-    disable()   - disable all joints
-    reset()     - reset all joints, reset all jrcp faults, disable the robot
-    stop()      - stop the robot, similar to hitting the e-stop button
-
+    enable()  - enable all joints
+    disable() - disable all joints
+    reset()   - reset all joints, reset all jrcp faults, disable the robot
+    stop()    - stop the robot, similar to hitting the e-stop button
     """
     def __init__(self):
         self._state = None
@@ -77,7 +73,7 @@ class RobotEnable(object):
 
         dataflow.wait_for(test=lambda: self._state.enabled == status,
                           timeout=2.0 if status else 5.0,
-                          timeout_msg=("Failed to %sable robot" % 
+                          timeout_msg=("Failed to %sable robot" %
                                        ('en' if status else 'dis',)),
                           body=lambda: pub.publish(status),
                           )
@@ -132,7 +128,7 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
         dataflow.wait_for(test=is_reset,
                           timeout=3.0,
                           timeout_msg=error_msg,
-                          body=lambda: pub.publish(),
+                          body=pub.publish,
                           )
 
     def stop(self):
@@ -144,5 +140,5 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
         dataflow.wait_for(test=lambda: self._state.stopped == True,
                           timeout=3.0,
                           timeout_msg="Failed to stop the robot",
-                          body=lambda: pub.publish(),
+                          body=pub.publish,
                           )

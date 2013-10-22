@@ -32,7 +32,6 @@ Baxter RSDK Joint Trajectory Controller
     Unlike other robots running ROS, this is not a Motor Controller plugin,
     but a regular node using the SDK interface.
 """
-import sys
 import argparse
 
 import roslib
@@ -40,25 +39,24 @@ roslib.load_manifest('baxter_interface')
 import rospy
 
 from dynamic_reconfigure.server import Server
-from baxter_interface.cfg import (
-    JointTrajectoryActionServerConfig
-)
 
-import iodevices
-import dataflow
-import baxter_interface
-from joint_trajectory_action import (
+from baxter_interface.cfg import (
+    JointTrajectoryActionServerConfig,
+)
+from joint_trajectory_action.joint_trajectory_action import (
     JointTrajectoryActionServer,
 )
 
-def main(limb, rate):
+
+def start_server(limb, rate):
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_trajectory_action_server%s" %
                     ("" if limb == 'both' else "_" + limb,))
     print("Initializing joint trajectory action server...")
 
     dynamic_cfg_srv = Server(JointTrajectoryActionServerConfig,
-                                 lambda config,level: config)
+                          lambda config, level: config
+                      )
     if limb == 'both':
         JointTrajectoryActionServer('right', dynamic_cfg_srv, rate)
         JointTrajectoryActionServer('left', dynamic_cfg_srv, rate)
@@ -67,13 +65,22 @@ def main(limb, rate):
     print("Running. Ctrl-c to quit")
     rospy.spin()
 
-if __name__ == "__main__":
-    format = argparse.ArgumentDefaultsHelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=format)
-    parser.add_argument("-l", "--limb", dest="limb", default="both",
-                        choices=['both', 'left', 'right'],
-                        help="joint trajectory action server limb")
-    parser.add_argument("-r", "--rate", dest="rate", default=100.0,
-                        type=float, help="trajectory control rate (Hz)")
+
+def main():
+    arg_fmt = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=arg_fmt)
+    parser.add_argument(
+        "-l", "--limb", dest="limb", default="both",
+        choices=['both', 'left', 'right'],
+        help="joint trajectory action server limb"
+    )
+    parser.add_argument(
+        "-r", "--rate", dest="rate", default=100.0,
+        type=float, help="trajectory control rate (Hz)"
+    )
     args = parser.parse_args(rospy.myargv()[1:])
-    main(args.limb, args.rate)
+    start_server(args.limb, args.rate)
+
+
+if __name__ == "__main__":
+    main()

@@ -37,20 +37,22 @@ roslib.load_manifest('baxter_interface')
 import rospy
 import actionlib
 
-from std_msgs.msg import (
-    UInt16,
-)
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
 )
+from std_msgs.msg import (
+    UInt16,
+)
 from trajectory_msgs.msg import (
-    JointTrajectory,
     JointTrajectoryPoint,
 )
 
-import dataflow
-import control
 import baxter_interface
+
+from utilities import (
+    dataflow,
+    control,
+)
 
 
 class JointTrajectoryActionServer(object):
@@ -164,7 +166,7 @@ class JointTrajectoryActionServer(object):
                 diffs = map(operator.sub, point.positions,
                             last_point)
                 diffs = map(operator.abs, diffs)
-                dflt_vel= [self._dflt_vel[jnt] for jnt in joint_names]
+                dflt_vel = [self._dflt_vel[jnt] for jnt in joint_names]
                 move_time = move_time + max(map(operator.div, diffs, dflt_vel))
                 point.time_from_start = rospy.Duration(move_time)
                 last_point = point.positions
@@ -215,7 +217,6 @@ class JointTrajectoryActionServer(object):
                 # just hold that position.
                 point = p1.positions
 
-
             if not self._command_velocities(joint_names, point):
                 return
 
@@ -225,6 +226,7 @@ class JointTrajectoryActionServer(object):
         # Keep trying to meet goal until goal_time constraint expired
         last_point = trajectory_points[-1].positions
         last_time = trajectory_points[-1].time_from_start.to_sec()
+
         def check_goal_state():
             for error in self._get_current_error(joint_names, last_point):
                 if (self._goal_error[error[0]] > 0

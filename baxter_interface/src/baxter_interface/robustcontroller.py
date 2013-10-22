@@ -35,20 +35,21 @@ from baxter_core_msgs.msg import (
     RobustControllerStatus,
 )
 
+
 class RobustController(object):
-    STATE_IDLE = 0
-    STATE_STARTING = 1
-    STATE_RUNNING = 2
-    STATE_STOPPING = 3
+    (STATE_IDLE,
+     STATE_STARTING,
+     STATE_RUNNING,
+     STATE_STOPPING) = range(4)
 
-    def __init__(self, namespace, enable_msg, disable_msg, timeout = 60):
+    def __init__(self, namespace, enable_msg, disable_msg, timeout=60):
         """
-        Wrapper around controlling a RobustController
+        @param namespace   - namespace containing the enable and status topics
+        @param enable_msg  - message to send to enable the RC
+        @param disable_msg - message to send to disable the RC
+        @param timeout     - seconds to wait for the RC to finish [60]
 
-        @param namespace    - namespace containing the enable and status topics
-        @param enable_msg   - message to send to enable the RC
-        @param disable_msg  - message to send to disable the RC
-        @param timeout      - seconds to wait for the RC to finish [60]
+        Wrapper around controlling a RobustController
         """
         self._command_pub = rospy.Publisher(
             namespace + '/enable',
@@ -95,7 +96,8 @@ class RobustController(object):
         start = rospy.Time.now()
 
         while not rospy.is_shutdown():
-            if self._state == self.STATE_RUNNING and (rospy.Time.now() - start).to_sec() > self._timeout:
+            if (self._state == self.STATE_RUNNING and
+                (rospy.Time.now() - start).to_sec() > self._timeout):
                 self._state = self.STATE_STOPPING
                 self._command_pub.publish(self._disable_msg)
                 self._return = errno.ETIMEDOUT
@@ -128,14 +130,14 @@ class RobustController(object):
         self._command_pub.publish(self._enable_msg)
         self._run_loop()
         if self._return != 0:
-            if self._return == errno.EIO:
-                raise IOError(self._return, "Robust controller failed")
-            elif self._return == errno.ENOMSG:
-                raise IOError(self._return, "Robust controller failed to enable")
-            elif self._return == errno.ETIMEDOUT:
-                raise IOError(self._return, "Robust controller timed out")
-            elif self._return == errno.ECONNABORTED:
-                raise IOError(self._return, "Robust controller interrupted by user")
-            else:
-                raise IOError(self._return)
+            msgs = {
+                errno.EIO:          "Robust controller failed",
+                errno.ENOMSG:       "Robust controller failed to enable",
+                errno.ETIMEDOUT:    "Robust controller timed out",
+                errno.ECONNABORTED: "Robust controller interrupted by user",
+                }
 
+            msg = msgs.get(self._return, None)
+            if msg:
+                raise IOError(self._return, msg)
+            raise IOError(self._return)

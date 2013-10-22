@@ -25,15 +25,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from robot_enable import RobotEnable
-from gripper import Gripper
-from head import Head
-from limb import Limb
-from digital_io import DigitalIO
-from analog_io import AnalogIO
-from navigator import Navigator
-from camera import CameraController
-from settings import (
+from .analog_io import AnalogIO
+from .camera import CameraController
+from .digital_io import DigitalIO
+from .gripper import Gripper
+from .head import Head
+from .limb import Limb
+from .navigator import Navigator
+from .robot_enable import RobotEnable
+from .settings import (
     JOINT_ANGLE_TOLERANCE,
     HEAD_PAN_ANGLE_TOLERANCE,
 )

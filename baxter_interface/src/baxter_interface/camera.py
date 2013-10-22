@@ -30,15 +30,15 @@ import errno
 import rospy
 
 from baxter_core_msgs.msg import (
-    CameraSettings,
     CameraControl,
+    CameraSettings,
 )
-
 from baxter_core_msgs.srv import (
-    OpenCamera,
     CloseCamera,
     ListCameras,
+    OpenCamera,
 )
+
 
 class CameraController(object):
     """
@@ -72,7 +72,7 @@ class CameraController(object):
         self._id = name
 
         list_svc = rospy.ServiceProxy('/cameras/list', ListCameras)
-        rospy.wait_for_service('/cameras/list', timeout = 10)
+        rospy.wait_for_service('/cameras/list', timeout=10)
         if not self._id in list_svc().cameras:
             raise AttributeError("Invalid camera name '%s'" % (self._id,))
 
@@ -155,7 +155,8 @@ class CameraController(object):
         if (exposure < 0 or exposure > 100) and exposure != self.CONTROL_AUTO:
             raise ValueError("Invalid exposure value")
 
-        self._set_control_value(CameraControl.CAMERA_CONTROL_EXPOSURE, exposure)
+        self._set_control_value(CameraControl.CAMERA_CONTROL_EXPOSURE,
+                                exposure)
         self._reload()
 
     @property
@@ -315,7 +316,8 @@ class CameraController(object):
         """
         Return True if binning/half resolution is enabled on the camera.
         """
-        return self._get_value(CameraControl.CAMERA_CONTROL_RESOLUTION_HALF, False)
+        return self._get_value(CameraControl.CAMERA_CONTROL_RESOLUTION_HALF,
+                               False)
 
     @half_resolution.setter
     def half_resolution(self, value):
@@ -343,4 +345,3 @@ class CameraController(object):
         if ret.err != 0 and ret.err != errno.EINVAL:
             raise OSError(ret.err, "Failed to close camera")
         self._open = False
-

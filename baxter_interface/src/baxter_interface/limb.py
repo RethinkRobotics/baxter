@@ -32,21 +32,20 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-from baxter_core_msgs.msg import (
-    JointCommand,
-    EndpointState,
-)
-
 from sensor_msgs.msg import (
     JointState
 )
-
 from std_msgs.msg import (
     Float64,
 )
 
-import settings
-import dataflow
+from baxter_core_msgs.msg import (
+    JointCommand,
+    EndpointState,
+)
+from baxter_interface import settings
+from utilities import dataflow
+
 
 class Limb(object):
     # Containers
@@ -55,9 +54,9 @@ class Limb(object):
 
     def __init__(self, limb):
         """
-        Interface class for a limb on the Baxter robot.
+        @param limb (string) - limb to interface
 
-        @param limb - limb to interface
+        Interface class for a limb on the Baxter robot.
         """
         self.name = limb
         self._joint_angle = {}
@@ -69,9 +68,9 @@ class Limb(object):
 
         self._joint_names = {
             'left': ['left_s0', 'left_s1', 'left_e0', 'left_e1',
-                'left_w0', 'left_w1', 'left_w2'],
+                     'left_w0', 'left_w1', 'left_w2'],
             'right': ['right_s0', 'right_s1', 'right_e0', 'right_e1',
-                'right_w0', 'right_w1', 'right_w2']
+                      'right_w0', 'right_w1', 'right_w2']
             }
 
         ns = '/robot/limb/' + limb + '/'
@@ -93,7 +92,7 @@ class Limb(object):
         self._last_state_time = None
         self._state_rate = 0
 
-        joint_state_sub = rospy.Subscriber(
+        _joint_state_sub = rospy.Subscriber(
             '/robot/joint_states',
             JointState,
             self._on_joint_states)
@@ -112,11 +111,12 @@ class Limb(object):
             rate = (1.0 / (now - self._last_state_time).to_sec())
             self._state_rate = ((99 * self._state_rate) + rate) / 100
         self._last_state_time = now
-        for i in range(len(msg.name)):
-            if self.name in msg.name[i]:
-                self._joint_angle[msg.name[i]] = msg.position[i]
-                self._joint_velocity[msg.name[i]] = msg.velocity[i]
-                self._joint_effort[msg.name[i]] = msg.effort[i]
+
+        for idx, name in enumerate(msg.name):
+            if self.name in name:
+                self._joint_angle[name] = msg.position[idx]
+                self._joint_velocity[name] = msg.velocity[idx]
+                self._joint_effort[name] = msg.effort[idx]
 
     def _on_endpoint_states(self, msg):
         # Comments in this private method are for documentation purposes.
@@ -175,9 +175,9 @@ class Limb(object):
 
     def joint_angle(self, joint):
         """
-        Return the requested joint angle.
+        @param joint (string) - name of a joint
 
-        @param joint    - name of a joint
+        Return the requested joint angle.
         """
         return self._joint_angle[joint]
 
@@ -189,9 +189,9 @@ class Limb(object):
 
     def joint_velocity(self, joint):
         """
-        Return the requested joint velocity.
+        @param joint (string) - name of a joint
 
-        @param joint    - name of a joint
+        Return the requested joint velocity.
         """
         return self._joint_velocity[joint]
 
@@ -203,9 +203,9 @@ class Limb(object):
 
     def joint_effort(self, joint):
         """
-        Return the requested joint effort.
+        @param joint (string) - name of a joint
 
-        @param joint    - name of a joint
+        Return the requested joint effort.
         """
         return self._joint_effort[joint]
 
@@ -235,7 +235,7 @@ class Limb(object):
 
     def set_command_timeout(self, timeout):
         """
-        @param timeout float  - float timeout in seconds
+        @param timeout (float) - timeout in seconds
 
         Set the timeout in seconds for the joint controller
         """
@@ -243,7 +243,7 @@ class Limb(object):
 
     def exit_control_mode(self, timeout=0.2):
         """
-        @param timeout float  - float control timeout in seconds [0.2]
+        @param timeout (float) - control timeout in seconds [0.2]
 
         Clean exit from advanced control modes (joint torque or velocity).
         Resets control to joint position mode with current positions.
@@ -253,7 +253,7 @@ class Limb(object):
 
     def set_joint_position_speed(self, speed):
         """
-        @param speed float  - speed ratio of maximum joint speed for execution
+        @param speed (float) - speed ratio of maximum joint speed for execution
 
         Sets the ratio [0.0-1.0] (clipped) of maximum joint speed for joint
         position control execution. This will be persistent until a new
@@ -263,7 +263,7 @@ class Limb(object):
 
     def set_joint_positions(self, positions):
         """
-        @param positions dict({str:float})  - dictionary of joint_name:angle
+        @param positions (dict({str:float})) - joint_name:angle command
 
         Commands the joints of this limb to the specified positions.
         """
@@ -274,10 +274,11 @@ class Limb(object):
 
     def set_joint_velocities(self, velocities):
         """
-        @param velocities dict({str:float})  - dictionary of joint_name:velocity
+        @param velocities (dict({str:float})) - joint_name:velocity command
 
         Commands the joints of this limb to the specified velocities.
-        Important: set_joint_velocities must be commanded at a rate great than
+
+        IMPORTANT: set_joint_velocities must be commanded at a rate great than
         the timeout specified by set_command_timeout. If the timeout is
         exceeded before a new set_joint_velocities command is received, the
         controller will switch modes back to position mode for safety purposes.
@@ -289,13 +290,14 @@ class Limb(object):
 
     def set_joint_torques(self, torques):
         """
-        @param torques dict({str:float})  - dictionary of joint_name:torque
+        @param torques (dict({str:float})) - joint_name:torque command
 
         Commands the joints of this limb to the specified torques.
-        Important: set_joint_torques must be commanded at a rate great than
-        the timeout specified by set_command_timeout. If the timeout is
-        exceeded before a new set_joint_torques command is received, the
-        controller will switch modes back to position mode for safety purposes.
+
+        IMPORTANT: set_joint_torques must be commanded at a rate great than the
+        timeout specified by set_command_timeout. If the timeout is exceeded
+        before a new set_joint_torques command is received, the controller will
+        switch modes back to position mode for safety purposes.
         """
         self._command_msg.names = torques.keys()
         self._command_msg.command = torques.values()
@@ -312,8 +314,8 @@ class Limb(object):
 
     def move_to_joint_positions(self, positions, timeout=15.0):
         """
-        @param positions dict({str:float})  - dictionary of joint_name:angle
-        @param timeout    - seconds to wait for move to finish [15]
+        @param positions (dict({str:float})) - joint_name:angle command
+        @param timeout - seconds to wait for move to finish [15]
 
         Commands the limb to the provided positions.  Waits until the reported
         joint state matches that specified.
@@ -327,10 +329,9 @@ class Limb(object):
                  j in self._joint_angle]
 
         dataflow.wait_for(
-                          lambda: (not
-                                   any(diff() >= settings.JOINT_ANGLE_TOLERANCE
-                                       for diff in diffs)),
-                          timeout=timeout,
-                          rate=100,
-                          body=lambda: self.set_joint_positions(positions)
-                          )
+            lambda: (all(diff() < settings.JOINT_ANGLE_TOLERANCE
+                         for diff in diffs)),
+            timeout=timeout,
+            rate=100,
+            body=lambda: self.set_joint_positions(positions)
+            )
