@@ -30,10 +30,13 @@ import termios
 import tty
 from select import select
 
+
 def getch(timeout=0.01):
-    """ retrieves a character from stdin
-    Returns None if no character is available within the timeout
-    Blocks if timeout < 0
+    """
+    Retrieves a character from stdin.
+
+    Returns None if no character is available within the timeout.
+    Blocks if timeout < 0.
     """
     # If this is being piped to, ignore non-blocking functionality
     if not sys.stdin.isatty():
@@ -54,16 +57,3 @@ def getch(timeout=0.01):
     finally:
         termios.tcsetattr(fileno, termios.TCSADRAIN, old_settings)
     return ch
-
-if __name__ == '__main__':
-    print("getch test")
-    print("blocking getch...")
-    c = getch(-1)
-    print("returned %s" % (str(c),))
-    print("2.5 second timeout getch...")
-    c = getch(2.5)
-    print("returned %s" % (str(c),))
-    print("non-blocking getch in loop until character...")
-    while not getch():
-        pass
-    print("done.")

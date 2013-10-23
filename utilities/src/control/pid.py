@@ -1,10 +1,12 @@
-# Modified example source code from the book "Real-World Instrumentation with Python"
+# Modified example source code from the book
+# "Real-World Instrumentation with Python"
 # by J. M. Hughes, published by O'Reilly Media, December 2010,
 # ISBN 978-0-596-80956-0.
 
 import roslib
 roslib.load_manifest('utilities')
 import rospy
+
 
 class PID(object):
     """
@@ -31,6 +33,21 @@ class PID(object):
 
         self.initialize()
 
+    def initialize(self):
+        """
+        Initialize pid controller.
+        """
+        # reset delta t variables
+        self._cur_time = rospy.get_time()
+        self._prev_time = self._cur_time
+
+        self._prev_err = 0.0
+
+        # reset result variables
+        self._cp = 0.0
+        self._ci = 0.0
+        self._cd = 0.0
+
     def set_kp(self, invar):
         """
         Set proportional gain.
@@ -48,27 +65,6 @@ class PID(object):
         Set derivative gain.
         """
         self._kd = invar
-
-    def set_prev_error(self, preverr):
-        """
-        Set previous error value.
-        """
-        self._prev_err = preverr
-
-    def initialize(self):
-        """
-        Initialize pid controller.
-        """
-        # reset delta t variables
-        self._cur_time = rospy.get_time()
-        self._prev_time = self._cur_time
-
-        self._prev_err = 0.0
-
-        # reset result variables
-        self._cp = 0.0
-        self._ci = 0.0
-        self._cd = 0.0
 
     def compute_output(self, error):
         """
@@ -91,4 +87,5 @@ class PID(object):
         self._prev_err = error  # save t-1 error
 
         # sum the terms and return the result
-        return (self._kp * self._cp) + (self._ki * self._ci) + (self._kd * self._cd)
+        return ((self._kp * self._cp) + (self._ki * self._ci) +
+                (self._kd * self._cd))
