@@ -65,7 +65,7 @@ def close_camera(camera, *_args, **_kwds):
     cam.close()
 
 
-def main(action=None, camera=None, res=(1280, 800)):
+def main():
     parser = argparse.ArgumentParser()
     action_grp = parser.add_mutually_exclusive_group(required=True)
     action_grp.add_argument(
