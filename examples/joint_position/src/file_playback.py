@@ -96,7 +96,7 @@ def map_file(filename, loops=1):
         l += 1
         print("Moving to start position...")
 
-        _, lcmd_start, rcmd_start, _ = clean_line(lines[1], keys)
+        _cmd, lcmd_start, rcmd_start, _raw = clean_line(lines[1], keys)
         left.move_to_joint_positions(lcmd_start)
         right.move_to_joint_positions(rcmd_start)
         for values in lines[1:]:
@@ -120,9 +120,9 @@ def map_file(filename, loops=1):
                 if len(rcmd):
                     right.set_joint_positions(rcmd)
                 if 'left_gripper' in cmd:
-                    grip_left.set_position(cmd['left_gripper'])
+                    grip_left.command_position(cmd['left_gripper'])
                 if 'left_gripper' in cmd:
-                    grip_right.set_position(cmd['right_gripper'])
+                    grip_right.command_position(cmd['right_gripper'])
                 rate.sleep()
     print
     return True
@@ -131,12 +131,12 @@ def map_file(filename, loops=1):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-f', '--file', metavar="PATH", required=True,
-        help="path to input file"
+        '-f', '--file', metavar='PATH', required=True,
+        help='path to input file'
     )
     parser.add_argument(
         '-l', '--loops', type=int, default=1,
-        help="number of times to loop the input file. 0=infinite."
+        help='number of times to loop the input file. 0=infinite.'
     )
     args = parser.parse_args(rospy.myargv()[1:])
 

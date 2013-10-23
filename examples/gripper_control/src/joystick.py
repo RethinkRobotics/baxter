@@ -145,9 +145,10 @@ def map_joystick(joystick):
 def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-j', '--joystick', required=True,
-                          choices=['xbox', 'logitech', 'ps3'],
-                          help='specify the type of joystick to use')
+    required.add_argument(
+        '-j', '--joystick', required=True, choices=['xbox', 'logitech', 'ps3'],
+        help='specify the type of joystick to use'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     joystick = None

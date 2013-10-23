@@ -66,9 +66,10 @@ def test_interface(io_component='torso_fan'):
 def main():
     arg_fmt = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=arg_fmt)
-    parser.add_argument('-c', '--component', dest='component_id',
-                        default='torso_fan',
-                        help='name of Analog IO component to use')
+    parser.add_argument(
+        '-c', '--component', dest='component_id', default='torso_fan',
+        help='name of Analog IO component to use'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     rospy.init_node('test_aio', anonymous=True)

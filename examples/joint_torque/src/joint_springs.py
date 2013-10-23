@@ -64,6 +64,11 @@ class JointSprings(object):
     """
     def __init__(self, limb, reconfig_server):
         self._dyn = reconfig_server
+
+        # control parameters
+        self._rate = 1000.0  # Hz
+        self._missed_cmds = 20.0  # Missed cycles before triggering timeout
+
         # create our limb instance
         self._limb = baxter_interface.Limb(limb)
 
@@ -125,12 +130,11 @@ class JointSprings(object):
         self._start_angles = self._limb.joint_angles()
 
         # set control rate
-        rate = 1000  # Hz
-        control_rate = rospy.Rate(rate)
+        control_rate = rospy.Rate(self._rate)
 
         # for safety purposes set command timeout
         # if 20 command cycles missed - timeout and disable robot
-        self._limb.set_command_timeout(1.0 / (rate / 20))
+        self._limb.set_command_timeout(1.0 / (self._rate / self._missed_cmds))
 
         # loop at specified rate commanding new joint torques
         while not rospy.is_shutdown() and self._rs.state().enabled:
@@ -144,7 +148,7 @@ class JointSprings(object):
         self._limb.exit_control_mode()
 
 
-def main(limb):
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-l', '--limb', dest='limb', required=True, choices=['left', 'right'],

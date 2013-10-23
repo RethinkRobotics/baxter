@@ -85,12 +85,13 @@ class Trajectory(object):
             ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2']]
 
 
-def main(limb):
+def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument("-l", "--limb", required=True,
-                        choices=['left', 'right'],
-                        help="send joint trajectory to which limb")
+    required.add_argument(
+        '-l', '--limb', required=True, choices=['left', 'right'],
+        help='send joint trajectory to which limb'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
     limb = args.limb
 

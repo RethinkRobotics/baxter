@@ -40,11 +40,14 @@ from jointrecorder import JointRecorder
 def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument("-f", "--file", dest="filename", required=True,
-                        help="the file name to record to")
-    parser.add_argument("-r", "--record-rate", type=int, default=10,
-                        metavar="RECORDRATE",
-                        help="rate at which to record")
+    required.add_argument(
+        '-f', '--file', dest='filename', required=True,
+        help='the file name to record to'
+    )
+    parser.add_argument(
+        '-r', '--record-rate', type=int, default=10, metavar='RECORDRATE',
+        help='rate at which to record'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     print("Initializing node... ")

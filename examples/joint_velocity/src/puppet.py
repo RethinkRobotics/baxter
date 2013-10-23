@@ -125,7 +125,7 @@ def main():
     if (args.amplification < min_gain or max_gain < args.amplification):
         print("Exiting: Amplification must be between: [%g, %g]" %
               (min_gain, max_gain))
-        sys.exit(1)
+        return 1
 
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_velocity_puppet")
@@ -140,6 +140,7 @@ def main():
     print("Disabling robot... ")
     rs.disable()
     print("done.")
+    return 0
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

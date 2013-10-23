@@ -57,9 +57,11 @@ def test_interface(io_component='left_itb_light_outer'):
 def main():
     show_defaults = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=show_defaults)
-    parser.add_argument('-c', '--component', dest='component_id',
-                        default='left_itb_light_outer',
-                        help='name of Digital IO component to use')
+    parser.add_argument(
+        '-c', '--component', dest='component_id',
+        default='left_itb_light_outer',
+        help='name of Digital IO component to use'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     rospy.init_node('test_dio', anonymous=True)
