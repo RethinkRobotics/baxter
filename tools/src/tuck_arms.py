@@ -31,8 +31,6 @@
 Tool to tuck/untuck Baxter's arms to/from the shipping pose
 """
 import argparse
-import math
-import threading
 
 import roslib
 roslib.load_manifest('tools')
@@ -42,12 +40,13 @@ from std_msgs.msg import (
     Empty,
     Bool,
 )
+
+import baxter_interface
+import dataflow
+
 from baxter_core_msgs.msg import (
     CollisionAvoidanceState,
 )
-
-import dataflow
-import baxter_interface
 
 
 class Tuck(object):
@@ -59,9 +58,9 @@ class Tuck(object):
             'right': baxter_interface.Limb('right'),
             }
         self._tuck = tuck_cmd
-        self._tuck_rate = rospy.Rate(20.0) # Hz
-        self._tuck_threshold = 0.2 # Radians
-        self._peak_angle = -1.6 # Radians
+        self._tuck_rate = rospy.Rate(20.0)  # Hz
+        self._tuck_threshold = 0.2  # radians
+        self._peak_angle = -1.6  # radians
         self._arm_state = {
                            'tuck': {'left': 'none', 'right': 'none'},
                            'collide': {'left': False, 'right': False},
@@ -70,11 +69,11 @@ class Tuck(object):
         self._joint_moves = {
             'tuck': {
                      'left':  [-1.0, -2.07,  3.0, 2.55,  0.0, 0.01,  0.0],
-                     'right': [ 1.0, -2.07, -3.0, 2.55, -0.0, 0.01,  0.0]
+                     'right':  [1.0, -2.07, -3.0, 2.55, -0.0, 0.01,  0.0]
                      },
             'untuck': {
                        'left':  [-0.08, -1.0, -1.19, 1.94,  0.67, 1.03, -0.50],
-                       'right': [ 0.08, -1.0,  1.19, 1.94, -0.67, 1.03,  0.50]
+                       'right':  [0.08, -1.0,  1.19, 1.94, -0.67, 1.03,  0.50]
                        }
             }
         self._collide_lsub = rospy.Subscriber(
@@ -101,12 +100,13 @@ class Tuck(object):
         self._check_arm_state()
 
     def _check_arm_state(self):
-        """Check for goals and behind collision field.
+        """
+        Check for goals and behind collision field.
 
         If s1 joint is over the peak, collision will need to be disabled
         to get the arm around the head-arm collision force-field.
         """
-        diff_check = lambda a,b: abs(a-b) <= self._tuck_threshold
+        diff_check = lambda a, b: abs(a - b) <= self._tuck_threshold
         for limb in self._limbs:
             angles = [self._arms[limb].joint_angle(joint)
                       for joint in self._arms[limb].joint_names()]
@@ -125,7 +125,7 @@ class Tuck(object):
 
             # Check if shoulder is flipped over peak
             self._arm_state['flipped'][limb] = (
-                self._arms[limb].joint_angle(limb+'_s1') <= self._peak_angle)
+                self._arms[limb].joint_angle(limb + '_s1') <= self._peak_angle)
 
     def _prepare_to_tuck(self, disabled=False):
         # If arms are in "tucked" state, disable collision avoidance
@@ -154,7 +154,7 @@ class Tuck(object):
         if any(disabled.values()):
             [pub.publish(Empty()) for pub in self._disable_pub.values()]
         while (any(self._arm_state['tuck'][limb] != goal
-                   for limb,goal in tuck.viewitems())
+                   for limb, goal in tuck.viewitems())
                and not rospy.is_shutdown()):
             if self._rs.state().enabled == False:
                 self._enable_pub.publish(True)
@@ -242,7 +242,17 @@ class Tuck(object):
                 self._enable_pub.publish(False)
                 self._tuck_rate.sleep()
 
-def main(tuck):
+
+def main():
+    parser = argparse.ArgumentParser()
+    tuck_group = parser.add_mutually_exclusive_group(required=True)
+    tuck_group.add_argument("-t", "--tuck", dest="tuck",
+        action='store_true', default=False, help="tuck arms")
+    tuck_group.add_argument("-u", "--untuck", dest="untuck",
+        action='store_true', default=False, help="untuck arms")
+    args = parser.parse_args(rospy.myargv()[1:])
+    tuck = args.tuck
+
     rospy.loginfo("Initializing node... ")
     rospy.init_node("tuck_arms")
     rospy.loginfo("%sucking arms" % ("T" if tuck else "Unt",))
@@ -252,12 +262,4 @@ def main(tuck):
     rospy.loginfo("Finished tuck")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    tuck_group = parser.add_mutually_exclusive_group(required=True)
-    tuck_group.add_argument("-t", "--tuck", dest="tuck",
-        action='store_true', default=False, help="tuck arms")
-    tuck_group.add_argument("-u", "--untuck", dest="untuck",
-        action='store_true', default=False, help="untuck arms")
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    main(args.tuck)
+    main()

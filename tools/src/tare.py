@@ -36,33 +36,43 @@ import roslib
 roslib.load_manifest('tools')
 import rospy
 
+import baxter_interface
+
 from baxter_maintenance_msgs.msg import (
     TareEnable,
 )
 
-import baxter_interface
-import baxter_interface.robustcontroller
 
-class Tare(baxter_interface.robustcontroller.RobustController):
-    def __init__ (self, limb):
+class Tare(baxter_interface.RobustController):
+    def __init__(self, limb):
         """
         Wrapper to run the Tare RobustController.
 
         @param limb - Limb to run tare on [left/right]
         """
-        enable_msg = TareEnable(isEnabled = True, uid = 'sdk')
+        enable_msg = TareEnable(isEnabled=True, uid='sdk')
         enable_msg.data.tuneGravitySpring = True
 
-        disable_msg = TareEnable(isEnabled = False, uid = 'sdk')
+        disable_msg = TareEnable(isEnabled=False, uid='sdk')
 
-        # Initialize RobustController, use 5 minute timeout for the Tare process
+        # Initialize RobustController, use 5 minute timeout for the Tare
+        # process.
         super(Tare, self).__init__(
             'robustcontroller/%s/Tare' % (limb,),
             enable_msg,
             disable_msg,
             5 * 60)
 
-def main(limb):
+
+def main():
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-l', '--limb', required=True,
+                        choices=['left', 'right'],
+                        help='Tare the specified limb')
+    args = parser.parse_args(rospy.myargv()[1:])
+    limb = args.limb
+
     rospy.init_node('tare_sdk', anonymous=True)
     rs = baxter_interface.RobotEnable()
     rs.enable()
@@ -72,12 +82,12 @@ def main(limb):
     error = None
     try:
         tt.run()
-    except Exception, e: 
-        error = str(e)
+    except Exception, e:
+        error = e.strerror
     finally:
         try:
             rs.disable()
-        except:
+        except Exception:
             pass
 
     if error == None:
@@ -85,14 +95,7 @@ def main(limb):
     else:
         rospy.logerr("Tare failed: %s" % (error,))
 
-    sys.exit(0 if error == None else 1)
+    return 0 if error == None else 1
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    required = parser.add_argument_group('required arguments')
-    required.add_argument('-l', '--limb', required=True,
-                        choices=['left', 'right'],
-                        help='Tare the specified limb')
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    main(args.limb)
+    sys.exit(main())

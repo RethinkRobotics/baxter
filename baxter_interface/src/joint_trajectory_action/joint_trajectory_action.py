@@ -48,11 +48,8 @@ from trajectory_msgs.msg import (
 )
 
 import baxter_interface
-
-from utilities import (
-    dataflow,
-    control,
-)
+import control
+import dataflow
 
 
 class JointTrajectoryActionServer(object):

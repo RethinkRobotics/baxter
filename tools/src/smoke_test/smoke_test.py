@@ -43,9 +43,11 @@ import rospy
 
 import smoketests
 
+
 def run_test(tname, fname, proceed):
-    """Execution of the tests where starting, finishing and error
-    handeling occurs.
+    """
+    Execution of the tests where starting, finishing and error handeling
+    occurs.
     """
     try:
         cur_test = getattr(smoketests, tname)(tname)
@@ -64,46 +66,50 @@ def run_test(tname, fname, proceed):
         print("Exiting: Failed Test %s" % tname)
         sys.exit(1)
 
+
 def test_help():
-    """Help text for argparse describing available sdk tests
+    """
+    Help text for argparse describing available sdk tests.
     """
     return """Specify an individual test for execution
     TESTS:
-    Enable     - Verify ability to enable, check state and disable baxter
-    Messages   - Verify messages being published and ability to subscribe
-    Services   - Verify services available and ability to make calls as client
-    Head       - Move the head pan and tilt, display image to screen
-    MoveArms   - Move both arms through entire joint range
-    Grippers   - Calibrate and move grippers using position and velocity control
-    BlinkLEDs  - Blink Navigator LEDs
-    Cameras    - Verify camera publishing and visualization
+    Enable    - Verify ability to enable, check state and disable baxter
+    Messages  - Verify messages being published and ability to subscribe
+    Services  - Verify services available and ability to make calls as client
+    Head      - Move the head pan and tilt, display image to screen
+    MoveArms  - Move both arms through entire joint range
+    Grippers  - Calibrate and move grippers using position and velocity control
+    BlinkLEDs - Blink Navigator LEDs
+    Cameras   - Verify camera publishing and visualization
     """
 
+
 def get_version():
-    """Get current software version number from param server
+    """
+    Get current software version number from param server.
     """
     try:
         version = rospy.get_param('/rethink/software_version').split('_')[0]
     except socket.error:
-        print(
-            "Exiting: Could not communicate with ROS Master to determine " + 
-            "Software version"
-            )
+        print("Exiting: Could not communicate with ROS Master to determine " +
+              "Software version")
         sys.exit(1)
     except:
-        print("Exiting: Could not determine SW version from param " + 
-            "'/rethink/software_version'"
-            )
+        print("Exiting: Could not determine SW version from param " +
+            "'/rethink/software_version'")
         sys.exit(1)
     return version
 
+
 def ros_init():
-    """Initialize rsdk_smoke_test ros node
+    """
+    Initialize rsdk_smoke_test ros node.
     """
     print("Initializing node 'rsdk_smoke_test'\n")
     rospy.init_node('rsdk_smoke_test', disable_signals=True)
 
-if __name__ == '__main__':
+
+def main():
     format = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=format)
     parser.add_argument('-p', '--proceed', action='store_true',
@@ -121,19 +127,19 @@ if __name__ == '__main__':
 
     test_dict['version'] = get_version()
     if not test_dict['version'] in test_dict['valid_tests'].keys():
-        print("Exiting: No tests specified for your software version: %s" % 
+        print("Exiting: No tests specified for your software version: %s" %
             (test_dict['version']))
-        sys.exit(1)
+        return 1
 
     try:
         raw_input("Press <Enter> to Begin Smoke Test\n")
-    except:
+    except Exception:
         print("\nExiting.")
-        sys.exit(1)
+        return 1
 
     hostname = re.split('http://|.local', rospy.get_master().getUri()[2])[1]
     cur_time = time.localtime()
-    filename = ("%s-%s.%s.%s-rsdk-%s.smoketest" % 
+    filename = ("%s-%s.%s.%s-rsdk-%s.smoketest" %
                 (hostname, cur_time.tm_mon, cur_time.tm_mday,
                  cur_time.tm_year, test_dict['version'],)
                 )
@@ -149,3 +155,8 @@ if __name__ == '__main__':
         print("Exiting: Invalid test provided: %s for %s version software" %
               (args.test, test_dict['version']))
         parser.print_help()
+
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
