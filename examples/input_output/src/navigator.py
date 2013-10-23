@@ -37,6 +37,7 @@ import rospy
 
 import baxter_interface
 
+
 def blink():
     navs = (
         baxter_interface.Navigator('left'),
@@ -54,22 +55,28 @@ def blink():
         rate.sleep()
         i += 1
 
+
 def echo_input():
     def b0_pressed(v):
         print ("Button 0: %s" % (v,))
+
     def b1_pressed(v):
         print ("Button 1: %s" % (v,))
+
     def b2_pressed(v):
         print ("Button 2: %s" % (v,))
+
     def wheel_moved(v):
         print ("Wheel: %d" % (v,))
 
-    print ("Press input buttons on the left navigator, input will be echoed here.")
     nav = baxter_interface.Navigator('left')
     nav.button0_changed.connect(b0_pressed)
     nav.button1_changed.connect(b1_pressed)
     nav.button2_changed.connect(b2_pressed)
     nav.wheel_changed.connect(wheel_moved)
+
+    print ("Press input buttons on the left navigator, "
+           "input will be echoed here.")
 
     rate = rospy.Rate(1)
     i = 0
@@ -77,20 +84,23 @@ def echo_input():
         rate.sleep()
         i += 1
 
-def main(action):
-    rospy.init_node('navigator_example', anonymous = True)
-    action()
-    sys.exit(0)
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     action_grp = parser.add_mutually_exclusive_group(required=True)
-    action_grp.add_argument("-b", "--blink", dest='action',
-                            action='store_const', const=blink,
-                            help="Blink navigator lights for 10 seconds")
-    action_grp.add_argument("-i", "--input", dest='action',
-                            action='store_const', const=echo_input,
-                            help="Show input of left arm for 10 seconds")
+    action_grp.add_argument(
+        '-b', '--blink', dest='action', action='store_const', const=blink,
+        help='Blink navigator lights for 10 seconds'
+    )
+    action_grp.add_argument(
+        '-i', '--input', dest='action', action='store_const', const=echo_input,
+        help='Show input of left arm for 10 seconds'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
-    main(args.action)
+    rospy.init_node('navigator_example', anonymous=True)
+    args.action()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

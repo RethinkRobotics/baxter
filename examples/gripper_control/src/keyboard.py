@@ -37,6 +37,7 @@ import rospy
 import baxter_interface
 import iodevices
 
+
 def map_keyboard():
     left = baxter_interface.Gripper('left')
     right = baxter_interface.Gripper('right')
@@ -60,7 +61,7 @@ def map_keyboard():
         right.set_moving_force(right.parameters()['moving_force'] + offset)
 
     def l_velocity(value):
-        left_set_velocity(value)
+        left.set_velocity(value)
 
     def r_velocity(value):
         right.set_velocity(value)
@@ -109,6 +110,7 @@ def map_keyboard():
         'I': (r_command, [10.0], "right:  increase position"),
     }
     done = False
+
     while not done and not rospy.is_shutdown():
         c = iodevices.getch()
         if c:
@@ -122,7 +124,8 @@ def map_keyboard():
                 print("key bindings: ")
                 print("  Esc: Quit")
                 print("  ?: Help")
-                for key, val in sorted(bindings.items(), key=lambda x: x[1][2]):
+                for key, val in sorted(bindings.items(),
+                                       key=lambda x: x[1][2]):
                     print("  %s: %s" % (key, val[2]))
 
 

@@ -38,12 +38,13 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
+import dataflow
+
 from baxter_core_msgs.msg import (
     EndEffectorCommand,
     EndEffectorProperties,
     EndEffectorState,
 )
-from utilities import dataflow
 
 
 class Gripper(object):

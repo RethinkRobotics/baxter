@@ -4,7 +4,6 @@ from catkin_pkg.python_setup import generate_distutils_setup
 
 d = generate_distutils_setup()
 d['packages'] = ['joint_trajectory']
-d['package_dir'] = {'':'src'}
+d['package_dir'] = {'': 'src'}
 
 setup(**d)
-

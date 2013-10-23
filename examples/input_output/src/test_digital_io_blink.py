@@ -35,7 +35,8 @@ import rospy
 
 import baxter_interface.digital_io as DIO
 
-def test_interface(io_component = 'left_itb_light_outer'):
+
+def test_interface(io_component='left_itb_light_outer'):
     """Blinks a Digital Output on then off."""
     rospy.loginfo("Blinking Digital Output: %s", io_component)
     b = DIO.DigitalIO(io_component)
@@ -53,14 +54,19 @@ def test_interface(io_component = 'left_itb_light_outer'):
     print "Final state:", b.state()
 
 
-if __name__ == '__main__':
+def main():
     show_defaults = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=show_defaults)
-    parser.add_argument('-c','--component', dest='component_id',
-                        default='left_itb_light_outer',
-                        help='name of Digital IO component to use')
+    parser.add_argument(
+        '-c', '--component', dest='component_id',
+        default='left_itb_light_outer',
+        help='name of Digital IO component to use'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     rospy.init_node('test_dio', anonymous=True)
     io_component = rospy.get_param('~component_id', args.component_id)
     test_interface(io_component)
+
+if __name__ == '__main__':
+    main()

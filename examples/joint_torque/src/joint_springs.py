@@ -39,9 +39,8 @@ import roslib
 roslib.load_manifest('joint_torque')
 import rospy
 
-from dynamic_reconfigure.server import Server
-from joint_torque.cfg import (
-    JointSpringsExampleConfig
+from dynamic_reconfigure.server import (
+    Server,
 )
 from std_msgs.msg import (
     Empty,
@@ -49,17 +48,27 @@ from std_msgs.msg import (
 
 import baxter_interface
 
+from joint_torque.cfg import (
+    JointSpringsExampleConfig
+)
+
+
 class JointSprings(object):
     """
     @param limb - limb on which to run joint springs example
     @param reconfig_server - dynamic reconfigure server
 
     JointSprings class contains methods for the joint torque example allowing
-    moving the limb to a neutral location, entering torque mode,
-    and attaching virtual springs.
+    moving the limb to a neutral location, entering torque mode, and attaching
+    virtual springs.
     """
     def __init__(self, limb, reconfig_server):
         self._dyn = reconfig_server
+
+        # control parameters
+        self._rate = 1000.0  # Hz
+        self._missed_cmds = 20.0  # Missed cycles before triggering timeout
+
         # create our limb instance
         self._limb = baxter_interface.Limb(limb)
 
@@ -87,7 +96,7 @@ class JointSprings(object):
         """
         Calculates the current angular difference between the start position
         and the current joint positions applying the joint torque spring forces
-        as defined on the dynamic reconfigure server
+        as defined on the dynamic reconfigure server.
         """
         # get latest spring constants
         self._update_parameters()
@@ -108,25 +117,24 @@ class JointSprings(object):
 
     def move_to_neutral(self):
         """
-        Moves the limb to neutral location
+        Moves the limb to neutral location.
         """
         self._limb.move_to_neutral()
 
     def attach_springs(self):
-        """ 
+        """
         Switches to joint torque mode and attached joint springs to current
-        joint positions
+        joint positions.
         """
         # record initial joint angles
         self._start_angles = self._limb.joint_angles()
 
         # set control rate
-        rate = 1000 #Hz
-        control_rate = rospy.Rate(rate)
+        control_rate = rospy.Rate(self._rate)
 
         # for safety purposes set command timeout
         # if 20 command cycles missed - timeout and disable robot
-        self._limb.set_command_timeout(1.0 / (rate / 20))
+        self._limb.set_command_timeout(1.0 / (self._rate / self._missed_cmds))
 
         # loop at specified rate commanding new joint torques
         while not rospy.is_shutdown() and self._rs.state().enabled:
@@ -134,26 +142,29 @@ class JointSprings(object):
             control_rate.sleep()
 
     def clean_shutdown(self):
-            """
-            Switches out of joint torque mode to exit cleanly
-            """
-            self._limb.exit_control_mode()
+        """
+        Switches out of joint torque mode to exit cleanly
+        """
+        self._limb.exit_control_mode()
 
-def main(limb):
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-l', '--limb', dest='limb', required=True, choices=['left', 'right'],
+        help='limb on which to attach joint springs'
+    )
+    args = parser.parse_args()
+
     print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_torque_springs_%s" % (limb,))
+    rospy.init_node("rethink_rsdk_joint_torque_springs_%s" % (args.limb,))
     dynamic_cfg_srv = Server(JointSpringsExampleConfig,
-                             lambda config,level: config)
-    js = JointSprings(limb, dynamic_cfg_srv)
+                             lambda config, level: config)
+    js = JointSprings(args.limb, dynamic_cfg_srv)
     # register shutdown callback
     rospy.on_shutdown(js.clean_shutdown)
     js.move_to_neutral()
     js.attach_springs()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", dest="limb", required=True,
-                    choices=['left', 'right'],
-                    help="limb on which to attach joint springs")
-    args = parser.parse_args()
-    main(args.limb)
+    main()

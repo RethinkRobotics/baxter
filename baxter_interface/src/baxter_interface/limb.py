@@ -39,12 +39,13 @@ from std_msgs.msg import (
     Float64,
 )
 
+import dataflow
+
 from baxter_core_msgs.msg import (
     JointCommand,
     EndpointState,
 )
 from baxter_interface import settings
-from utilities import dataflow
 
 
 class Limb(object):

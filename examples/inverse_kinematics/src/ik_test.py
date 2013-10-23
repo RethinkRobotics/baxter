@@ -37,7 +37,8 @@ Baxter RSDK Inverse Kinematics Example:
 import argparse
 import sys
 
-import roslib; roslib.load_manifest('inverse_kinematics')
+import roslib
+roslib.load_manifest('inverse_kinematics')
 import rospy
 
 from geometry_msgs.msg import (
@@ -47,15 +48,16 @@ from geometry_msgs.msg import (
     Quaternion,
 )
 from std_msgs.msg import Header
+
 from baxter_core_msgs.srv import (
     SolvePositionIK,
     SolvePositionIKRequest,
 )
 
-def main(limb):
+
+def ik_test(limb):
     rospy.init_node("rethink_rsdk_inverse_kinematics_test")
-    ns = "robot/limb/" + limb + "/solve_ik_position"
-    rospy.wait_for_service(ns)
+    ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
     iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
     ikreq = SolvePositionIKRequest()
     hdr = Header(stamp=rospy.Time.now(), frame_id='base')
@@ -96,9 +98,11 @@ def main(limb):
 
     ikreq.pose_stamp.append(poses[limb])
     try:
+        rospy.wait_for_service(ns, 5.0)
         resp = iksvc(ikreq)
-    except rospy.ServiceException,e :
-        rospy.loginfo("Service call failed: %s" % (e,))
+    except (rospy.ServiceException, rospy.ROSException), e:
+        rospy.logerr("Service call failed: %s" % (e,))
+        return 1
     if (resp.isValid[0]):
         print("SUCCESS - Valid Joint Solution Found:")
         # Format solution into Limb API-compatible dictionary
@@ -107,12 +111,18 @@ def main(limb):
     else:
         print("INVALID POSE - No Valid Joint Solution Found.")
 
+    return 0
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--limb", choices=['left','right'],
-                        required=True,
-                        help="the limb to test")
+    parser.add_argument(
+        '-l', '--limb', choices=['left', 'right'], required=True,
+        help="the limb to test"
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
-    main(args.limb)
+    return ik_test(args.limb)
+
+if __name__ == '__main__':
+    sys.exit(main())

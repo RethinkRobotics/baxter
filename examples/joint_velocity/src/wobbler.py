@@ -27,7 +27,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import signal
 import math
 import random
 
@@ -42,14 +41,15 @@ from std_msgs.msg import (
 import baxter_interface
 import iodevices
 
+
 class Wobbler(object):
 
     def __init__(self):
         """
-        'Wobbles' both arms by driving the joint velocities to sinusoid functions
-
+        'Wobbles' both arms by commanding joint velocities sinusoidally.
         """
-        self._pub_rate = rospy.Publisher('/robot/joint_state_publish_rate', UInt16)
+        self._pub_rate = rospy.Publisher('/robot/joint_state_publish_rate',
+                                         UInt16)
         self._left_arm = baxter_interface.limb.Limb("left")
         self._right_arm = baxter_interface.limb.Limb("right")
         self._left_joint_names = self._left_arm.joint_names()
@@ -60,8 +60,7 @@ class Wobbler(object):
 
     def set_neutral(self):
         """
-        Sets both arms back into a neutral pose
-
+        Sets both arms back into a neutral pose.
         """
         print("Moving to neutral pose...")
         self._left_arm.move_to_neutral()
@@ -70,24 +69,30 @@ class Wobbler(object):
     def wobble(self):
         self.set_neutral()
         """
-        Performs the wobbling of both arms
-
+        Performs the wobbling of both arms.
         """
-        rate = rospy.Rate(100);
+        rate = rospy.Rate(100)
         start = rospy.Time.now()
 
         def make_v_func():
             """
-            returns a randomly parameterized cos function to control a specific joint
-
+            returns a randomly parameterized cosine function to control a
+            specific joint.
             """
             period_factor = random.uniform(0.3, 0.5)
             amplitude_factor = random.uniform(0.1, 0.2)
+
             def v_func(elapsed):
-                return math.cos(period_factor * elapsed.to_sec() * math.pi * 2) * amplitude_factor
+                w = period_factor * elapsed.to_sec()
+                return amplitude_factor * math.cos(w * 2 * math.pi)
             return v_func
 
-        v_funcs = [make_v_func() for x in range(len(self._right_joint_names))]
+        v_funcs = [make_v_func() for _ in self._right_joint_names]
+
+        def make_cmd(joint_names, elapsed):
+            return dict([(joint, v_funcs[i](elapsed))
+                         for i, joint in enumerate(joint_names)])
+
         done = False
         print("Wobbling. Press any key to stop...")
         while not done and not rospy.is_shutdown():
@@ -96,15 +101,15 @@ class Wobbler(object):
             else:
                 self._pub_rate.publish(100)
                 elapsed = rospy.Time.now() - start
-                cmd = dict(zip(self._left_joint_names, [v_funcs[i](elapsed) for i in range(len(self._left_joint_names))]))
+                cmd = make_cmd(self._left_joint_names, elapsed)
                 self._left_arm.set_joint_velocities(cmd)
-                cmd = dict(zip(self._right_joint_names, [-v_funcs[i](elapsed) for i in range(len(self._right_joint_names))]))
+                cmd = make_cmd(self._right_joint_names, elapsed)
                 self._right_arm.set_joint_velocities(cmd)
                 rate.sleep()
 
-        rate = rospy.Rate(100);
+        rate = rospy.Rate(100)
         if not rospy.is_shutdown():
-            for i in range(100):
+            for _ in xrange(100):
                 if rospy.is_shutdown():
                     return False
                 self._left_arm.exit_control_mode()
@@ -115,7 +120,8 @@ class Wobbler(object):
             self.set_neutral()
             return True
 
-if __name__ == '__main__':
+
+def main():
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_velocity")
     print("Getting robot state... ")
@@ -129,3 +135,6 @@ if __name__ == '__main__':
     print("Disabling robot... ")
     rs.disable()
     print("done.")
+
+if __name__ == '__main__':
+    main()

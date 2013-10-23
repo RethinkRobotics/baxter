@@ -40,11 +40,13 @@ import rospy
 import baxter_interface
 import iodevices
 
+
 def try_float(x):
     try:
         return float(x)
     except ValueError:
         return None
+
 
 def clean_line(line, names):
     """ Cleans a single line of recorded joint positions
@@ -59,11 +61,12 @@ def clean_line(line, names):
     cleaned = [x for x in combined if x[1] is not None]
     #convert it to a dictionary with only valid commands
     command = dict(cleaned)
-    left_command = dict((key, command[key]) for key in command.keys() \
-        if key[:-2] == 'left_')
-    right_command = dict((key, command[key]) for key in command.keys() \
-        if key[:-2] == 'right_')
+    left_command = dict((key, command[key]) for key in command.keys()
+                        if key[:-2] == 'left_')
+    right_command = dict((key, command[key]) for key in command.keys()
+                         if key[:-2] == 'right_')
     return (command, left_command, right_command, line)
+
 
 def map_file(filename, loops=1):
     """ Loops through csv file
@@ -90,16 +93,17 @@ def map_file(filename, loops=1):
     l = 0
     # If specified, repeat the file playback 'loops' number of times
     while loops < 1 or l < loops:
-        l = l+1
+        l += 1
         print("Moving to start position...")
-        cmd_start, lcmd_start, rcmd_start, raw_start = clean_line(lines[1], keys)
+
+        _cmd, lcmd_start, rcmd_start, _raw = clean_line(lines[1], keys)
         left.move_to_joint_positions(lcmd_start)
         right.move_to_joint_positions(rcmd_start)
         for values in lines[1:]:
-            i = i +1
+            i += 1
             loopstr = str(loops) if loops > 0 else "forever"
-            sys.stdout.write("\r Record %d of %d, loop %d of %s" \
-                % (i, len(lines)-1,l,loopstr))
+            sys.stdout.write("\r Record %d of %d, loop %d of %s" %
+                             (i, len(lines) - 1, l, loopstr))
             sys.stdout.flush()
 
             cmd, lcmd, rcmd, values = clean_line(values, keys)
@@ -116,19 +120,24 @@ def map_file(filename, loops=1):
                 if len(rcmd):
                     right.set_joint_positions(rcmd)
                 if 'left_gripper' in cmd:
-                    grip_left.set_position(cmd['left_gripper'])
+                    grip_left.command_position(cmd['left_gripper'])
                 if 'left_gripper' in cmd:
-                    grip_right.set_position(cmd['right_gripper'])
+                    grip_right.command_position(cmd['right_gripper'])
                 rate.sleep()
     print
     return True
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', metavar="PATH", required=True,
-                        help="path to input file")
-    parser.add_argument('-l', '--loops', type=int, default=1,
-                help="number of times to loop the input file. 0=infinite.")
+    parser.add_argument(
+        '-f', '--file', metavar='PATH', required=True,
+        help='path to input file'
+    )
+    parser.add_argument(
+        '-l', '--loops', type=int, default=1,
+        help='number of times to loop the input file. 0=infinite.'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     print("Initializing node... ")
@@ -139,3 +148,6 @@ if __name__ == '__main__':
     rs.enable()
 
     map_file(args.file, args.loops)
+
+if __name__ == '__main__':
+    main()

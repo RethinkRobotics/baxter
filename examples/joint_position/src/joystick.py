@@ -39,33 +39,40 @@ import rospy
 import baxter_interface
 import iodevices
 
+
 def rotate(l):
     """
-    rotates a list left
     @param l - the list
+
+    Rotates a list left.
     """
     if len(l):
         v = l[0]
         l[:-1] = l[1:]
         l[-1] = v
 
+
 def set_j(cmd, limb, joints, index, delta):
     """
-    set the selected joint to current pos + delta
-    joint/index is to make this work in the bindings
     @param cmd - the joint command dictionary
     @param limb - the limb to get the pos from
     @param joints - a list of joint names
     @param index - the index in the list of names
     @param delta - delta to update the joint by
+
+    Set the selected joint to current pos + delta.
+
+    joint/index is to make this work in the bindings.
     """
     joint = joints[index]
     cmd[joint] = delta + limb.joint_angle(joint)
 
+
 def map_joystick(joystick):
     """
-    maps joystick input to joint position commands
     @param joystick - an instance of a Joystick
+
+    Maps joystick input to joint position commands.
     """
     left = baxter_interface.Limb('left')
     right = baxter_interface.Limb('right')
@@ -87,32 +94,50 @@ def map_joystick(joystick):
     def print_help(bindings_list):
         print("press any keyboard key to quit.")
         for bindings in bindings_list:
-            for (test, cmd, doc) in bindings:
+            for (test, _cmd, doc) in bindings:
                 if callable(doc):
                     doc = doc()
                 print("%s: %s" % (str(test[1][0]), doc))
 
     bindings_list = []
     bindings = (
-        ((bdn, ['rightTrigger']), (grip_left.close,  []), "left gripper close"),
-        ((bup, ['rightTrigger']), (grip_left.open,   []), "left gripper open"),
-        ((bdn, ['leftTrigger']),  (grip_right.close, []), "right gripper close"),
-        ((bup, ['leftTrigger']),  (grip_right.open,  []), "right gripper open"),
-        ((jlo, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0,  0.1]), lambda i=0:"right inc "+rj[i]),
-        ((jhi, ['leftStickHorz']),  (set_j, [rcmd, right, rj, 0, -0.1]), lambda i=0:"right dec "+rj[i]),
-        ((jlo, ['rightStickHorz']), (set_j, [lcmd, left,  lj, 0,  0.1]), lambda i=0:"left inc "+lj[i]),
-        ((jhi, ['rightStickHorz']), (set_j, [lcmd, left,  lj, 0, -0.1]), lambda i=0:"left dec "+lj[i]),
-        ((jlo, ['leftStickVert']),  (set_j, [rcmd, right, rj, 1,  0.1]), lambda i=1:"right inc "+rj[i]),
-        ((jhi, ['leftStickVert']),  (set_j, [rcmd, right, rj, 1, -0.1]), lambda i=1:"right dec "+rj[i]),
-        ((jlo, ['rightStickVert']), (set_j, [lcmd, left,  lj, 1,  0.1]), lambda i=1:"left inc "+lj[i]),
-        ((jhi, ['rightStickVert']), (set_j, [lcmd, left,  lj, 1, -0.1]), lambda i=1:"left dec "+lj[i]),
-        ((bdn, ['rightBumper']), (rotate, [lj]), "left: cycle joint"),
-        ((bdn, ['leftBumper']),  (rotate, [rj]), "right: cycle joint"),
-        ((bdn, ['btnRight']), (grip_left.calibrate, []), "left calibrate"),
-        ((bdn, ['btnLeft']), (grip_right.calibrate, []), "right calibrate"),
-        ((bdn, ['function1']), (print_help, [bindings_list]), "help"),
-        ((bdn, ['function2']), (print_help, [bindings_list]), "help"),
-    )
+        ((bdn, ['rightTrigger']),
+         (grip_left.close,  []), "left gripper close"),
+        ((bup, ['rightTrigger']),
+         (grip_left.open,   []), "left gripper open"),
+        ((bdn, ['leftTrigger']),
+         (grip_right.close, []), "right gripper close"),
+        ((bup, ['leftTrigger']),
+         (grip_right.open,  []), "right gripper open"),
+        ((jlo, ['leftStickHorz']),
+         (set_j, [rcmd, right, rj, 0,  0.1]), lambda: "right inc " + rj[0]),
+        ((jhi, ['leftStickHorz']),
+         (set_j, [rcmd, right, rj, 0, -0.1]), lambda: "right dec " + rj[0]),
+        ((jlo, ['rightStickHorz']),
+         (set_j, [lcmd, left,  lj, 0,  0.1]), lambda: "left inc " + lj[0]),
+        ((jhi, ['rightStickHorz']),
+         (set_j, [lcmd, left,  lj, 0, -0.1]), lambda: "left dec " + lj[0]),
+        ((jlo, ['leftStickVert']),
+         (set_j, [rcmd, right, rj, 1,  0.1]), lambda: "right inc " + rj[1]),
+        ((jhi, ['leftStickVert']),
+         (set_j, [rcmd, right, rj, 1, -0.1]), lambda: "right dec " + rj[1]),
+        ((jlo, ['rightStickVert']),
+         (set_j, [lcmd, left,  lj, 1,  0.1]), lambda: "left inc " + lj[1]),
+        ((jhi, ['rightStickVert']),
+         (set_j, [lcmd, left,  lj, 1, -0.1]), lambda: "left dec " + lj[1]),
+        ((bdn, ['rightBumper']),
+         (rotate, [lj]), "left: cycle joint"),
+        ((bdn, ['leftBumper']),
+         (rotate, [rj]), "right: cycle joint"),
+        ((bdn, ['btnRight']),
+         (grip_left.calibrate, []), "left calibrate"),
+        ((bdn, ['btnLeft']),
+         (grip_right.calibrate, []), "right calibrate"),
+        ((bdn, ['function1']),
+         (print_help, [bindings_list]), "help"),
+        ((bdn, ['function2']),
+         (print_help, [bindings_list]), "help"),
+        )
     bindings_list.append(bindings)
 
     rate = rospy.Rate(100)
@@ -141,12 +166,15 @@ def map_joystick(joystick):
         rate.sleep()
     return False
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-j','--joystick', required=True,
-                          choices=['xbox', 'logitech', 'ps3'],
-                          help="specify the type of joystick to use")
+    required.add_argument(
+        '-j', '--joystick', required=True,
+        choices=['xbox', 'logitech', 'ps3'],
+        help='specify the type of joystick to use'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     joystick = None
@@ -172,3 +200,6 @@ if __name__ == '__main__':
         print("done")
     else:
         print("terminated")
+
+if __name__ == '__main__':
+    main()

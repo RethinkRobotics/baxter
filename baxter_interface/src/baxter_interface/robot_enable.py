@@ -36,10 +36,11 @@ from std_msgs.msg import (
     Empty,
 )
 
+import dataflow
+
 from baxter_core_msgs.msg import (
     AssemblyState,
 )
-from utilities import dataflow
 
 
 class RobotEnable(object):

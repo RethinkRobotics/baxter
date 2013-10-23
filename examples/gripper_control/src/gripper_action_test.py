@@ -38,11 +38,13 @@ roslib.load_manifest('gripper_action')
 import rospy
 import actionlib
 
-import baxter_interface
 from control_msgs.msg import (
     GripperCommandAction,
     GripperCommandGoal,
 )
+
+import baxter_interface
+
 
 class GripperClient(object):
     def __init__(self, gripper):
@@ -51,6 +53,8 @@ class GripperClient(object):
             ns + "gripper_action",
             GripperCommandAction,
         )
+        self._goal = GripperCommandGoal()
+
         # Wait 10 Seconds for the gripper action server to start or exit
         if not self._client.wait_for_server(rospy.Duration(10.0)):
             rospy.logerr("Exiting - Gripper Action Server Not Found")
@@ -72,7 +76,17 @@ class GripperClient(object):
     def clear(self):
         self._goal = GripperCommandGoal()
 
-def main(gripper):
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-g', '--gripper', dest='gripper', required=True,
+        choices=['left', 'right'],
+        help='which gripper to send action commands'
+    )
+    args = parser.parse_args(rospy.myargv()[1:])
+    gripper = args.gripper
+
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_gripper_action_test_%s" % (gripper,))
     print("Getting robot state... ")
@@ -96,9 +110,4 @@ def main(gripper):
     print gc.wait()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-g", "--gripper", dest="gripper", required=True,
-                        choices=['left', 'right'],
-                        help="which gripper to send action commands")
-    args = parser.parse_args(rospy.myargv()[1:])
-    main(args.gripper)
+    main()

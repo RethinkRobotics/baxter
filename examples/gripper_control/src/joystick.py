@@ -39,6 +39,7 @@ import rospy
 import baxter_interface
 import iodevices
 
+
 def map_joystick(joystick):
     """
     maps joystick input to gripper commands
@@ -56,7 +57,7 @@ def map_joystick(joystick):
     def print_help(bindings_list):
         print("press any keyboard key to quit.")
         for bindings in bindings_list:
-            for (test, cmd, doc) in bindings:
+            for (test, _cmd, doc) in bindings:
                 if callable(doc):
                     doc = doc()
                 print("%s %s: %s" % (test[0].__name__, str(test[1]), doc))
@@ -74,7 +75,7 @@ def map_joystick(joystick):
         right.set_holding_force(right.parameters()['holding_force'] + offset)
 
     def l_velocity(offset):
-        left_set_velocity(left.parameters()['velocity'] + offset)
+        left.set_velocity(left.parameters()['velocity'] + offset)
 
     def r_velocity(offset):
         right.set_velocity(right.parameters()['velocity'] + offset)
@@ -140,12 +141,14 @@ def map_joystick(joystick):
         rate.sleep()
     return False
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-j','--joystick', required=True,
-                          choices=['xbox', 'logitech', 'ps3'],
-                          help="specify the type of joystick to use")
+    required.add_argument(
+        '-j', '--joystick', required=True, choices=['xbox', 'logitech', 'ps3'],
+        help='specify the type of joystick to use'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     joystick = None
@@ -172,3 +175,6 @@ if __name__ == '__main__':
         print("done")
     else:
         print("terminated")
+
+if __name__ == '__main__':
+    main()
