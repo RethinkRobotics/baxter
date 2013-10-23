@@ -65,24 +65,22 @@ def close_camera(camera, *_args, **_kwds):
     cam.close()
 
 
-def main(action=None, camera=None, res=(1280, 800)):
-
-    rospy.init_node('cameras_example', anonymous=True)
-    action(camera, res)
-    sys.exit(0)
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
+def main():
+    parser = argparse.ArgumentParser()
     action_grp = parser.add_mutually_exclusive_group(required=True)
-    action_grp.add_argument('-o', '--open', metavar='CAMERA',
-                            help='Open specified camera')
-    action_grp.add_argument('-c', '--close', metavar='CAMERA',
-                            help='Close specified camera')
-    action_grp.add_argument('-l', '--list', action='store_true',
-                            help='List available cameras')
-    parser.add_argument('-r', '--resolution', metavar='[X]x[Y]',
-                        default='1280x800',
-                        help='Set camera resolution (default: 1280x800)\n')
+    action_grp.add_argument(
+        '-o', '--open', metavar='CAMERA', help='Open specified camera'
+    )
+    action_grp.add_argument(
+        '-c', '--close', metavar='CAMERA', help='Close specified camera'
+    )
+    action_grp.add_argument(
+        '-l', '--list', action='store_true', help='List available cameras'
+    )
+    parser.add_argument(
+        '-r', '--resolution', metavar='[X]x[Y]', default='1280x800',
+        help='Set camera resolution (default: 1280x800)'
+    )
     args = parser.parse_args(rospy.myargv()[1:])
 
     action = None
@@ -106,4 +104,9 @@ if __name__ == '__main__':
         parser.print_usage()
         parser.error("No action defined.")
 
-    main(action, camera, res)
+    rospy.init_node('cameras_example', anonymous=True)
+    action(camera, res)
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

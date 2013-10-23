@@ -84,15 +84,14 @@ class Wobbler(object):
 
             def v_func(elapsed):
                 w = period_factor * elapsed.to_sec()
-                return  amplitude_factor * math.cos(w * 2 * math.pi)
+                return amplitude_factor * math.cos(w * 2 * math.pi)
             return v_func
 
         v_funcs = [make_v_func() for _ in self._right_joint_names]
 
-        def make_cmd(joint_names):
-            return dict(zip(joint_names,
-                            [v_funcs[i](elapsed)
-                             for i, _ in enumerate(joint_names)]))
+        def make_cmd(joint_names, elapsed):
+            return dict([(joint, v_funcs[i](elapsed))
+                         for i, joint in enumerate(joint_names)])
 
         done = False
         print("Wobbling. Press any key to stop...")
@@ -102,9 +101,9 @@ class Wobbler(object):
             else:
                 self._pub_rate.publish(100)
                 elapsed = rospy.Time.now() - start
-                cmd = make_cmd(self._left_joint_names)
+                cmd = make_cmd(self._left_joint_names, elapsed)
                 self._left_arm.set_joint_velocities(cmd)
-                cmd = make_cmd(self._right_joint_names)
+                cmd = make_cmd(self._right_joint_names, elapsed)
                 self._right_arm.set_joint_velocities(cmd)
                 rate.sleep()
 

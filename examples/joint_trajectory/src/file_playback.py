@@ -105,16 +105,18 @@ class Trajectory(object):
         #param namespace
         self._param_ns = '/rethink_rsdk_joint_trajectory_action_server/'
 
+        #gripper control rate
+        self._gripper_rate = 20.0  # Hz
+
     def _execute_gripper_commands(self):
         start_time = rospy.get_time()
         r_cmd = self._r_grip.trajectory.points
         l_cmd = self._l_grip.trajectory.points
         pnt_times = [pnt.time_from_start.to_sec() for pnt in r_cmd]
         end_time = pnt_times[-1]
-        control_rate = 20.0  # 20Hz gripper control rate
-        rate = rospy.Rate(control_rate)
+        rate = rospy.Rate(self._gripper_rate)
         now_from_start = rospy.get_time() - start_time
-        while(now_from_start < end_time + (1.0 / control_rate) and
+        while(now_from_start < end_time + (1.0 / self._gripper_rate) and
               not rospy.is_shutdown()):
             idx = bisect(pnt_times, now_from_start) - 1
             self._r_gripper.command_position(r_cmd[idx].positions[0])
@@ -274,10 +276,14 @@ class Trajectory(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', metavar='PATH', required=True,
-                        help='path to input file')
-    parser.add_argument('-l', '--loops', type=int, default=1,
-                        help='number of playback loops. 0=infinite.')
+    parser.add_argument(
+        '-f', '--file', metavar='PATH', required=True,
+        help='path to input file'
+    )
+    parser.add_argument(
+        '-l', '--loops', type=int, default=1,
+        help='number of playback loops. 0=infinite.'
+    )
     # remove ROS args and filename (sys.arv[0]) for argparse
     args = parser.parse_args(rospy.myargv()[1:])
 
@@ -292,7 +298,7 @@ def main():
     traj = Trajectory()
     traj.parse_file(args.file)
     #for safe interrupt handling
-    rospy.on_shutdown(lambda: traj.stop())
+    rospy.on_shutdown(traj.stop)
     result = True
     loop_cnt = 1
     loopstr = str(args.loops)

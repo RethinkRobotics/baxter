@@ -55,6 +55,7 @@ def send_image(path):
     msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
     pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
     pub.publish(msg)
+    # Sleep to allow for image to be published.
     rospy.sleep(1)
 
 
@@ -75,7 +76,7 @@ def main():
 
     if not os.access(args.file, os.R_OK):
         rospy.logerr("Cannot read file at '%s'" % (args.file,))
-        sys.exit(1)
+        return 1
 
     # Wait for specified time
     if args.delay > 0:
@@ -86,7 +87,7 @@ def main():
         rospy.sleep(args.delay)
 
     send_image(args.file)
-    sys.exit(0)
+    return 0
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

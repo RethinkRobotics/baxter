@@ -77,7 +77,16 @@ class GripperClient(object):
         self._goal = GripperCommandGoal()
 
 
-def main(gripper):
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-g', '--gripper', dest='gripper', required=True,
+        choices=['left', 'right'],
+        help='which gripper to send action commands'
+    )
+    args = parser.parse_args(rospy.myargv()[1:])
+    gripper = args.gripper
+
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_gripper_action_test_%s" % (gripper,))
     print("Getting robot state... ")
@@ -101,9 +110,4 @@ def main(gripper):
     print gc.wait()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--gripper', dest='gripper', required=True,
-                        choices=['left', 'right'],
-                        help='which gripper to send action commands')
-    args = parser.parse_args(rospy.myargv()[1:])
-    main(args.gripper)
+    main()
