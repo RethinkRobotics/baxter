@@ -33,6 +33,7 @@ from .head import Head
 from .limb import Limb
 from .navigator import Navigator
 from .robot_enable import RobotEnable
+from .robust_controller import RobustController
 from .settings import (
     JOINT_ANGLE_TOLERANCE,
     HEAD_PAN_ANGLE_TOLERANCE,

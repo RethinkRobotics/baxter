@@ -101,7 +101,6 @@ class SmokeTest(object):
                     ('*' * 40, self.result[1], '*' * 40,)
                     )
         print "Results of %s saved to file: %s" % (self._name, filename,)
-        print "Results of %s saved to file: %s" % (self._name, filename,)
         print ("------- Result: %s -------\n\n" % ("Success"
                                                   if self.result[0] else
                                                   "Failure",))
@@ -496,7 +495,7 @@ class Cameras(SmokeTest):
             print "Restarting the Default Cameras..."
             for i in range(1, 3):
                 camera = baxter_interface.CameraController(camera_names[i])
-                camera.resolution = (320, 200,)
+                camera.resolution = (640, 400,)
                 camera.fps = 25
                 camera.open()
 

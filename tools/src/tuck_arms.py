@@ -243,7 +243,7 @@ class Tuck(object):
                 self._tuck_rate.sleep()
 
 
-def main(tuck):
+def main():
     parser = argparse.ArgumentParser()
     tuck_group = parser.add_mutually_exclusive_group(required=True)
     tuck_group.add_argument("-t", "--tuck", dest="tuck",
@@ -262,4 +262,4 @@ def main(tuck):
     rospy.loginfo("Finished tuck")
 
 if __name__ == "__main__":
-    main(args.tuck)
+    main()

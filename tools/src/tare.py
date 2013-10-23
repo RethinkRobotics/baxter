@@ -64,14 +64,15 @@ class Tare(baxter_interface.RobustController):
             5 * 60)
 
 
-def main(limb):
+def main():
+    parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
     required.add_argument('-l', '--limb', required=True,
                         choices=['left', 'right'],
                         help='Tare the specified limb')
     args = parser.parse_args(rospy.myargv()[1:])
-
     limb = args.limb
+
     rospy.init_node('tare_sdk', anonymous=True)
     rs = baxter_interface.RobotEnable()
     rs.enable()
