@@ -298,7 +298,7 @@ def main():
     traj = Trajectory()
     traj.parse_file(args.file)
     #for safe interrupt handling
-    rospy.on_shutdown(traj.stop())
+    rospy.on_shutdown(traj.stop)
     result = True
     loop_cnt = 1
     loopstr = str(args.loops)
