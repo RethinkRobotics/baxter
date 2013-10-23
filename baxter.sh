@@ -33,9 +33,9 @@
 # should be executed with every new instance of a shell in which you plan on
 # working with Baxter.
 
-#--------------------------------------------------------------------------#
-#               USER CONFIGURABLE ROS ENVIRONMENT VARIABLES                #
-#--------------------------------------------------------------------------#
+#-----------------------------------------------------------------------------#
+#                 USER CONFIGURABLE ROS ENVIRONMENT VARIABLES                 #
+#-----------------------------------------------------------------------------#
 # Note: If ROS_MASTER_URI, ROS_IP, or ROS_HOSTNAME environment variables were
 # previously set (typically in your .bashrc or .bash_profile), those settings
 # will be overwritten by any variables set here.
@@ -50,7 +50,7 @@ your_ip="192.168.XXX.XXX"
 
 # Specify ROS distribution (e.g. groovy, hydro)
 ros_version="groovy"
-#--------------------------------------------------------------------------#
+#-----------------------------------------------------------------------------#
 
 tf=$(tempfile)
 trap "rm -f -- '${tf}'" EXIT
@@ -65,9 +65,28 @@ else
 	your_ip="${ROS_IP}" && your_hostname="${ROS_HOSTNAME}"
 fi
 
+# If argument provided, set baxter_hostname to argument
+# If argument is sim, set baxter_hostname to localhost
+if [ -n "${1}" ]; then
+	if [[ "${1}" == "sim" ]]; then
+		baxter_hostname="localhost"
+	else
+		baxter_hostname="${1}"
+	fi
+fi
+
+topdir=$(basename $(dirname $(readlink -m ${0})))
+
 cat <<-EOF > ${tf}
 	[ -s "\${HOME}"/.bashrc ] && source "\${HOME}"/.bashrc
 	[ -s "\${HOME}"/.bash_profile ] && source "\${HOME}"/.bash_profile
+
+	# verify this script is moved out of sdk-examples
+	if [[ "${topdir}" == "sdk-examples" ]]; then
+		echo -ne "EXITING - This script must be moved from sdk-examples to \
+the root of your catkin workspace.\n"
+		exit 1
+	fi
 
 	# verify ros_version lowercase
 	ros_version="$(tr [A-Z] [a-z] <<< "${ros_version}")"
