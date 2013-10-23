@@ -101,9 +101,8 @@ class SmokeTest(object):
                     ('*' * 40, self.result[1], '*' * 40,)
                     )
         print "Results of %s saved to file: %s" % (self._name, filename,)
-        print ("------- Result: %s -------\n\n" % ("Success"
-                                                  if self.result[0] else
-                                                  "Failure",))
+        print ("------- Result: %s -------\n\n" %
+               ("Success" if self.result[0] else "Failure",))
 
     def return_failure(self, trace):
         """Commonly used failure return
@@ -152,14 +151,16 @@ class Messages(SmokeTest):
         Runs Messages Smoke Test.
         """
         try:
-            print "Test: Subscribe to topic: /robot/joint_states"
-            rospy.wait_for_message('/robot/joint_states', JointState, 5.0)
-            print "Test: Subscribe to topic: /robot/analog_io_states"
+            msg = 'robot/joint_states'
+            print "Test: Subscribe to topic: /%s" % msg
+            rospy.wait_for_message(msg, JointState, 5.0)
+            msg = 'robot/analog_io_states'
+            print "Test: Subscribe to topic: /%s" % msg
             rospy.wait_for_message(
-                '/robot/analog_io_states',
+                msg,
                 AnalogIOStates,
                 5.0
-                )
+            )
             self.result[0] = True
         except:
             self.return_failure(traceback.format_exc())
@@ -207,9 +208,9 @@ class Services(SmokeTest):
 
 
 class Head(SmokeTest):
-    '''
+    """
     Move the head pan and tilt, display image to screen.
-    '''
+    """
     def __init__(self, name='Head'):
         super(Head, self).__init__(name)
 
