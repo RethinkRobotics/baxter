@@ -177,8 +177,8 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 		if [ -n "\${__ORIG_PROMPT_COMMAND}" ]; then
 			eval \${__ORIG_PROMPT_COMMAND}
 		fi
-		if ! echo \${PS1} | grep 'ros' &>/dev/null; then
-			export PS1="\[\033[00;33m\][ros - \
+		if ! echo \${PS1} | grep 'baxter' &>/dev/null; then
+			export PS1="\[\033[00;33m\][baxter - \
 \${ROS_MASTER_URI}]\[\033[00m\] \${PS1}"
 		fi
 	}
@@ -186,8 +186,8 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 	if [ "\${TERM}" != "dumb" ]; then
 		export PROMPT_COMMAND=__ros_prompt
 		__ROS_PROMPT=1
-	elif ! echo \${PS1} | grep 'ros' &>/dev/null; then
-		export PS1="[ros - \${ROS_MASTER_URI}] \${PS1}"
+	elif ! echo \${PS1} | grep 'baxter' &>/dev/null; then
+		export PS1="[baxter - \${ROS_MASTER_URI}] \${PS1}"
 	fi
 
 EOF
