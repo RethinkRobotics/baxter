@@ -28,13 +28,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import roslib
+roslib.load_manifest('utilities')
 import rospy
 
 from sensor_msgs.msg import Joy
 
+
 class ButtonTransition(object):
-    """ monitor button transitions
-    The transition is measured when read
+    """
+    Monitor button transitions.
+
+    The transition is measured when read.
     """
     def __init__(self, val_func, down_val=True, up_val=False):
         self._raw_value = val_func
@@ -46,7 +50,7 @@ class ButtonTransition(object):
     def down(self):
         val = self._raw_value()
         if val == self._down_val:
-           if not self._down_checked:
+            if not self._down_checked:
                 self._down_checked = True
                 return True
         else:
@@ -56,16 +60,19 @@ class ButtonTransition(object):
     def up(self):
         val = self._raw_value()
         if val == self._up_val:
-           if not self._up_checked:
+            if not self._up_checked:
                 self._up_checked = True
                 return True
         else:
             self._up_checked = False
         return False
 
+
 class StickTransition(object):
-    """ monitor transitions in stick movement
-    The transition is measured when read
+    """
+    Monitor transitions in stick movement.
+
+    The transition is measured when read.
     """
     def __init__(self, val_func, epsilon=0.05):
         self._raw_value = val_func
@@ -90,26 +97,28 @@ class StickTransition(object):
             return True
         return False
 
-    def decreased (self):
+    def decreased(self):
         value = self._raw_value()
         if (self._value - value) > self._epsilon:
             self._value = value
             return True
         return False
 
+
 class Joystick(object):
-    """ Abstract base class to handle joystick input
+    """
+    Abstract base class to handle joystick input.
     """
 
     def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
-        """ Maps joystick input to robot control
-        Sets up the bindings
-        Args:
-            scale(float): scaling applied to joystick values.
-                                        raw joystick valuess are in [1.0...-1.0]
-            offset(float): offset applied to joystick values, post-scaling
-            deadband(float): deadband applied to scaled, offset values
+        """
+        @param scale (float) - scaling applied to joystick values [1.0]
+        @param offset (float) - joystick offset values, post-scaling [0.0]
+        @param deadband (float) - deadband post scaling and offset [0.1]
 
+        Maps joystick input to robot control.
+
+        Raw joystick valuess are in [1.0...-1.0].
         """
         sub = rospy.Subscriber("/joy", Joy, self._on_joy)
         self._scale = scale
@@ -173,8 +182,10 @@ class Joystick(object):
             return (value * self._scale) + self._offset
         return 0
 
+
 class XboxController(Joystick):
-    """ Xbox specialization of Joystick
+    """
+    Xbox specialization of Joystick.
     """
     def __init__(self, scale=1.0, offset=0.0, deadband=0.5):
         super(XboxController, self).__init__(scale, offset, deadband)
@@ -195,8 +206,8 @@ class XboxController(Joystick):
         self._controls['dPadLeft'] = (msg.axes[6] > 0.5)
         self._controls['dPadRight'] = (msg.axes[6] < -0.5)
 
-        self._controls['leftStickHorz']  = msg.axes[0]
-        self._controls['leftStickVert']  = msg.axes[1]
+        self._controls['leftStickHorz'] = msg.axes[0]
+        self._controls['leftStickVert'] = msg.axes[1]
         self._controls['rightStickHorz'] = msg.axes[3]
         self._controls['rightStickVert'] = msg.axes[4]
 
@@ -208,8 +219,10 @@ class XboxController(Joystick):
         self._controls['function1'] = (msg.buttons[6] == 1)
         self._controls['function2'] = (msg.buttons[10] == 1)
 
+
 class LogitechController(Joystick):
-    """ Logitech specialization of Joystick
+    """
+    Logitech specialization of Joystick.
     """
     def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
         super(LogitechController, self).__init__(scale, offset, deadband)
@@ -230,8 +243,8 @@ class LogitechController(Joystick):
         self._controls['dPadLeft'] = (msg.axes[4] > 0.5)
         self._controls['dPadRight'] = (msg.axes[4] < -0.5)
 
-        self._controls['leftStickHorz']  = msg.axes[0]
-        self._controls['leftStickVert']  = msg.axes[1]
+        self._controls['leftStickHorz'] = msg.axes[0]
+        self._controls['leftStickVert'] = msg.axes[1]
         self._controls['rightStickHorz'] = msg.axes[2]
         self._controls['rightStickVert'] = msg.axes[3]
 
@@ -243,8 +256,10 @@ class LogitechController(Joystick):
         self._controls['function1'] = (msg.buttons[8] == 1)
         self._controls['function2'] = (msg.buttons[9] == 1)
 
+
 class PS3Controller(Joystick):
-    """ PS3 specialization of Joystick
+    """
+    PS3 specialization of Joystick.
     """
     def __init__(self, scale=1.0, offset=0.0, deadband=0.1):
         super(PS3Controller, self).__init__(scale, offset, deadband)
@@ -265,8 +280,8 @@ class PS3Controller(Joystick):
         self._controls['dPadLeft'] = (msg.axes[7] > 0.5)
         self._controls['dPadRight'] = (msg.axes[5] < -0.5)
 
-        self._controls['leftStickHorz']  = msg.axes[0]
-        self._controls['leftStickVert']  = msg.axes[1]
+        self._controls['leftStickHorz'] = msg.axes[0]
+        self._controls['leftStickVert'] = msg.axes[1]
         self._controls['rightStickHorz'] = msg.axes[2]
         self._controls['rightStickVert'] = msg.axes[3]
 
@@ -277,4 +292,3 @@ class PS3Controller(Joystick):
 
         self._controls['function1'] = (msg.buttons[0] == 1)
         self._controls['function2'] = (msg.buttons[3] == 1)
-

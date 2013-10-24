@@ -33,6 +33,7 @@ try:
 except ImportError:
     from weakrefset import WeakSet
 
+
 class Signal(object):
     def __init__(self):
         self._functions = WeakSet()
@@ -61,4 +62,3 @@ class Signal(object):
         else:
             if slot in self._functions:
                 self._functions.remove(slot)
-
