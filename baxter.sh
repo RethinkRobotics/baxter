@@ -178,7 +178,7 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 			eval \${__ORIG_PROMPT_COMMAND}
 		fi
 		if ! echo \${PS1} | grep 'ros' &>/dev/null; then
-			export PS1="\[\033[00;33m\][ros \${ros_version} - \
+			export PS1="\[\033[00;33m\][ros - \
 \${ROS_MASTER_URI}]\[\033[00m\] \${PS1}"
 		fi
 	}
@@ -187,7 +187,7 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 		export PROMPT_COMMAND=__ros_prompt
 		__ROS_PROMPT=1
 	elif ! echo \${PS1} | grep 'ros' &>/dev/null; then
-		export PS1="[ros \${ros_version} - \${ROS_MASTER_URI}] \${PS1}"
+		export PS1="[ros - \${ROS_MASTER_URI}] \${PS1}"
 	fi
 
 EOF
