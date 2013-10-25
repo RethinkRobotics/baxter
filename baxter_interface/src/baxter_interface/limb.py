@@ -90,9 +90,6 @@ class Limb(object):
             ns + 'joint_command_timeout',
             Float64)
 
-        self._last_state_time = None
-        self._state_rate = 0
-
         _joint_state_sub = rospy.Subscriber(
             '/robot/joint_states',
             JointState,
@@ -106,13 +103,6 @@ class Limb(object):
         dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0)
 
     def _on_joint_states(self, msg):
-        now = rospy.Time.now()
-        if self._last_state_time:
-            # cheap low pass
-            rate = (1.0 / (now - self._last_state_time).to_sec())
-            self._state_rate = ((99 * self._state_rate) + rate) / 100
-        self._last_state_time = now
-
         for idx, name in enumerate(msg.name):
             if self.name in name:
                 self._joint_angle[name] = msg.position[idx]
@@ -167,12 +157,6 @@ class Limb(object):
         Return the names of the joints for the specified limb.
         """
         return self._joint_names[self.name]
-
-    def state_rate(self):
-        """
-        Return the rate at which the joint and Cartesian states are received.
-        """
-        return self._state_rate
 
     def joint_angle(self, joint):
         """
