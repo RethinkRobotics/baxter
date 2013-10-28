@@ -295,7 +295,6 @@ class Gripper(object):
         if not self._state.calibrated:
             msg = "Unable to command %s position until calibrated" % self.name
             rospy.logwarn(msg)
-            raise IOError(errno.EPERM, msg)
 
         cmd = EndEffectorCommand.CMD_GO
         arguments = {"position": self._clip(position)}
