@@ -1,3 +1,0 @@
-string[] names
-EndpointState[] states
-
