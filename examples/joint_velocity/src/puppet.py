@@ -39,14 +39,13 @@ from std_msgs.msg import (
 )
 
 import baxter_interface
-import iodevices
 
 
 class Puppeteer(object):
 
     def __init__(self, limb, amplification=1.0):
         """
-        @param limb - the arm to be puppeted with the other
+        @param limb - the control arm used to puppet the other
         @param amplification - factor by which to amplify the arm movement
 
         Puppets one arm with the other.
@@ -58,14 +57,39 @@ class Puppeteer(object):
         self._puppet_arm = baxter_interface.limb.Limb(self._puppet_limb)
         self._amp = amplification
 
+        print("Getting robot state... ")
+        self._rs = baxter_interface.RobotEnable()
+        self._init_state = self._rs.state().enabled
+        print("Enabling robot... ")
+        self._rs.enable()
+
+    def _reset_control_modes(self):
+        rate = rospy.Rate(100)
+        for _ in xrange(100):
+            if rospy.is_shutdown():
+                return False
+            self._control_arm.exit_control_mode()
+            self._puppet_arm.exit_control_mode()
+            rate.sleep()
+        return True
+
     def set_neutral(self):
         """
         Sets both arms back into a neutral pose.
-
         """
         print("Moving to neutral pose...")
         self._control_arm.move_to_neutral()
         self._puppet_arm.move_to_neutral()
+
+    def clean_shutdown(self):
+        print("\nExiting example...")
+        #return to normal
+        self._reset_control_modes()
+        self.set_neutral()
+        if not self._init_state:
+            print("Disabling robot...")
+            self._rs.disable()
+        return True
 
     def puppet(self):
         """
@@ -77,33 +101,19 @@ class Puppeteer(object):
         control_joint_names = self._control_arm.joint_names()
         puppet_joint_names = self._puppet_arm.joint_names()
 
-        done = False
-        print("Puppeting. Press any key to stop...")
-        while not done and not rospy.is_shutdown():
-            if iodevices.getch():
-                done = True
-            else:
-                cmd = {}
-                for idx, name in enumerate(puppet_joint_names):
-                    v = self._control_arm.joint_velocity(
-                        control_joint_names[idx])
-                    if name[-2:] in ('s0', 'e0', 'w0', 'w2'):
-                        v = -v
-                    cmd[name] = v * self._amp
-                self._puppet_arm.set_joint_velocities(cmd)
-                rate.sleep()
-
-        rate = rospy.Rate(100)
-        if not rospy.is_shutdown():
-            for _ in xrange(100):
-                if rospy.is_shutdown():
-                    return False
-                self._control_arm.exit_control_mode()
-                self._puppet_arm.exit_control_mode()
-                rate.sleep()
-            #return to normal
-            self.set_neutral()
-            return True
+        print ("Puppeting:\n"
+              "  Grab %s cuff and move arm.\n"
+              "  Press Ctrl-C to stop...") % (self._control_limb,)
+        while not rospy.is_shutdown():
+            cmd = {}
+            for idx, name in enumerate(puppet_joint_names):
+                v = self._control_arm.joint_velocity(
+                    control_joint_names[idx])
+                if name[-2:] in ('s0', 'e0', 'w0', 'w2'):
+                    v = -v
+                cmd[name] = v * self._amp
+            self._puppet_arm.set_joint_velocities(cmd)
+            rate.sleep()
 
 
 def main():
@@ -129,17 +139,12 @@ def main():
 
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_joint_velocity_puppet")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
 
     puppeteer = Puppeteer(args.limb, args.amplification)
+    rospy.on_shutdown(puppeteer.clean_shutdown)
     puppeteer.puppet()
 
-    print("Disabling robot... ")
-    rs.disable()
-    print("done.")
+    print("Done.")
     return 0
 
 if __name__ == '__main__':

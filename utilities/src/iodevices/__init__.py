@@ -28,4 +28,6 @@
 from getch import getch
 from joystick import (
     XboxController,
-    LogitechController)
+    LogitechController,
+    PS3Controller,
+)

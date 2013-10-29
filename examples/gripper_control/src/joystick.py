@@ -45,17 +45,28 @@ def map_joystick(joystick):
     maps joystick input to gripper commands
     @param joystick - an instance of a Joystick
     """
+    # initialize interfaces
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    init_state = rs.state().enabled
     left = baxter_interface.Gripper('left')
     right = baxter_interface.Gripper('right')
 
-    #abbreviations
+    def clean_shutdown():
+        if not init_state:
+            print("Disabling robot...")
+            rs.disable()
+        print("Exiting example.")
+    rospy.on_shutdown(clean_shutdown)
+
+    # abbreviations
     jhi = lambda s: joystick.stick_value(s) > 0
     jlo = lambda s: joystick.stick_value(s) < 0
     bdn = joystick.button_down
     bup = joystick.button_up
 
     def print_help(bindings_list):
-        print("press any keyboard key to quit.")
+        print("Press Ctrl-C to quit.")
         for bindings in bindings_list:
             for (test, _cmd, doc) in bindings:
                 if callable(doc):
@@ -82,6 +93,7 @@ def map_joystick(joystick):
 
     bindings_list = []
     bindings = (
+        #(test, command, description)
         ((bdn, ['btnDown']), (left.reboot, []), "left: reboot"),
         ((bdn, ['btnLeft']), (right.reboot, []), "right: reboot"),
         ((bdn, ['btnRight']), (left.calibrate, []), "left: calibrate"),
@@ -121,16 +133,13 @@ def map_joystick(joystick):
     )
     bindings_list.append(bindings)
 
+    print("Enabling robot...")
+    rs.enable()
     rate = rospy.Rate(100)
     print_help(bindings_list)
-    print("press any key to stop...")
+    print("Press <Start> button for help; Ctrl-C to stop...")
     while not rospy.is_shutdown():
-        c = iodevices.getch()
-        if c:
-            if c == '?':
-                print_help(bindings_list)
-            else:
-                return True
+        # test each joystick condition and call binding cmd if true
         for (test, cmd, doc) in bindings:
             if test[0](*test[1]):
                 cmd[0](*cmd[1])
@@ -139,7 +148,7 @@ def map_joystick(joystick):
                 else:
                     print(doc)
         rate.sleep()
-    return False
+    rospy.signal_shutdown("Example finished.")
 
 
 def main():
@@ -164,17 +173,9 @@ def main():
 
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_gripper_control_joystick")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
 
-    if map_joystick(joystick):
-        print("Disabling robot... ")
-        rs.disable()
-        print("done")
-    else:
-        print("terminated")
+    map_joystick(joystick)
+
 
 if __name__ == '__main__':
     main()

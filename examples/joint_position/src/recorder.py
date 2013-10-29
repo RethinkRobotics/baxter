@@ -58,10 +58,12 @@ def main():
     rs.enable()
 
     recorder = JointRecorder(args.filename, args.record_rate)
-    print("Recording. Press any key to stop.")
+    rospy.on_shutdown(recorder.stop)
+
+    print("Recording. Press Ctrl-C to stop.")
     recorder.record()
 
-    print("done.")
+    print("\nDone.")
 
 if __name__ == '__main__':
     main()

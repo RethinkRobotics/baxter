@@ -38,7 +38,6 @@ roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface
-import iodevices
 
 
 def try_float(x):
@@ -110,10 +109,7 @@ def map_file(filename, loops=1):
             #command this set of commands until the next frame
             while (rospy.get_time() - start_time) < values[0]:
                 if rospy.is_shutdown():
-                    print("\n ROS shutdown")
-                    return False
-                if iodevices.getch():
-                    print("\n stopped")
+                    print("\n Aborting - ROS shutdown")
                     return False
                 if len(lcmd):
                     left.set_joint_positions(lcmd)
@@ -144,10 +140,20 @@ def main():
     rospy.init_node("rethink_rsdk_joint_position_file_playback")
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
+    init_state = rs.state().enabled
+
+    def clean_shutdown():
+        if not init_state:
+            print("Disabling robot...")
+            rs.disable()
+        print("Exiting example.")
+    rospy.on_shutdown(clean_shutdown)
+
     print("Enabling robot... ")
     rs.enable()
 
     map_file(args.file, args.loops)
+
 
 if __name__ == '__main__':
     main()

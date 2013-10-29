@@ -30,7 +30,6 @@ roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface
-import iodevices
 
 
 class JointRecorder(object):
@@ -77,8 +76,6 @@ class JointRecorder(object):
         Return whether or not recording is done.
         """
         if rospy.is_shutdown():
-            self.stop()
-        elif iodevices.getch(0.9 / self._raw_rate):
             self.stop()
         return self._done
 
