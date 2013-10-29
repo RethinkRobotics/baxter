@@ -150,7 +150,7 @@ class Navigator(object):
 
         Control the outer LED.
         """
-        return self._outer_led.set_output(enable)
+        self._outer_led.set_output(enable)
 
     def _on_state(self, msg):
         if not self._state:
