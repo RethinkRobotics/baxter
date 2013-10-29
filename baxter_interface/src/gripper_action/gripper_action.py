@@ -53,10 +53,26 @@ class GripperActionServer(object):
         # Store Gripper Type
         self._type = self._gripper.type()
         if self._type == 'custom':
-            msg = ("%s %s - not capable of gripper actions" %
-                   (self._gripper.name, self._type))
+            msg = ("Stopping %s action server - %s gripper not capable of "
+                   "gripper actions" % (self._gripper.name, self._type))
             rospy.logerr(msg)
             return
+
+        # Verify Grippers Have No Errors and are Calibrated
+        if self._gripper.error():
+            self._gripper.reboot()
+            if self._gripper.error():
+                msg = ("Stopping %s action server - Unable to clear error" %
+                       self._gripper.name)
+                rospy.logerr(msg)
+                return
+        if not self._gripper.calibrated():
+            self._gripper.calibrate()
+            if not self._gripper.calibrated():
+                msg = ("Stopping %s action server - Unable to calibrate" %
+                       self._gripper.name)
+                rospy.logerr(msg)
+                return
 
         # Action Server
         self._server = actionlib.SimpleActionServer(
@@ -70,12 +86,6 @@ class GripperActionServer(object):
         # Action Feedback/Result
         self._fdbk = GripperCommandFeedback()
         self._result = GripperCommandResult()
-
-        # Verify Grippers Have No Errors and are Calibrated
-        if self._gripper.error():
-            self._gripper.reboot()
-        if not self._gripper.calibrated():
-            self._gripper.calibrate()
 
         # Initialize Parameters
         self._prm = self._gripper.parameters()

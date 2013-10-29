@@ -114,6 +114,7 @@ def main():
     traj.add_point([x * 1.25 for x in p1], 12.0)
     traj.start()
     traj.wait()
+    print("Exiting - Joint Trajectory Action Test Complete")
 
 if __name__ == "__main__":
     main()
