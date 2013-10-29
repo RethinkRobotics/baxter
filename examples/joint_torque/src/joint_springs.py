@@ -49,7 +49,7 @@ from std_msgs.msg import (
 import baxter_interface
 
 from joint_torque.cfg import (
-    JointSpringsExampleConfig
+    JointSpringsExampleConfig,
 )
 
 
@@ -83,6 +83,7 @@ class JointSprings(object):
         # verify robot is enabled
         print("Getting robot state... ")
         self._rs = baxter_interface.RobotEnable()
+        self._init_state = self._rs.state().enabled
         print("Enabling robot... ")
         self._rs.enable()
         print("Running. Ctrl-c to quit")
@@ -145,7 +146,11 @@ class JointSprings(object):
         """
         Switches out of joint torque mode to exit cleanly
         """
+        print("\nExiting example...")
         self._limb.exit_control_mode()
+        if not self._init_state:
+            print("Disabling robot...")
+            self._rs.disable()
 
 
 def main():
@@ -165,6 +170,7 @@ def main():
     rospy.on_shutdown(js.clean_shutdown)
     js.move_to_neutral()
     js.attach_springs()
+
 
 if __name__ == "__main__":
     main()

@@ -39,8 +39,19 @@ import iodevices
 
 
 def map_keyboard():
+    # initialize interfaces
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    init_state = rs.state().enabled
     left = baxter_interface.Gripper('left')
     right = baxter_interface.Gripper('right')
+
+    def clean_shutdown():
+        if not init_state:
+            print("Disabling robot...")
+            rs.disable()
+        print("Exiting example.")
+    rospy.on_shutdown(clean_shutdown)
 
     def l_command(offset):
         left.command_position(left.position() + offset)
@@ -109,8 +120,11 @@ def map_keyboard():
         'i': (l_command, [10.0], "left:  increase position"),
         'I': (r_command, [10.0], "right:  increase position"),
     }
-    done = False
 
+    done = False
+    print("Enabling robot... ")
+    rs.enable()
+    print("Controlling grippers. Press ? for help, Esc to quit.")
     while not done and not rospy.is_shutdown():
         c = iodevices.getch()
         if c:
@@ -127,20 +141,16 @@ def map_keyboard():
                 for key, val in sorted(bindings.items(),
                                        key=lambda x: x[1][2]):
                     print("  %s: %s" % (key, val[2]))
+    # force shutdown call if caught by key handler
+    rospy.signal_shutdown("Example finished.")
 
 
 def main():
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_gripper_keyboard")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
 
     map_keyboard()
 
-    print("Disabling robot... ")
-    rs.disable()
 
 if __name__ == '__main__':
     main()

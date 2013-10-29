@@ -97,6 +97,7 @@ def map_keyboard():
             #catch Esc or ctrl-c
             if c in ['\x1b', '\x03']:
                 done = True
+                rospy.signal_shutdown("Example finished.")
             elif c in bindings:
                 cmd = bindings[c]
                 #expand binding to something like "set_j(right, 's0', 0.1)"
@@ -116,13 +117,21 @@ def main():
     rospy.init_node("rethink_rsdk_joint_position_keyboard")
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
+    init_state = rs.state().enabled
+
+    def clean_shutdown():
+        print("\nExiting example...")
+        if not init_state:
+            print("Disabling robot...")
+            rs.disable()
+    rospy.on_shutdown(clean_shutdown)
+
     print("Enabling robot... ")
     rs.enable()
 
     map_keyboard()
+    print("Done.")
 
-    print("Disabling robot... ")
-    rs.disable()
 
 if __name__ == '__main__':
     main()

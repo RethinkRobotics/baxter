@@ -92,7 +92,7 @@ def map_joystick(joystick):
     bup = joystick.button_up
 
     def print_help(bindings_list):
-        print("press any keyboard key to quit.")
+        print("Press Ctrl-C to quit.")
         for bindings in bindings_list:
             for (test, _cmd, doc) in bindings:
                 if callable(doc):
@@ -142,14 +142,8 @@ def map_joystick(joystick):
 
     rate = rospy.Rate(100)
     print_help(bindings_list)
-    print("press any key to stop. ")
+    print("Press Ctrl-C to stop. ")
     while not rospy.is_shutdown():
-        c = iodevices.getch()
-        if c:
-            if c == '?':
-                print_help(bindings_list)
-            else:
-                return True
         for (test, cmd, doc) in bindings:
             if test[0](*test[1]):
                 cmd[0](*cmd[1])
@@ -191,15 +185,21 @@ def main():
     rospy.init_node("rethink_rsdk_joint_position_joystick")
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable()
+    init_state = rs.state().enabled
+
+    def clean_shutdown():
+        print("\nExiting example.")
+        if not init_state:
+            print("Disabling robot...")
+            rs.disable()
+    rospy.on_shutdown(clean_shutdown)
+
     print("Enabling robot... ")
     rs.enable()
 
-    if map_joystick(joystick):
-        print("Disabling robot... ")
-        rs.disable()
-        print("done")
-    else:
-        print("terminated")
+    map_joystick(joystick)
+    print("Done.")
+
 
 if __name__ == '__main__':
     main()
