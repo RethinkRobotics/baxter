@@ -1,4 +1,0 @@
-geometry_msgs/PoseStamped[] pose_stamp
----
-JointPositions[] joints
-bool[] isValid
