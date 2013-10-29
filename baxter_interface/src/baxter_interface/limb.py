@@ -90,17 +90,21 @@ class Limb(object):
             ns + 'joint_command_timeout',
             Float64)
 
-        _joint_state_sub = rospy.Subscriber(
-            '/robot/joint_states',
-            JointState,
-            self._on_joint_states)
-
         cartesian_state_sub = rospy.Subscriber(
             ns + 'endpoint_state',
             EndpointState,
             self._on_endpoint_states)
 
-        dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0)
+        joint_state_topic = 'robot/joint_states'
+        _joint_state_sub = rospy.Subscriber(
+            joint_state_topic,
+            JointState,
+            self._on_joint_states)
+
+        init_err_msg = ("Limb init failed to get current joint_states "
+                        "from %s") % (joint_state_topic,)
+        dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0,
+                          timeout_msg=init_err_msg)
 
     def _on_joint_states(self, msg):
         for idx, name in enumerate(msg.name):
@@ -317,6 +321,7 @@ class Limb(object):
             lambda: (all(diff() < settings.JOINT_ANGLE_TOLERANCE
                          for diff in diffs)),
             timeout=timeout,
+            timeout_msg="Limb failed to reach joint positions in move_to",
             rate=100,
             body=lambda: self.set_joint_positions(positions)
             )
