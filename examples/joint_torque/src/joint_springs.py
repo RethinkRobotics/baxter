@@ -133,12 +133,17 @@ class JointSprings(object):
         # set control rate
         control_rate = rospy.Rate(self._rate)
 
-        # for safety purposes set command timeout
-        # if 20 command cycles missed - timeout and disable robot
-        self._limb.set_command_timeout(1.0 / (self._rate / self._missed_cmds))
+        # for safety purposes, set the control rate command timeout.
+        # if the specified number of command cycles are missed, the robot
+        # will timeout and disable
+        self._limb.set_command_timeout((1.0 / self._rate) * self._missed_cmds)
 
         # loop at specified rate commanding new joint torques
-        while not rospy.is_shutdown() and self._rs.state().enabled:
+        while not rospy.is_shutdown():
+            if not self._rs.state().enabled:
+                rospy.logerr("Joint torque example failed to meet "
+                             "specified control rate timeout.")
+                break
             self._update_forces()
             control_rate.sleep()
 
@@ -148,7 +153,7 @@ class JointSprings(object):
         """
         print("\nExiting example...")
         self._limb.exit_control_mode()
-        if not self._init_state:
+        if not self._init_state and self._rs.state().enabled:
             print("Disabling robot...")
             self._rs.disable()
 
