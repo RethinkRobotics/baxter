@@ -313,6 +313,8 @@ class MoveArms(SmokeTest):
                     lambda: not (left_thread.is_alive() or
                                  right_thread.is_alive()),
                     timeout=20.0,
+                    timeout_msg=("Timeout while waiting for arm move threads"
+                                 " to finish"),
                     rate=10,
                 )
                 left_thread.join()

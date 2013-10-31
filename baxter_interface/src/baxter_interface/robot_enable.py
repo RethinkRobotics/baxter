@@ -54,7 +54,8 @@ class RobotEnable(object):
     """
     def __init__(self):
         self._state = None
-        self._state_sub = rospy.Subscriber('/robot/state',
+        state_topic = 'robot/state'
+        self._state_sub = rospy.Subscriber(state_topic,
                                            AssemblyState,
                                            self._state_callback
                                            )
@@ -62,7 +63,7 @@ class RobotEnable(object):
         dataflow.wait_for(lambda: not self._state is None,
                           timeout=2.0,
                           timeout_msg=("Failed to get robot state on %s" %
-                                       ('/robot/state',)),
+                                       (state_topic,)),
                           )
 
     def _state_callback(self, msg):
@@ -70,7 +71,7 @@ class RobotEnable(object):
 
     def _toggle_enabled(self, status):
 
-        pub = rospy.Publisher('/robot/set_super_enable', Bool)
+        pub = rospy.Publisher('robot/set_super_enable', Bool)
 
         dataflow.wait_for(test=lambda: self._state.enabled == status,
                           timeout=2.0 if status else 5.0,
@@ -118,7 +119,7 @@ class RobotEnable(object):
                             self._state.estop_source == 0
                             )
 
-        pub = rospy.Publisher('/robot/set_super_reset', Empty)
+        pub = rospy.Publisher('robot/set_super_reset', Empty)
 
         rospy.loginfo("Resetting robot...")
         error_msg = """Failed to reset robot.
@@ -137,7 +138,7 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
         Simulate an e-stop button being pressed.  Robot must be reset to clear
         the stopped state.
         """
-        pub = rospy.Publisher('/robot/set_super_stop', Empty)
+        pub = rospy.Publisher('robot/set_super_stop', Empty)
         dataflow.wait_for(test=lambda: self._state.stopped == True,
                           timeout=3.0,
                           timeout_msg="Failed to stop the robot",

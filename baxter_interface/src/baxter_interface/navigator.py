@@ -75,8 +75,9 @@ class Navigator(object):
         self.button2_changed = dataflow.Signal()
         self.wheel_changed = dataflow.Signal()
 
+        nav_state_topic = 'robot/itb/%s_itb/state' % (self._id,)
         self._state_sub = rospy.Subscriber(
-            'robot/itb/%s_itb/state' % (self._id,),
+            nav_state_topic,
             ITBState,
             self._on_state)
 
@@ -86,7 +87,10 @@ class Navigator(object):
         self._outer_led = digital_io.DigitalIO(
             '%s_itb_light_outer' % (self._id,))
 
-        dataflow.wait_for(lambda: self._state != None)
+        init_err_msg = ("Navigator init failed to get current state from %s" %
+                        (nav_state_topic,))
+        dataflow.wait_for(lambda: self._state != None,
+                          timeout_msg=init_err_msg)
 
     @property
     def wheel(self):
