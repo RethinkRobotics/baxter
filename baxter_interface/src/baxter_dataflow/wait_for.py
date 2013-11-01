@@ -27,8 +27,6 @@
 
 import errno
 
-import roslib
-roslib.load_manifest('utilities')
 import rospy
 
 

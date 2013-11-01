@@ -47,9 +47,9 @@ from trajectory_msgs.msg import (
     JointTrajectoryPoint,
 )
 
+import baxter_control
+import baxter_dataflow
 import baxter_interface
-import control
-import dataflow
 
 
 class JointTrajectoryActionServer(object):
@@ -77,7 +77,7 @@ class JointTrajectoryActionServer(object):
         # Create our PID controllers
         self._pid = {}
         for joint in self._limb.joint_names():
-            self._pid[joint] = control.PID()
+            self._pid[joint] = baxter_control.PID()
 
         # Set joint state publishing to specified control rate
         self._pub_rate = rospy.Publisher(
@@ -184,7 +184,7 @@ class JointTrajectoryActionServer(object):
         start_time = goal.trajectory.header.stamp.to_sec()
         if start_time == 0.0:
             start_time = rospy.get_time()
-        dataflow.wait_for(
+        baxter_dataflow.wait_for(
             lambda: rospy.get_time() >= start_time,
             timeout=float('inf')
         )

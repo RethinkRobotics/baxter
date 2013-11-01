@@ -11,7 +11,6 @@ find_package(catkin
   trajectory_msgs
   dynamic_reconfigure
   baxter_core_msgs
-  utilities
 )
 
 catkin_python_setup()
@@ -31,7 +30,6 @@ catkin_package(
   trajectory_msgs
   dynamic_reconfigure
   baxter_core_msgs
-  utilities
 )
 
 install(

@@ -29,7 +29,7 @@ import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
 
-import dataflow
+import baxter_dataflow
 
 from baxter_core_msgs.msg import (
     ITBState,
@@ -70,10 +70,10 @@ class Navigator(object):
             raise AttributeError("Invalid Navigator name '%s'" % (location,))
         self._id = location
         self._state = None
-        self.button0_changed = dataflow.Signal()
-        self.button1_changed = dataflow.Signal()
-        self.button2_changed = dataflow.Signal()
-        self.wheel_changed = dataflow.Signal()
+        self.button0_changed = baxter_dataflow.Signal()
+        self.button1_changed = baxter_dataflow.Signal()
+        self.button2_changed = baxter_dataflow.Signal()
+        self.wheel_changed = baxter_dataflow.Signal()
 
         nav_state_topic = 'robot/itb/%s_itb/state' % (self._id,)
         self._state_sub = rospy.Subscriber(
@@ -89,8 +89,8 @@ class Navigator(object):
 
         init_err_msg = ("Navigator init failed to get current state from %s" %
                         (nav_state_topic,))
-        dataflow.wait_for(lambda: self._state != None,
-                          timeout_msg=init_err_msg)
+        baxter_dataflow.wait_for(lambda: self._state != None,
+                                 timeout_msg=init_err_msg)
 
     @property
     def wheel(self):
