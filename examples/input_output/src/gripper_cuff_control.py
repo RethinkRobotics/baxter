@@ -41,9 +41,9 @@ from baxter_interface import (
 )
 
 
-class GripperLink(object):
+class GripperConnect(object):
     """
-    Links wrist button presses to gripper open/close commands.
+    Connects wrist button presses to gripper open/close commands.
 
     Uses the DigitalIO Signal feature to make callbacks to connected
     action functions when the button values change.
@@ -56,9 +56,9 @@ class GripperLink(object):
         """
         self._arm = arm
         # inputs
-        self._close_io = DigitalIO('%s_upper_button' % (arm,)) # 'dash' btn
-        self._open_io = DigitalIO('%s_lower_button' % (arm,)) # 'circle' btn
-        self._light_io = DigitalIO('%s_lower_cuff' % (arm,)) # cuff squeeze
+        self._close_io = DigitalIO('%s_upper_button' % (arm,))  # 'dash' btn
+        self._open_io = DigitalIO('%s_lower_button' % (arm,))   # 'circle' btn
+        self._light_io = DigitalIO('%s_lower_cuff' % (arm,))    # cuff squeeze
         # outputs
         self._gripper = Gripper('%s' % (arm,))
         self._nav = Navigator('%s' % (arm,))
@@ -71,7 +71,7 @@ class GripperLink(object):
         else:
             msg = (("%s (%s) not capable of gripper commands."
                    " Running cuff-light connection only.") %
-                   (self._gripper.name, self._gripper.type()))
+                   (self._gripper.name.capitalize(), self._gripper.type()))
             rospy.logwarn(msg)
 
         if lights:
@@ -126,10 +126,11 @@ def main():
                         help='print debug statements')
     args = parser.parse_args(rospy.myargv()[1:])
 
-    rospy.init_node('gripper_cuff_monitor', log_level=args.verbosity)
+    rospy.init_node('rsdk_gripper_cuff_control_%s' % (args.gripper,),
+                    log_level=args.verbosity)
 
-    arms = (args.gripper,) if args.gripper != 'both' else ('left','right')
-    grip_ctrls = [GripperLink(arm, args.lights) for arm in arms]
+    arms = (args.gripper,) if args.gripper != 'both' else ('left', 'right')
+    grip_ctrls = [GripperConnect(arm, args.lights) for arm in arms]
 
     print("Press cuff buttons to control grippers. Spinning...")
     rospy.spin()
