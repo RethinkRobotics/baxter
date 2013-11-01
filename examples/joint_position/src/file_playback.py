@@ -83,21 +83,21 @@ def map_file(filename, loops=1):
     grip_left = baxter_interface.Gripper('left')
     grip_right = baxter_interface.Gripper('right')
     rate = rospy.Rate(1000)
-    start_time = rospy.get_time()
     print("Playing back: %s" % (filename,))
     with open(filename, 'r') as f:
         lines = f.readlines()
     keys = lines[0].rstrip().split(',')
-    i = 0
     l = 0
     # If specified, repeat the file playback 'loops' number of times
     while loops < 1 or l < loops:
+        i = 0
         l += 1
         print("Moving to start position...")
 
         _cmd, lcmd_start, rcmd_start, _raw = clean_line(lines[1], keys)
         left.move_to_joint_positions(lcmd_start)
         right.move_to_joint_positions(rcmd_start)
+        start_time = rospy.get_time()
         for values in lines[1:]:
             i += 1
             loopstr = str(loops) if loops > 0 else "forever"
@@ -143,10 +143,10 @@ def main():
     init_state = rs.state().enabled
 
     def clean_shutdown():
+        print("\nExiting example...")
         if not init_state:
             print("Disabling robot...")
             rs.disable()
-        print("Exiting example.")
     rospy.on_shutdown(clean_shutdown)
 
     print("Enabling robot... ")
