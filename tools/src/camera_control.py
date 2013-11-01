@@ -32,7 +32,8 @@ import os
 import sys
 
 import roslib
-roslib.load_manifest('input_output')
+from baxter_interface.camera import CameraController
+roslib.load_manifest('tools')
 import rospy
 
 import baxter_interface
@@ -66,7 +67,13 @@ def close_camera(camera, *_args, **_kwds):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    str_res = ["%rx%r" % (r[0],r[1]) for r in CameraController.MODES]
+    fmt_res = ("Valid resolutions:\n[" +
+              ("%s, " * (len(CameraController.MODES) - 1)) + "%s]")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(fmt_res % tuple(str_res))
+    )
     action_grp = parser.add_mutually_exclusive_group(required=True)
     action_grp.add_argument(
         '-o', '--open', metavar='CAMERA', help='Open specified camera'
