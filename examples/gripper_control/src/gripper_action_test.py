@@ -34,7 +34,7 @@ import sys
 import argparse
 
 import roslib
-roslib.load_manifest('gripper_action')
+roslib.load_manifest('gripper_control')
 import rospy
 import actionlib
 

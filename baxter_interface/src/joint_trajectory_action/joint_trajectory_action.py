@@ -32,6 +32,8 @@ import math
 import operator
 import bisect
 
+from copy import deepcopy
+
 import roslib
 roslib.load_manifest('baxter_interface')
 import rospy
@@ -39,6 +41,8 @@ import actionlib
 
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
+    FollowJointTrajectoryFeedback,
+    FollowJointTrajectoryResult,
 )
 from std_msgs.msg import (
     UInt16,
@@ -65,6 +69,10 @@ class JointTrajectoryActionServer(object):
         self._server.start()
         self._limb = baxter_interface.Limb(limb)
 
+        # Action Feedback/Result
+        self._fdbk = FollowJointTrajectoryFeedback()
+        self._result = FollowJointTrajectoryResult()
+
         # Controller parameters from arguments and dynamic reconfigure
         self._control_rate = rate  # Hz
         self._control_joints = []
@@ -90,8 +98,9 @@ class JointTrajectoryActionServer(object):
                 rospy.logerr(
                     "%s: Trajectory Aborted - Provided Invalid Joint Name %s" %
                     (self._action_name, jnt,))
-                self._server.set_aborted()
-                return False
+                self._result.error_code = self._result.INVALID_JOINTS
+                self._server.set_aborted(self._result)
+                return
 
             self._pid[jnt].set_kp(self._dyn.config[jnt + '_kp'])
             self._pid[jnt].set_ki(self._dyn.config[jnt + '_ki'])
@@ -100,7 +109,6 @@ class JointTrajectoryActionServer(object):
             self._error_threshold[jnt] = self._dyn.config[jnt + '_trajectory']
             self._dflt_vel[jnt] = self._dyn.config[jnt + '_default_velocity']
             self._pid[jnt].initialize()
-        return True
 
     def _get_current_position(self, joint_names):
         return [self._limb.joint_angle(joint) for joint in joint_names]
@@ -109,6 +117,20 @@ class JointTrajectoryActionServer(object):
         current = self._get_current_position(joint_names)
         error = map(operator.sub, set_point, current)
         return zip(joint_names, error)
+
+    def _update_feedback(self, cmd_point, jnt_names, cur_time):
+        self._fdbk.header.stamp = rospy.Duration.from_sec(rospy.get_time())
+        self._fdbk.joint_names = jnt_names
+        self._fdbk.desired = cmd_point
+        self._fdbk.desired.time_from_start = rospy.Duration.from_sec(cur_time)
+        self._fdbk.actual.positions = self._get_current_position(jnt_names)
+        self._fdbk.actual.time_from_start = rospy.Duration.from_sec(cur_time)
+        self._fdbk.error.positions = map(operator.sub,
+                                         self._fdbk.desired.positions,
+                                         self._fdbk.actual.positions
+                                     )
+        self._fdbk.error.time_from_start = rospy.Duration.from_sec(cur_time)
+        self._server.publish_feedback(self._fdbk)
 
     def _command_stop(self, joint_names):
         velocities = [0.0] * len(joint_names)
@@ -128,10 +150,10 @@ class JointTrajectoryActionServer(object):
             if (delta[1] >= self._error_threshold[delta[0]]
                 and self._error_threshold[delta[0]] >= 0.0):
                 self._command_stop(joint_names)
-                rospy.logerr(
-                             "%s: Exceeded Error Threshold on %s: %s" %
+                rospy.logerr("%s: Exceeded Error Threshold on %s: %s" %
                              (self._action_name, delta[0], str(delta[1]),))
-                self._server.set_aborted()
+                self._result.error_code = self._result.PATH_TOLERANCE_VIOLATED
+                self._server.set_aborted(self._result)
                 return False
             velocities.append(self._pid[delta[0]].compute_output(delta[1]))
         cmd = dict(zip(joint_names, velocities))
@@ -141,10 +163,12 @@ class JointTrajectoryActionServer(object):
     def _on_trajectory_action(self, goal):
         joint_names = goal.trajectory.joint_names
         trajectory_points = goal.trajectory.points
+
+        rospy.loginfo("%s: Executing requested joint trajectory" %
+                      (self._action_name,))
+
         # Load parameters for trajectory
-        if not self._get_trajectory_parameters(joint_names):
-            self._server.set_aborted()
-            return
+        self._get_trajectory_parameters(joint_names)
 
         # Create a new discretized joint trajectory
         num_points = len(trajectory_points)
@@ -156,17 +180,18 @@ class JointTrajectoryActionServer(object):
 
         # If all time_from_start are zero,
         # interject these based on default velocities
+        last = JointTrajectoryPoint()
         if all(pt.time_from_start.to_sec() == 0.0 for pt in trajectory_points):
-            last_point = self._get_current_position(joint_names)
+            last.positions = self._get_current_position(joint_names)
             move_time = 0.0
             for point in trajectory_points:
                 diffs = map(operator.sub, point.positions,
-                            last_point)
+                            last.positions)
                 diffs = map(operator.abs, diffs)
                 dflt_vel = [self._dflt_vel[jnt] for jnt in joint_names]
                 move_time = move_time + max(map(operator.div, diffs, dflt_vel))
                 point.time_from_start = rospy.Duration(move_time)
-                last_point = point.positions
+                last.positions = point.positions
 
         def interp(a, b, pct):
             return a + (b - a) * pct
@@ -180,7 +205,13 @@ class JointTrajectoryActionServer(object):
 
         pnt_times = [pnt.time_from_start.to_sec() for pnt in trajectory_points]
 
-         # Wait for the specified execution time, if not provided use now
+        # Reset feedback/result
+        start_point = JointTrajectoryPoint()
+        start_point.positions = self._get_current_position(joint_names)
+        self._update_feedback(deepcopy(start_point), joint_names,
+                              rospy.get_time())
+
+        # Wait for the specified execution time, if not provided use now
         start_time = goal.trajectory.header.stamp.to_sec()
         if start_time == 0.0:
             start_time = rospy.get_time()
@@ -202,13 +233,14 @@ class JointTrajectoryActionServer(object):
                 p1 = JointTrajectoryPoint()
                 p1.positions = self._get_current_position(joint_names)
             else:
-                p1 = trajectory_points[idx - 1]
+                p1 = deepcopy(trajectory_points[idx - 1])
 
             if idx != num_points:
                 p2 = trajectory_points[idx]
                 pct = ((now_from_start - p1.time_from_start.to_sec()) /
                        (p2.time_from_start - p1.time_from_start).to_sec())
                 point = interp_positions(p1, p2, pct)
+                p1.positions = point
             else:
                 # If the current time is after the last trajectory point,
                 # just hold that position.
@@ -219,13 +251,15 @@ class JointTrajectoryActionServer(object):
 
             control_rate.sleep()
             now_from_start = rospy.get_time() - start_time
+            self._update_feedback(deepcopy(p1), joint_names, now_from_start)
 
         # Keep trying to meet goal until goal_time constraint expired
-        last_point = trajectory_points[-1].positions
+        last = JointTrajectoryPoint()
+        last.positions = trajectory_points[-1].positions
         last_time = trajectory_points[-1].time_from_start.to_sec()
 
         def check_goal_state():
-            for error in self._get_current_error(joint_names, last_point):
+            for error in self._get_current_error(joint_names, last.positions):
                 if (self._goal_error[error[0]] > 0
                     and self._goal_error[error[0]] < math.fabs(error[1])):
                     return error[0]
@@ -234,17 +268,25 @@ class JointTrajectoryActionServer(object):
 
         while ((rospy.get_time() < start_time + last_time + self._goal_time)
                and check_goal_state()):
-            if not self._command_velocities(joint_names, last_point):
+            if not self._command_velocities(joint_names, last.positions):
                 return
+            now_from_start = rospy.get_time() - start_time
+            self._update_feedback(deepcopy(last), joint_names,
+                                  now_from_start)
             control_rate.sleep()
 
+        now_from_start = rospy.get_time() - start_time
+        self._update_feedback(deepcopy(last), joint_names,
+                                  now_from_start)
         # Verify goal constraint
         result = check_goal_state()
         if result != None:
             self._command_stop(goal.trajectory.joint_names)
             rospy.logerr("%s: Exceeded Goal Threshold Error %s" %
                          (self._action_name, result,))
-            self._server.set_aborted()
+            self._result.error_code = self._result.GOAL_TOLERANCE_VIOLATED
+            self._server.set_aborted(self._result)
         else:
             self._command_stop(goal.trajectory.joint_names)
-            self._server.set_succeeded()
+            self._result.error_code = self._result.SUCCESSFUL
+            self._server.set_succeeded(self._result)
