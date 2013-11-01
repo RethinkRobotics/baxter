@@ -93,9 +93,11 @@ class Trajectory(object):
             self._l_gripper.reboot()
         if self._r_gripper.error():
             self._r_gripper.reboot()
-        if not self._l_gripper.calibrated():
+        if (not self._l_gripper.calibrated() and
+            self._l_gripper.type() != 'custom'):
             self._l_gripper.calibrate()
-        if not self._r_gripper.calibrated():
+        if (not self._r_gripper.calibrated() and
+            self._r_gripper.type() != 'custom'):
             self._r_gripper.calibrate()
 
         #gripper goal trajectories
@@ -119,8 +121,10 @@ class Trajectory(object):
         while(now_from_start < end_time + (1.0 / self._gripper_rate) and
               not rospy.is_shutdown()):
             idx = bisect(pnt_times, now_from_start) - 1
-            self._r_gripper.command_position(r_cmd[idx].positions[0])
-            self._l_gripper.command_position(l_cmd[idx].positions[0])
+            if self._r_gripper.type() != 'custom':
+                self._r_gripper.command_position(r_cmd[idx].positions[0])
+            if self._r_gripper.type() != 'custom':
+                self._l_gripper.command_position(l_cmd[idx].positions[0])
             rate.sleep()
             now_from_start = rospy.get_time() - start_time
 

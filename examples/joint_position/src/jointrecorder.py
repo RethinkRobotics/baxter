@@ -57,9 +57,11 @@ class JointRecorder(object):
             self._gripper_left.reboot()
         if self._gripper_right.error():
             self._gripper_right.reboot()
-        if not self._gripper_left.calibrated():
+        if (not self._gripper_left.calibrated() and
+            self._gripper_left.type() != 'custom'):
             self._gripper_left.calibrate()
-        if not self._gripper_right.calibrated():
+        if (not self._gripper_right.calibrated() and
+            self._gripper_right.type() != 'custom'):
             self._gripper_right.calibrate()
 
     def _time_stamp(self):
