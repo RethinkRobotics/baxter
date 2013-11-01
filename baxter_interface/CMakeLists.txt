@@ -33,3 +33,9 @@ catkin_package(
   baxter_core_msgs
   utilities
 )
+
+install(
+  DIRECTORY scripts/
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  USE_SOURCE_PERMISSIONS
+)
