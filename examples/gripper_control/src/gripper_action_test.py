@@ -94,6 +94,7 @@ def main():
     rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")
     rs.enable()
+    print("Running. Ctrl-c to quit")
 
     gc = GripperClient(gripper)
     gc.command(position=0.0, effort=50.0)

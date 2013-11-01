@@ -6,7 +6,7 @@
   <!-- Start the Gripper Action Server -->
   <node name="rsdk_gripper_action_server" pkg="baxter_interface"
   type="gripper_action_server.py" args="--gripper $(arg gripper)"
-  required="true" output="screen" />
+  required="true" />
 
   <!-- Run the Gripper Action Test -->
   <node name="rsdk_gripper_action_test" pkg="gripper_control"

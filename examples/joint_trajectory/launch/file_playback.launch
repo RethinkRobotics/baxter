@@ -5,7 +5,7 @@
 
   <!-- Start the Joint Trajectory Action Server -->
   <node name="rsdk_joint_trajectory_action_server" pkg="baxter_interface"
-  type="joint_trajectory_action_server.py" required="true" output="screen" />
+  type="joint_trajectory_action_server.py" required="true" />
 
   <!-- Run the Joint Trajectory File Playback Example -->
   <node name="rsdk_joint_trajectory_file_playback" pkg="joint_trajectory"
