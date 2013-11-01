@@ -31,6 +31,7 @@
 Tool to tuck/untuck Baxter's arms to/from the shipping pose
 """
 import argparse
+from copy import deepcopy
 
 import roslib
 roslib.load_manifest('tools')
@@ -127,24 +128,24 @@ class Tuck(object):
             self._arm_state['flipped'][limb] = (
                 self._arms[limb].joint_angle(limb + '_s1') <= self._peak_angle)
 
-    def _prepare_to_tuck(self, disabled=False):
+    def _prepare_to_tuck(self):
         # If arms are in "tucked" state, disable collision avoidance
         # before enabling robot, to avoid arm jerking from "force-field".
         head = baxter_interface.Head()
-        disabled = not self._rs.state().enabled
+        start_disabled = not self._rs.state().enabled
         at_goal = lambda: (abs(head.pan()) <=
                         baxter_interface.settings.HEAD_PAN_ANGLE_TOLERANCE)
 
         rospy.loginfo("Moving head to neutral position")
         while not at_goal() and not rospy.is_shutdown():
-            if disabled:
+            if start_disabled:
                 [pub.publish(Empty()) for pub in self._disable_pub.values()]
             if not self._rs.state().enabled:
                 self._enable_pub.publish(True)
             head.set_pan(0.0, 50.0, timeout=0)
             self._tuck_rate.sleep()
 
-        if not disabled:
+        if start_disabled:
             while self._rs.state().enabled == True and not rospy.is_shutdown():
                 [pub.publish(Empty()) for pub in self._disable_pub.values()]
                 self._enable_pub.publish(False)
@@ -216,7 +217,7 @@ class Tuck(object):
                 rospy.loginfo("Untucking: One or more arms Tucked;"
                               " Disabling Collision Avoidance and untucking.")
                 self._check_arm_state()
-                suppress = self._arm_state['flipped']
+                suppress = deepcopy(self._arm_state['flipped'])
                 actions = {'left': 'untuck', 'right': 'untuck'}
                 self._move_to(actions, suppress)
                 self._done = True
@@ -226,7 +227,7 @@ class Tuck(object):
                 rospy.loginfo("Untucking: Arms already Untucked;"
                               " Moving to neutral position.")
                 self._check_arm_state()
-                suppress = self._arm_state['flipped']
+                suppress = deepcopy(self._arm_state['flipped'])
                 actions = {'left': 'untuck', 'right': 'untuck'}
                 self._move_to(actions, suppress)
                 self._done = True
