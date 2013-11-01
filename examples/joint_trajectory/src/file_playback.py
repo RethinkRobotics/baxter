@@ -33,10 +33,12 @@ Via joint_position example - joint_position recorder.py <filename>
 """
 
 import argparse
-from bisect import bisect
-from copy import copy
 import operator
 import sys
+
+from bisect import bisect
+from copy import copy
+from os import path
 
 import roslib
 roslib.load_manifest('joint_trajectory')
@@ -296,7 +298,7 @@ def main():
     print("Running. Ctrl-c to quit")
 
     traj = Trajectory()
-    traj.parse_file(args.file)
+    traj.parse_file(path.expanduser(args.file))
     #for safe interrupt handling
     rospy.on_shutdown(traj.stop)
     result = True
@@ -311,6 +313,7 @@ def main():
         traj.start()
         result = traj.wait()
         loop_cnt = loop_cnt + 1
+    print("Exiting - File Playback Complete")
 
 if __name__ == "__main__":
     main()

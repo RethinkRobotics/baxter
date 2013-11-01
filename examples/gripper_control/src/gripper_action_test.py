@@ -34,7 +34,7 @@ import sys
 import argparse
 
 import roslib
-roslib.load_manifest('gripper_action')
+roslib.load_manifest('gripper_control')
 import rospy
 import actionlib
 
@@ -57,7 +57,8 @@ class GripperClient(object):
 
         # Wait 10 Seconds for the gripper action server to start or exit
         if not self._client.wait_for_server(rospy.Duration(10.0)):
-            rospy.logerr("Exiting - Gripper Action Server Not Found")
+            rospy.logerr("Exiting - %s Gripper Action Server Not Found" %
+                         (gripper.capitalize(),))
             sys.exit(1)
         self.clear()
 
@@ -108,6 +109,7 @@ def main():
     gc.wait()
     gc.command(position=100.0, effort=40.0)
     print gc.wait()
+    print "Exiting - Gripper Action Test Example Complete"
 
 if __name__ == "__main__":
     main()
