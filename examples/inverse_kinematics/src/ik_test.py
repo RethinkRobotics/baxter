@@ -37,8 +37,6 @@ Baxter RSDK Inverse Kinematics Example:
 import argparse
 import sys
 
-import roslib
-roslib.load_manifest('inverse_kinematics')
 import rospy
 
 from geometry_msgs.msg import (

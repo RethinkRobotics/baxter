@@ -32,35 +32,34 @@ import argparse
 import os
 import sys
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 import baxter_interface
 
 from baxter_maintenance_msgs.msg import (
-    CalibrateArmEnable,
+    TareEnable,
 )
 
 
-class CalibrateArm(baxter_interface.RobustController):
+class Tare(baxter_interface.RobustController):
     def __init__(self, limb):
         """
-        Wrapper to run the CalibrateArm RobustController.
+        Wrapper to run the Tare RobustController.
 
-        @param limb - Limb to run CalibrateArm on [left/right]
+        @param limb - Limb to run tare on [left/right]
         """
-        enable_msg = CalibrateArmEnable(isEnabled=True, uid='sdk')
+        enable_msg = TareEnable(isEnabled=True, uid='sdk')
+        enable_msg.data.tuneGravitySpring = True
 
-        disable_msg = CalibrateArmEnable(isEnabled=False, uid='sdk')
+        disable_msg = TareEnable(isEnabled=False, uid='sdk')
 
-        # Initialize RobustController, use 10 minute timeout for the
-        # CalibrateArm process
-        super(CalibrateArm, self).__init__(
-            'robustcontroller/%s/CalibrateArm' % (limb,),
+        # Initialize RobustController, use 5 minute timeout for the Tare
+        # process.
+        super(Tare, self).__init__(
+            'robustcontroller/%s/Tare' % (limb,),
             enable_msg,
             disable_msg,
-            10 * 60)
+            5 * 60)
 
 
 def main():
@@ -68,19 +67,19 @@ def main():
     required = parser.add_argument_group('required arguments')
     required.add_argument('-l', '--limb', required=True,
                         choices=['left', 'right'],
-                        help="Calibrate the specified arm")
+                        help='Tare the specified limb')
     args = parser.parse_args(rospy.myargv()[1:])
-    arm = args.limb
+    limb = args.limb
 
-    rospy.init_node('calibrate_arm_sdk', anonymous=True)
+    rospy.init_node('tare_sdk', anonymous=True)
     rs = baxter_interface.RobotEnable()
     rs.enable()
-    cat = CalibrateArm(arm)
-    rospy.loginfo("Running calibrate on %s arm" % (arm,))
+    tt = Tare(limb)
+    rospy.loginfo("Running tare on %s limb" % (limb,))
 
     error = None
     try:
-        cat.run()
+        tt.run()
     except Exception, e:
         error = e.strerror
     finally:
@@ -90,9 +89,9 @@ def main():
             pass
 
     if error == None:
-        rospy.loginfo("Calibrate arm finished")
+        rospy.loginfo("Tare finished")
     else:
-        rospy.logerr("Calibrate arm failed: %s" % (error,))
+        rospy.logerr("Tare failed: %s" % (error,))
 
     return 0 if error == None else 1
 

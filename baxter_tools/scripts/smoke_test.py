@@ -37,8 +37,6 @@ import re
 import socket
 import traceback
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 import smoketests

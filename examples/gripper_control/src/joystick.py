@@ -32,8 +32,6 @@ Baxter RSDK Gripper Example: joystick
 """
 import argparse
 
-import roslib
-roslib.load_manifest('gripper_control')
 import rospy
 
 import baxter_interface

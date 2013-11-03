@@ -33,9 +33,8 @@ Baxter RSDK Joint Trajectory Controller Test
 from copy import copy
 import argparse
 
-import roslib
-roslib.load_manifest('joint_trajectory')
 import rospy
+
 import actionlib
 
 import baxter_interface

@@ -36,8 +36,6 @@ import traceback
 import threading
 import Queue
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 import cv
@@ -55,8 +53,8 @@ from sensor_msgs.msg import (
     JointState,
 )
 
+import baxter_dataflow
 import baxter_interface
-import dataflow
 
 from baxter_core_msgs.msg import (
     AnalogIOStates,
@@ -309,7 +307,7 @@ class MoveArms(SmokeTest):
                 right_thread.daemon = True
                 left_thread.start()
                 right_thread.start()
-                dataflow.wait_for(
+                baxter_dataflow.wait_for(
                     lambda: not (left_thread.is_alive() or
                                  right_thread.is_alive()),
                     timeout=20.0,

@@ -35,8 +35,6 @@ position
 
 import argparse
 
-import roslib
-roslib.load_manifest('joint_torque')
 import rospy
 
 from dynamic_reconfigure.server import (

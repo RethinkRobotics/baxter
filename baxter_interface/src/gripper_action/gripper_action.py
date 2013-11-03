@@ -30,9 +30,8 @@ Baxter RSDK Gripper Action Server
 """
 from math import fabs
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
+
 import actionlib
 
 from control_msgs.msg import (

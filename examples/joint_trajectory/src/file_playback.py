@@ -40,9 +40,8 @@ from bisect import bisect
 from copy import copy
 from os import path
 
-import roslib
-roslib.load_manifest('joint_trajectory')
 import rospy
+
 import actionlib
 
 from control_msgs.msg import (

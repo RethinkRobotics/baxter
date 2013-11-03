@@ -32,8 +32,6 @@ Baxter RSDK Joint Position Example: joystick
 """
 import argparse
 
-import roslib
-roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface

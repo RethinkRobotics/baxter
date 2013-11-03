@@ -27,75 +27,57 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
 import argparse
 import os
 import sys
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 import baxter_interface
 
-from baxter_maintenance_msgs.msg import (
-    TareEnable,
-)
-
-
-class Tare(baxter_interface.RobustController):
-    def __init__(self, limb):
-        """
-        Wrapper to run the Tare RobustController.
-
-        @param limb - Limb to run tare on [left/right]
-        """
-        enable_msg = TareEnable(isEnabled=True, uid='sdk')
-        enable_msg.data.tuneGravitySpring = True
-
-        disable_msg = TareEnable(isEnabled=False, uid='sdk')
-
-        # Initialize RobustController, use 5 minute timeout for the Tare
-        # process.
-        super(Tare, self).__init__(
-            'robustcontroller/%s/Tare' % (limb,),
-            enable_msg,
-            disable_msg,
-            5 * 60)
-
 
 def main():
     parser = argparse.ArgumentParser()
-    required = parser.add_argument_group('required arguments')
-    required.add_argument('-l', '--limb', required=True,
-                        choices=['left', 'right'],
-                        help='Tare the specified limb')
+    parser.add_argument('-s', '--state', const='state',
+                        dest='actions', action='append_const',
+                        help='Print current robot state')
+    parser.add_argument('-e', '--enable', const='enable',
+                        dest='actions', action='append_const',
+                        help='Enable the robot')
+    parser.add_argument('-d', '--disable', const='disable',
+                        dest='actions', action='append_const',
+                        help='Disable the robot')
+    parser.add_argument('-r', '--reset', const='reset',
+                        dest='actions', action='append_const',
+                        help='Reset the robot')
+    parser.add_argument('-S', '--stop', const='stop',
+                        dest='actions', action='append_const',
+                        help='Stop the robot')
     args = parser.parse_args(rospy.myargv()[1:])
-    limb = args.limb
 
-    rospy.init_node('tare_sdk', anonymous=True)
+    if args.actions == None:
+        parser.print_usage()
+        parser.exit(0, "No action defined")
+
+    rospy.init_node('robot_enable', anonymous=True)
     rs = baxter_interface.RobotEnable()
-    rs.enable()
-    tt = Tare(limb)
-    rospy.loginfo("Running tare on %s limb" % (limb,))
 
-    error = None
     try:
-        tt.run()
+        for act in args.actions:
+            if act == 'state':
+                print rs.state()
+            elif act == 'enable':
+                rs.enable()
+            elif act == 'disable':
+                rs.disable()
+            elif act == 'reset':
+                rs.reset()
+            elif act == 'stop':
+                rs.stop()
     except Exception, e:
-        error = e.strerror
-    finally:
-        try:
-            rs.disable()
-        except Exception:
-            pass
+        rospy.logerr(e.strerror)
 
-    if error == None:
-        rospy.loginfo("Tare finished")
-    else:
-        rospy.logerr("Tare failed: %s" % (error,))
-
-    return 0 if error == None else 1
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

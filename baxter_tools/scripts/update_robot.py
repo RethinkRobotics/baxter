@@ -32,13 +32,11 @@ import argparse
 import os
 import sys
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 import std_msgs.msg
 
-import dataflow
+import baxter_dataflow
 
 from baxter_maintenance_msgs.msg import (
     UpdateSources,
@@ -55,7 +53,7 @@ class Updater(object):
                             the current UpdateStatus message.
     """
     def __init__(self):
-        self.status_changed = dataflow.Signal()
+        self.status_changed = baxter_dataflow.Signal()
 
         self._status = UpdateStatus()
         self._avail_updates = UpdateSources()
@@ -78,7 +76,7 @@ class Updater(object):
             '/updater/stop',
             std_msgs.msg.Empty)
 
-        dataflow.wait_for(
+        baxter_dataflow.wait_for(
             lambda: self._avail_updates.uuid != '',
             timeout=1.0,
             timeout_msg="Failed to get list of available updates"
@@ -170,10 +168,11 @@ def run_update(updater, uuid):
         raise
 
     try:
-        dataflow.wait_for(
+        baxter_dataflow.wait_for(
             lambda: nl.done == True,
             timeout=5 * 60,
-            timeout_msg="Timeout waiting for update to succeed")
+            timeout_msg="Timeout waiting for update to succeed"
+        )
     except Exception, e:
         if not (hasattr(e, 'errno') and e.errno == errno.ESHUTDOWN):
             print e.strerror

@@ -30,8 +30,6 @@
 """
 Baxter RSDK Joint Position Example: keyboard
 """
-import roslib
-roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface

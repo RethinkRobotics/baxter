@@ -27,8 +27,6 @@
 
 import errno
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 import baxter_dataflow

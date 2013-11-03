@@ -28,8 +28,6 @@
 from copy import deepcopy
 import collections
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 from sensor_msgs.msg import (

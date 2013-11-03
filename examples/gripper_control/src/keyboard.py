@@ -30,8 +30,6 @@
 """
 Baxter RSDK Gripper Example: keyboard
 """
-import roslib
-roslib.load_manifest('gripper_control')
 import rospy
 
 import baxter_interface

@@ -32,8 +32,6 @@ Tool to tuck/untuck Baxter's arms to/from the shipping pose
 """
 import argparse
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 from std_msgs.msg import (
@@ -42,7 +40,6 @@ from std_msgs.msg import (
 )
 
 import baxter_interface
-import dataflow
 
 from baxter_core_msgs.msg import (
     CollisionAvoidanceState,

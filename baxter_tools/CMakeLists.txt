@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(tools)
+project(baxter_tools)
 
 find_package(catkin
   REQUIRED
@@ -10,7 +10,6 @@ find_package(catkin
   baxter_interface
   baxter_core_msgs
   baxter_maintenance_msgs
-  utilities
 )
 
 catkin_python_setup()
@@ -24,5 +23,10 @@ catkin_package(
   baxter_interface
   baxter_core_msgs
   baxter_maintenance_msgs
-  utilities
+)
+
+install(
+  DIRECTORY scripts/
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  USE_SOURCE_PERMISSIONS
 )

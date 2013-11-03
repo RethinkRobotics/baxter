@@ -30,8 +30,6 @@
 import random
 import signal
 
-import roslib
-roslib.load_manifest('head_control')
 import rospy
 
 import baxter_interface

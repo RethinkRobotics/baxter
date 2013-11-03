@@ -32,9 +32,8 @@ import math
 import operator
 import bisect
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
+
 import actionlib
 
 from control_msgs.msg import (

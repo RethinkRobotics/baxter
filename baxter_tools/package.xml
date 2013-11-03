@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>tools</name>
+  <name>baxter_tools</name>
   <version>0.6.1</version>
   <description>
     Useful tool application for use with the
@@ -29,7 +29,6 @@
   <build_depend>baxter_interface</build_depend>
   <build_depend>baxter_core_msgs</build_depend>
   <build_depend>baxter_maintenance_msgs</build_depend>
-  <build_depend>utilities</build_depend>
 
   <run_depend>rospy</run_depend>
   <run_depend>sensor_msgs</run_depend>
@@ -38,6 +37,5 @@
   <run_depend>baxter_interface</run_depend>
   <run_depend>baxter_core_msgs</run_depend>
   <run_depend>baxter_maintenance_msgs</run_depend>
-  <run_depend>utilities</run_depend>
 
 </package>

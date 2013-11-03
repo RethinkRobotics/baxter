@@ -32,8 +32,6 @@ Baxter RSDK Gripper Action Server
 """
 import argparse
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 from dynamic_reconfigure.server import Server

@@ -27,59 +27,72 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 import argparse
 import os
 import sys
 
-import roslib
-roslib.load_manifest('tools')
 import rospy
 
 import baxter_interface
 
+from baxter_maintenance_msgs.msg import (
+    CalibrateArmEnable,
+)
+
+
+class CalibrateArm(baxter_interface.RobustController):
+    def __init__(self, limb):
+        """
+        Wrapper to run the CalibrateArm RobustController.
+
+        @param limb - Limb to run CalibrateArm on [left/right]
+        """
+        enable_msg = CalibrateArmEnable(isEnabled=True, uid='sdk')
+
+        disable_msg = CalibrateArmEnable(isEnabled=False, uid='sdk')
+
+        # Initialize RobustController, use 10 minute timeout for the
+        # CalibrateArm process
+        super(CalibrateArm, self).__init__(
+            'robustcontroller/%s/CalibrateArm' % (limb,),
+            enable_msg,
+            disable_msg,
+            10 * 60)
+
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--state', const='state',
-                        dest='actions', action='append_const',
-                        help='Print current robot state')
-    parser.add_argument('-e', '--enable', const='enable',
-                        dest='actions', action='append_const',
-                        help='Enable the robot')
-    parser.add_argument('-d', '--disable', const='disable',
-                        dest='actions', action='append_const',
-                        help='Disable the robot')
-    parser.add_argument('-r', '--reset', const='reset',
-                        dest='actions', action='append_const',
-                        help='Reset the robot')
-    parser.add_argument('-S', '--stop', const='stop',
-                        dest='actions', action='append_const',
-                        help='Stop the robot')
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-l', '--limb', required=True,
+                        choices=['left', 'right'],
+                        help="Calibrate the specified arm")
     args = parser.parse_args(rospy.myargv()[1:])
+    arm = args.limb
 
-    if args.actions == None:
-        parser.print_usage()
-        parser.exit(0, "No action defined")
-
-    rospy.init_node('robot_enable', anonymous=True)
+    rospy.init_node('calibrate_arm_sdk', anonymous=True)
     rs = baxter_interface.RobotEnable()
+    rs.enable()
+    cat = CalibrateArm(arm)
+    rospy.loginfo("Running calibrate on %s arm" % (arm,))
 
+    error = None
     try:
-        for act in args.actions:
-            if act == 'state':
-                print rs.state()
-            elif act == 'enable':
-                rs.enable()
-            elif act == 'disable':
-                rs.disable()
-            elif act == 'reset':
-                rs.reset()
-            elif act == 'stop':
-                rs.stop()
+        cat.run()
     except Exception, e:
-        rospy.logerr(e.strerror)
+        error = e.strerror
+    finally:
+        try:
+            rs.disable()
+        except Exception:
+            pass
 
-    return 0
+    if error == None:
+        rospy.loginfo("Calibrate arm finished")
+    else:
+        rospy.logerr("Calibrate arm failed: %s" % (error,))
+
+    return 0 if error == None else 1
 
 if __name__ == '__main__':
     sys.exit(main())

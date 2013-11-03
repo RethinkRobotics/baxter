@@ -33,8 +33,6 @@ Baxter RSDK Joint Position Example: file playback
 import argparse
 import sys
 
-import roslib
-roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface

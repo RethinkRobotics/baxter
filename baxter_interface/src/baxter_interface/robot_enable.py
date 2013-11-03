@@ -27,8 +27,6 @@
 
 import errno
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 from std_msgs.msg import (

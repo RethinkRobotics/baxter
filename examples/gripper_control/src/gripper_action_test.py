@@ -33,9 +33,8 @@ Baxter RSDK Gripper Action Test
 import sys
 import argparse
 
-import roslib
-roslib.load_manifest('gripper_control')
 import rospy
+
 import actionlib
 
 from control_msgs.msg import (

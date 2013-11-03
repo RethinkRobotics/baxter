@@ -29,8 +29,6 @@
 
 import argparse
 
-import roslib
-roslib.load_manifest('joint_position')
 import rospy
 
 import baxter_interface

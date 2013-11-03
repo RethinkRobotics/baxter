@@ -30,8 +30,6 @@
 import argparse
 import sys
 
-import roslib
-roslib.load_manifest('joint_velocity')
 import rospy
 
 from std_msgs.msg import (

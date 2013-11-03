@@ -29,8 +29,6 @@
 
 import argparse
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 import baxter_interface.analog_io as AIO
