@@ -82,11 +82,24 @@ def map_file(filename, loops=1):
     right = baxter_interface.Limb('right')
     grip_left = baxter_interface.Gripper('left')
     grip_right = baxter_interface.Gripper('right')
-    rate = rospy.Rate(1000)
-    start_time = rospy.get_time()
+
     print("Playing back: %s" % (filename,))
     with open(filename, 'r') as f:
         lines = f.readlines()
+
+    if grip_left.error():
+        grip_left.reset()
+    if grip_right.error():
+        grip_right.reset()
+    if (not grip_left.calibrated() and
+        grip_left.type() != 'custom'):
+        grip_left.calibrate()
+    if (not grip_right.calibrated() and
+        grip_right.type() != 'custom'):
+        grip_right.calibrate()
+
+    rate = rospy.Rate(1000)
+    start_time = rospy.get_time()
     keys = lines[0].rstrip().split(',')
     i = 0
     l = 0
@@ -115,9 +128,11 @@ def map_file(filename, loops=1):
                     left.set_joint_positions(lcmd)
                 if len(rcmd):
                     right.set_joint_positions(rcmd)
-                if 'left_gripper' in cmd:
+                if ('left_gripper' in cmd and
+                    grip_left.type() != 'custom'):
                     grip_left.command_position(cmd['left_gripper'])
-                if 'left_gripper' in cmd:
+                if ('right_gripper' in cmd and
+                    grip_right.type() != 'custom'):
                     grip_right.command_position(cmd['right_gripper'])
                 rate.sleep()
     print
