@@ -28,24 +28,21 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import os
 import sys
 
 import roslib
-from baxter_interface.camera import CameraController
 roslib.load_manifest('tools')
 import rospy
-
-import baxter_interface
 
 from baxter_core_msgs.srv import (
     ListCameras,
 )
+from baxter_interface.camera import CameraController
 
 
 def list_cameras(*_args, **_kwds):
-    ls = rospy.ServiceProxy('/cameras/list', ListCameras)
-    rospy.wait_for_service('/cameras/list', timeout=10)
+    ls = rospy.ServiceProxy('cameras/list', ListCameras)
+    rospy.wait_for_service('cameras/list', timeout=10)
     resp = ls()
     if len(resp.cameras):
         print ('Cameras:')
@@ -55,19 +52,19 @@ def list_cameras(*_args, **_kwds):
 
 
 def open_camera(camera, res, *_args, **_kwds):
-    cam = baxter_interface.CameraController(camera)
+    cam = CameraController(camera)
     cam.close()
     cam.resolution = res
     cam.open()
 
 
 def close_camera(camera, *_args, **_kwds):
-    cam = baxter_interface.CameraController(camera)
+    cam = CameraController(camera)
     cam.close()
 
 
 def main():
-    str_res = ["%rx%r" % (r[0],r[1]) for r in CameraController.MODES]
+    str_res = ["%rx%r" % (r[0], r[1]) for r in CameraController.MODES]
     fmt_res = ("Valid resolutions:\n[" +
               ("%s, " * (len(CameraController.MODES) - 1)) + "%s]")
     parser = argparse.ArgumentParser(
@@ -111,7 +108,7 @@ def main():
         parser.print_usage()
         parser.error("No action defined.")
 
-    rospy.init_node('cameras_example', anonymous=True)
+    rospy.init_node('rsdk_camera_control', anonymous=True)
     action(camera, res)
     return 0
 

@@ -47,7 +47,7 @@ class CameraController(object):
 
     # Valid resolutions
     MODES = [
-             (1280,  800),
+             (1280, 800),
              (960, 600),
              (640, 400),
              (480, 300),
