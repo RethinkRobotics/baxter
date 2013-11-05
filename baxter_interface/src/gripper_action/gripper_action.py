@@ -124,6 +124,7 @@ class GripperActionServer(object):
             else:
                 self._fdbk.reached_goal = self._gripper.gripping()
         self._result = self._fdbk
+        self._server.publish_feedback(self._fdbk)
 
     def _command_gripper(self, position):
         if self._type == 'electric':

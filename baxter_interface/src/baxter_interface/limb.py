@@ -25,8 +25,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from copy import deepcopy
 import collections
+
+from copy import deepcopy
 
 import roslib
 roslib.load_manifest('baxter_interface')
