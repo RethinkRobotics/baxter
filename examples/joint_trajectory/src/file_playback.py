@@ -90,9 +90,9 @@ class Trajectory(object):
 
         # Verify Grippers Have No Errors and are Calibrated
         if self._l_gripper.error():
-            self._l_gripper.reboot()
+            self._l_gripper.reset()
         if self._r_gripper.error():
-            self._r_gripper.reboot()
+            self._r_gripper.reset()
         if (not self._l_gripper.calibrated() and
             self._l_gripper.type() != 'custom'):
             self._l_gripper.calibrate()
@@ -123,7 +123,7 @@ class Trajectory(object):
             idx = bisect(pnt_times, now_from_start) - 1
             if self._r_gripper.type() != 'custom':
                 self._r_gripper.command_position(r_cmd[idx].positions[0])
-            if self._r_gripper.type() != 'custom':
+            if self._l_gripper.type() != 'custom':
                 self._l_gripper.command_position(l_cmd[idx].positions[0])
             rate.sleep()
             now_from_start = rospy.get_time() - start_time

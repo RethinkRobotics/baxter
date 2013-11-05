@@ -88,9 +88,9 @@ def map_file(filename, loops=1):
         lines = f.readlines()
 
     if grip_left.error():
-        grip_left.reboot()
+        grip_left.reset()
     if grip_right.error():
-        grip_right.reboot()
+        grip_right.reset()
     if (not grip_left.calibrated() and
         grip_left.type() != 'custom'):
         grip_left.calibrate()

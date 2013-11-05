@@ -54,9 +54,9 @@ class JointRecorder(object):
 
         # Verify Grippers Have No Errors and are Calibrated
         if self._gripper_left.error():
-            self._gripper_left.reboot()
+            self._gripper_left.reset()
         if self._gripper_right.error():
-            self._gripper_right.reboot()
+            self._gripper_right.reset()
         if (not self._gripper_left.calibrated() and
             self._gripper_left.type() != 'custom'):
             self._gripper_left.calibrate()
