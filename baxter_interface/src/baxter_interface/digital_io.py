@@ -55,8 +55,8 @@ class DigitalIO(object):
         self._id = component_id
         self._component_type = 'digital_io'
         self._is_output = False
-
-        self._state = {}
+        self._state = None
+        self.state_changed = dataflow.Signal()
 
         type_ns = '/robot/' + self._component_type
         topic_base = type_ns + '/' + self._id
@@ -67,7 +67,7 @@ class DigitalIO(object):
             self._on_io_state)
 
         dataflow.wait_for(
-            lambda: len(self._state.keys()) != 0,
+            lambda: self._state != None,
             timeout=2.0,
             timeout_msg="Failed to get current digital_io state from %s" \
             % (topic_base,),
@@ -83,20 +83,39 @@ class DigitalIO(object):
         """
         Updates the internally stored state of the Digital Input/Output.
         """
-        self._is_output = not msg.isInputOnly
-        self._state['state'] = (msg.state == DigitalIOState.PRESSED)
+        new_state = (msg.state == DigitalIOState.PRESSED)
+        if self._state == None:
+            self._state = new_state
+            self._is_output = not msg.isInputOnly
 
-    def state(self):
-        """
-        Return the latest state of the Digital Input/Output.
-        """
-        return self._state['state']
+        # trigger signal if changed
+        if self._state != new_state:
+            self.state_changed(new_state)
 
+        self._state = new_state
+
+    @property
     def is_output(self):
         """
         Accessor to check if IO is capable of output.
         """
         return self._is_output
+
+    @property
+    def state(self):
+        """
+        Current state of the Digital Input/Output.
+        """
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        """
+        @param value bool      - new state to output {True, False}
+
+        Control the state of the Digital Output. (is_output must be True)
+        """
+        self.set_output(value)
 
     def set_output(self, value, timeout=2.0):
         """
@@ -105,6 +124,8 @@ class DigitalIO(object):
                                  If 0, just command once and return.  [0]
 
         Control the state of the Digital Output.
+
+        Use this function for finer control over the wait_for timeout.
         """
         if not self._is_output:
             raise IOError(errno.EACCES, "Component is not an output [%s: %s]" %
@@ -116,7 +137,7 @@ class DigitalIO(object):
 
         if not timeout == 0:
             dataflow.wait_for(
-                test=lambda: self.state() == value,
+                test=lambda: self.state == value,
                 timeout=timeout,
                 rate=100,
                 timeout_msg=("Failed to command digital io to: %r" % (value,)),
