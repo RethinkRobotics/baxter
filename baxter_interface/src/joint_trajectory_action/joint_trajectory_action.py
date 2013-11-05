@@ -28,11 +28,10 @@
 """
 Baxter RSDK Joint Trajectory Action Server
 """
+import bisect
+from copy import deepcopy
 import math
 import operator
-import bisect
-
-from copy import deepcopy
 
 import roslib
 roslib.load_manifest('baxter_interface')
