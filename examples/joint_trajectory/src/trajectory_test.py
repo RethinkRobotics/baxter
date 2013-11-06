@@ -77,7 +77,9 @@ class Trajectory(object):
 
     def wait(self):
         self._client.wait_for_result()
-        rospy.sleep(0.1)
+
+    def result(self):
+        return self._client.get_result()
 
     def clear(self, limb):
         self._goal = FollowJointTrajectoryGoal()
@@ -107,8 +109,10 @@ def main():
         'right':  [0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
     }
 
-    p1 = positions[limb]
     traj = Trajectory(limb)
+    rospy.on_shutdown(traj.stop)
+
+    p1 = positions[limb]
     traj.add_point(p1, 7.0)
     traj.add_point([x * 0.75 for x in p1], 9.0)
     traj.add_point([x * 1.25 for x in p1], 12.0)
