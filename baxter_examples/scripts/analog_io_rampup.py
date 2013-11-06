@@ -27,43 +27,52 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from dynamic_reconfigure.parameter_generator_catkin import (
-    ParameterGenerator,
-    double_t,
-)
+import argparse
 
-gen = ParameterGenerator()
+import rospy
 
-gen.add(
-    'goal_time', double_t, 0,
-    "Amount of time (s) controller is permitted to be late achieving goal",
-    0.0, 0.0, 120.0,
+import baxter_interface.analog_io as AIO
+
+
+def test_interface(io_component='torso_fan'):
+    """Ramps an Analog component from 0 to 100, then back down to 0."""
+    rospy.loginfo("Ramping output of Analog IO component: %s", io_component)
+
+    b = AIO.AnalogIO(io_component)
+    rate = rospy.Rate(2)
+
+    # start: 0.0
+    print b.state()
+
+    # ramp up
+    for i in range(0, 101, 10):
+        b.set_output(i)
+        print i
+        rate.sleep()
+    # max: 100.0
+    print b.state()
+
+    # ramp down
+    for i in range(100, -1, -10):
+        b.set_output(i)
+        print i
+        rate.sleep()
+    # (fans off)
+    b.set_output(0)
+
+
+def main():
+    arg_fmt = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=arg_fmt)
+    parser.add_argument(
+        '-c', '--component', dest='component_id', default='torso_fan',
+        help='name of Analog IO component to use'
     )
+    args = parser.parse_args(rospy.myargv()[1:])
 
-joints = (
-    'left_s0', 'left_s1', 'left_e0', 'left_e1', 'left_w0', 'left_w1',
-    'left_w2', 'right_s0', 'right_s1', 'right_e0', 'right_e1', 'right_w0',
-    'right_w1', 'right_w2',
-    )
+    rospy.init_node('test_aio', anonymous=True)
+    io_component = rospy.get_param('~component_id', args.component_id)
+    test_interface(io_component)
 
-params = ('_goal', '_trajectory', '_default_velocity', '_kp', '_ki', '_kd',)
-msg = (
-    " - maximum final error",
-    " - maximum error during trajectory execution",
-    " - default max velocity during trajectory execution",
-    " - Kp proportional control gain",
-    " - Ki integral control gain",
-    " - Kd derivative control gain",
-    )
-min = (-1.0, -1.0, 0.0, 0.0, 0.0, 0.0,)
-default = (-1.0, -1.0, 0.25, 2.0, 0.0, 0.0,)
-max = (3.0, 3.0, 2.5, 500.0, 100.0, 100.0,)
-
-for idx, param in enumerate(params):
-    for joint in joints:
-        gen.add(
-            joint + param, double_t, 0, joint + msg[idx],
-            default[idx], min[idx], max[idx]
-            )
-
-exit(gen.generate('baxter_interface', '', 'JointTrajectoryActionServer'))
+if __name__ == '__main__':
+    main()

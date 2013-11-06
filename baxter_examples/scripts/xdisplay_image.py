@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 
 # Copyright (c) 2013, Rethink Robotics
 # All rights reserved.
@@ -27,43 +27,65 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from dynamic_reconfigure.parameter_generator_catkin import (
-    ParameterGenerator,
-    double_t,
+
+import os
+import sys
+import argparse
+
+import rospy
+
+import cv
+import cv_bridge
+
+from sensor_msgs.msg import (
+    Image,
 )
 
-gen = ParameterGenerator()
 
-gen.add(
-    'goal_time', double_t, 0,
-    "Amount of time (s) controller is permitted to be late achieving goal",
-    0.0, 0.0, 120.0,
+def send_image(path):
+    """
+    Send the image located at the specified path to the head
+    display on Baxter.
+
+    @param path - path to the image file to load and send
+    """
+    img = cv.LoadImage(path)
+    msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
+    pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
+    pub.publish(msg)
+    # Sleep to allow for image to be published.
+    rospy.sleep(1)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument(
+        '-f', '--file', metavar='PATH', required=True,
+        help='Path to image file to send'
     )
-
-joints = (
-    'left_s0', 'left_s1', 'left_e0', 'left_e1', 'left_w0', 'left_w1',
-    'left_w2', 'right_s0', 'right_s1', 'right_e0', 'right_e1', 'right_w0',
-    'right_w1', 'right_w2',
+    parser.add_argument(
+        '-d', '--delay', metavar='SEC', type=float, default=0.0,
+        help='Time in seconds to wait before publishing image'
     )
+    args = parser.parse_args(rospy.myargv()[1:])
 
-params = ('_goal', '_trajectory', '_default_velocity', '_kp', '_ki', '_kd',)
-msg = (
-    " - maximum final error",
-    " - maximum error during trajectory execution",
-    " - default max velocity during trajectory execution",
-    " - Kp proportional control gain",
-    " - Ki integral control gain",
-    " - Kd derivative control gain",
-    )
-min = (-1.0, -1.0, 0.0, 0.0, 0.0, 0.0,)
-default = (-1.0, -1.0, 0.25, 2.0, 0.0, 0.0,)
-max = (3.0, 3.0, 2.5, 500.0, 100.0, 100.0,)
+    rospy.init_node('xdisplay_image', anonymous=True)
 
-for idx, param in enumerate(params):
-    for joint in joints:
-        gen.add(
-            joint + param, double_t, 0, joint + msg[idx],
-            default[idx], min[idx], max[idx]
-            )
+    if not os.access(args.file, os.R_OK):
+        rospy.logerr("Cannot read file at '%s'" % (args.file,))
+        return 1
 
-exit(gen.generate('baxter_interface', '', 'JointTrajectoryActionServer'))
+    # Wait for specified time
+    if args.delay > 0:
+        rospy.loginfo(
+            "Waiting for %s second(s) before publishing image to face" %
+            (args.delay,)
+        )
+        rospy.sleep(args.delay)
+
+    send_image(args.file)
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

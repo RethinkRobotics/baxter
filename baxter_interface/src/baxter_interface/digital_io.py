@@ -27,11 +27,9 @@
 
 import errno
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
-import dataflow
+import baxter_dataflow
 
 from baxter_core_msgs.msg import (
     DigitalIOState,
@@ -136,8 +134,13 @@ class DigitalIO(object):
         self._pub_output.publish(cmd)
 
         if not timeout == 0:
+<<<<<<< HEAD
             dataflow.wait_for(
                 test=lambda: self.state == value,
+=======
+            baxter_dataflow.wait_for(
+                test=lambda: self.state() == value,
+>>>>>>> catkin_restructure
                 timeout=timeout,
                 rate=100,
                 timeout_msg=("Failed to command digital io to: %r" % (value,)),

@@ -27,43 +27,44 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from dynamic_reconfigure.parameter_generator_catkin import (
-    ParameterGenerator,
-    double_t,
-)
+import argparse
 
-gen = ParameterGenerator()
+import rospy
 
-gen.add(
-    'goal_time', double_t, 0,
-    "Amount of time (s) controller is permitted to be late achieving goal",
-    0.0, 0.0, 120.0,
+import baxter_interface.digital_io as DIO
+
+
+def test_interface(io_component='left_itb_light_outer'):
+    """Blinks a Digital Output on then off."""
+    rospy.loginfo("Blinking Digital Output: %s", io_component)
+    b = DIO.DigitalIO(io_component)
+
+    print "Initial state: ", b.state()
+
+    # turn on light
+    b.set_output(True)
+    rospy.sleep(1)
+    print "New state: ", b.state()
+
+    # reset output
+    b.set_output(False)
+    rospy.sleep(1)
+    print "Final state:", b.state()
+
+
+def main():
+    show_defaults = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=show_defaults)
+    parser.add_argument(
+        '-c', '--component', dest='component_id',
+        default='left_itb_light_outer',
+        help='name of Digital IO component to use'
     )
+    args = parser.parse_args(rospy.myargv()[1:])
 
-joints = (
-    'left_s0', 'left_s1', 'left_e0', 'left_e1', 'left_w0', 'left_w1',
-    'left_w2', 'right_s0', 'right_s1', 'right_e0', 'right_e1', 'right_w0',
-    'right_w1', 'right_w2',
-    )
+    rospy.init_node('test_dio', anonymous=True)
+    io_component = rospy.get_param('~component_id', args.component_id)
+    test_interface(io_component)
 
-params = ('_goal', '_trajectory', '_default_velocity', '_kp', '_ki', '_kd',)
-msg = (
-    " - maximum final error",
-    " - maximum error during trajectory execution",
-    " - default max velocity during trajectory execution",
-    " - Kp proportional control gain",
-    " - Ki integral control gain",
-    " - Kd derivative control gain",
-    )
-min = (-1.0, -1.0, 0.0, 0.0, 0.0, 0.0,)
-default = (-1.0, -1.0, 0.25, 2.0, 0.0, 0.0,)
-max = (3.0, 3.0, 2.5, 500.0, 100.0, 100.0,)
-
-for idx, param in enumerate(params):
-    for joint in joints:
-        gen.add(
-            joint + param, double_t, 0, joint + msg[idx],
-            default[idx], min[idx], max[idx]
-            )
-
-exit(gen.generate('baxter_interface', '', 'JointTrajectoryActionServer'))
+if __name__ == '__main__':
+    main()

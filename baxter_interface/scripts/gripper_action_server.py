@@ -27,43 +27,50 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from dynamic_reconfigure.parameter_generator_catkin import (
-    ParameterGenerator,
-    double_t,
+"""
+Baxter RSDK Gripper Action Server
+"""
+import argparse
+
+import rospy
+
+from dynamic_reconfigure.server import Server
+
+from baxter_interface.cfg import (
+    GripperActionServerConfig
+)
+from gripper_action.gripper_action import (
+    GripperActionServer,
 )
 
-gen = ParameterGenerator()
 
-gen.add(
-    'goal_time', double_t, 0,
-    "Amount of time (s) controller is permitted to be late achieving goal",
-    0.0, 0.0, 120.0,
-    )
+def start_server(gripper):
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_gripper_action_server%s" %
+                    ("" if gripper == 'both' else "_" + gripper,))
+    print("Initializing gripper action server...")
 
-joints = (
-    'left_s0', 'left_s1', 'left_e0', 'left_e1', 'left_w0', 'left_w1',
-    'left_w2', 'right_s0', 'right_s1', 'right_e0', 'right_e1', 'right_w0',
-    'right_w1', 'right_w2',
-    )
+    dynamic_cfg_srv = Server(GripperActionServerConfig,
+                             lambda config, level: config)
 
-params = ('_goal', '_trajectory', '_default_velocity', '_kp', '_ki', '_kd',)
-msg = (
-    " - maximum final error",
-    " - maximum error during trajectory execution",
-    " - default max velocity during trajectory execution",
-    " - Kp proportional control gain",
-    " - Ki integral control gain",
-    " - Kd derivative control gain",
-    )
-min = (-1.0, -1.0, 0.0, 0.0, 0.0, 0.0,)
-default = (-1.0, -1.0, 0.25, 2.0, 0.0, 0.0,)
-max = (3.0, 3.0, 2.5, 500.0, 100.0, 100.0,)
+    if gripper == 'both':
+        GripperActionServer('right', dynamic_cfg_srv)
+        GripperActionServer('left', dynamic_cfg_srv)
+    else:
+        GripperActionServer(gripper, dynamic_cfg_srv)
+    print("Running. Ctrl-c to quit")
+    rospy.spin()
 
-for idx, param in enumerate(params):
-    for joint in joints:
-        gen.add(
-            joint + param, double_t, 0, joint + msg[idx],
-            default[idx], min[idx], max[idx]
-            )
 
-exit(gen.generate('baxter_interface', '', 'JointTrajectoryActionServer'))
+def main():
+    arg_fmt = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=arg_fmt)
+    parser.add_argument("-g", "--gripper", dest="gripper", default="both",
+                        choices=['both', 'left', 'right'],
+                        help="gripper action server limb",)
+    args = parser.parse_args(rospy.myargv()[1:])
+    start_server(args.gripper)
+
+
+if __name__ == "__main__":
+    main()

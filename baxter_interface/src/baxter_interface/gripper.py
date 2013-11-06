@@ -34,11 +34,9 @@ from json import (
     JSONEncoder,
 )
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
-import dataflow
+import baxter_dataflow
 
 from baxter_core_msgs.msg import (
     EndEffectorCommand,
@@ -79,7 +77,7 @@ class Gripper(object):
                                           )
 
         # Wait for the gripper state message to be populated
-        dataflow.wait_for(
+        baxter_dataflow.wait_for(
                           lambda: not self._state is None,
                           timeout=5.0,
                           timeout_msg=("Failed to get state from %s" %
@@ -87,7 +85,7 @@ class Gripper(object):
                           )
 
         # Wait for the gripper type to be populated
-        dataflow.wait_for(
+        baxter_dataflow.wait_for(
                           lambda: not self.type() is None,
                           timeout=5.0,
                           timeout_msg=("Failed to get properties from %s" %
@@ -129,10 +127,11 @@ class Gripper(object):
             ee_cmd.args = JSONEncoder().encode(args)
         self._cmd_pub.publish(ee_cmd)
         if block:
-            return dataflow.wait_for(test=test, timeout=time,
-                                     raise_on_error=False,
-                                     body=lambda: self._cmd_pub.publish(ee_cmd)
-                                     )
+            return baxter_dataflow.wait_for(
+                       test=test, timeout=time,
+                       raise_on_error=False,
+                       body=lambda: self._cmd_pub.publish(ee_cmd),
+                   )
         else:
             return True
 
