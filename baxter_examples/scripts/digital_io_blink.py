@@ -39,17 +39,17 @@ def test_interface(io_component='left_itb_light_outer'):
     rospy.loginfo("Blinking Digital Output: %s", io_component)
     b = DIO.DigitalIO(io_component)
 
-    print "Initial state: ", b.state()
+    print "Initial state: ", b.state
 
     # turn on light
     b.set_output(True)
     rospy.sleep(1)
-    print "New state: ", b.state()
+    print "New state: ", b.state
 
     # reset output
     b.set_output(False)
     rospy.sleep(1)
-    print "Final state:", b.state()
+    print "Final state:", b.state
 
 
 def main():

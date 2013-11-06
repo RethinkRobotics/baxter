@@ -30,8 +30,6 @@
 import argparse
 import sys
 
-import roslib
-roslib.load_manifest('input_output')
 import rospy
 
 from baxter_interface import (
