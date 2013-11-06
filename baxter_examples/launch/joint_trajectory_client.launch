@@ -9,8 +9,8 @@
   required="true" />
 
   <!-- Run the Joint Trajectory Action Test Example -->
-  <node name="rsdk_joint_trajectory_test" pkg="joint_trajectory"
-  type="trajectory_test.py" args="--limb $(arg limb)"
+  <node name="rsdk_joint_trajectory_test" pkg="baxter_examples"
+  type="joint_trajectory_client.py" args="--limb $(arg limb)"
   output="screen" />
 
 </launch>

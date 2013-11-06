@@ -53,7 +53,6 @@ from trajectory_msgs.msg import (
 )
 
 import baxter_interface
-import dataflow
 
 
 class Trajectory(object):

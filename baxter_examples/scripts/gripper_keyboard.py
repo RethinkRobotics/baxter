@@ -33,7 +33,7 @@ Baxter RSDK Gripper Example: keyboard
 import rospy
 
 import baxter_interface
-import iodevices
+import baxter_io_devices
 
 
 def map_keyboard():
@@ -124,7 +124,7 @@ def map_keyboard():
     rs.enable()
     print("Controlling grippers. Press ? for help, Esc to quit.")
     while not done and not rospy.is_shutdown():
-        c = iodevices.getch()
+        c = baxter_io_devices.getch()
         if c:
             if c in ['\x1b', '\x03']:
                 done = True

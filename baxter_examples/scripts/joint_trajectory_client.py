@@ -38,8 +38,6 @@ import rospy
 import actionlib
 
 import baxter_interface
-import dataflow
-import iodevices
 
 from control_msgs.msg import (
     FollowJointTrajectoryAction,

@@ -39,7 +39,7 @@ import traceback
 
 import rospy
 
-import smoketests
+import baxter_tools
 
 
 def run_test(tname, fname, proceed):
@@ -48,7 +48,7 @@ def run_test(tname, fname, proceed):
     occurs.
     """
     try:
-        cur_test = getattr(smoketests, tname)(tname)
+        cur_test = getattr(baxter_tools.smoketests, tname)(tname)
     except AttributeError:
         print("Exiting: %s is not a valid smoke test." % tname)
         sys.exit(1)

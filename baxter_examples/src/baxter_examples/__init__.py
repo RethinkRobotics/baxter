@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, Rethink Robotics
 # All rights reserved.
 #
@@ -27,41 +25,4 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
-
-import rospy
-
-import baxter_interface
-from baxter_examples import JointRecorder
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    required = parser.add_argument_group('required arguments')
-    required.add_argument(
-        '-f', '--file', dest='filename', required=True,
-        help='the file name to record to'
-    )
-    parser.add_argument(
-        '-r', '--record-rate', type=int, default=10, metavar='RECORDRATE',
-        help='rate at which to record'
-    )
-    args = parser.parse_args(rospy.myargv()[1:])
-
-    print("Initializing node... ")
-    rospy.init_node("rethink_rsdk_joint_recorder")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
-
-    recorder = JointRecorder(args.filename, args.record_rate)
-    rospy.on_shutdown(recorder.stop)
-
-    print("Recording. Press Ctrl-C to stop.")
-    recorder.record()
-
-    print("\nDone.")
-
-if __name__ == '__main__':
-    main()
+from .joint_recorder import JointRecorder

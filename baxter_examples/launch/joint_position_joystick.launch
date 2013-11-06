@@ -13,8 +13,8 @@
   </node>
 
   <!-- Run the Joint Position Joystick Example -->
-  <node name="rsdk_joint_position_joystick" pkg="joint_position"
-  type="joystick.py" args="--joystick $(arg joystick)"
+  <node name="rsdk_joint_position_joystick" pkg="baxter_examples"
+  type="joint_position_joystick.py" args="--joystick $(arg joystick)"
   required="true" output="screen" />
 
 </launch>

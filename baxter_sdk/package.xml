@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>baxter</name>
+  <name>baxter_sdk</name>
   <version>0.6.1</version>
   <description>
     baxter metapackage containing all of the SDK
@@ -22,19 +22,10 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <run_depend>baxter_description</run_depend>
   <run_depend>baxter_interface</run_depend>
-  <run_depend>baxter_core_msgs</run_depend>
-  <run_depend>baxter_maintenance_msgs</run_depend>
-  <run_depend>tools</run_depend>
-  <run_depend>utilities</run_depend>
-  <run_depend>gripper_control</run_depend>
-  <run_depend>head_control</run_depend>
-  <run_depend>input_output</run_depend>
-  <run_depend>inverse_kinematics</run_depend>
-  <run_depend>joint_position</run_depend>
-  <run_depend>joint_trajectory</run_depend>
-  <run_depend>joint_velocity</run_depend>
+  <run_depend>baxter_examples</run_depend>
+  <run_depend>baxter_tools</run_depend>
+  <run_depend>baxter_common</run_depend>
   
   <export>
     <metapackage/>

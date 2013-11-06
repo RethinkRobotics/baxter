@@ -35,7 +35,7 @@ import argparse
 import rospy
 
 import baxter_interface
-import iodevices
+import baxter_io_devices
 
 
 def rotate(l):
@@ -171,11 +171,11 @@ def main():
 
     joystick = None
     if args.joystick == 'xbox':
-        joystick = iodevices.joystick.XboxController()
+        joystick = baxter_io_devices.joystick.XboxController()
     elif args.joystick == 'logitech':
-        joystick = iodevices.joystick.LogitechController()
+        joystick = baxter_io_devices.joystick.LogitechController()
     elif args.joystick == 'ps3':
-        joystick = iodevices.joystick.PS3Controller()
+        joystick = baxter_io_devices.joystick.PS3Controller()
     else:
         parser.error("Unsupported joystick type '%s'" % (args.joystick))
 

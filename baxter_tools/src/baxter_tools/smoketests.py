@@ -31,7 +31,6 @@
 Baxter RSDK Smoke Tests
 """
 
-import os
 import traceback
 import threading
 import Queue
@@ -40,6 +39,7 @@ import rospy
 
 import cv
 import cv_bridge
+import rospkg
 import std_msgs
 
 from geometry_msgs.msg import (
@@ -74,6 +74,7 @@ class SmokeTest(object):
     def __init__(self, name):
         self._name = name
         self._rs = baxter_interface.RobotEnable()
+        self._rp = rospkg.RosPack()
         self.result = [False, '']
 
     def start_test(self):
@@ -230,7 +231,8 @@ class Head(SmokeTest):
             for _ in xrange(3):
                 head.command_nod()
             print "Test: Display Image on Screen - 5 seconds"
-            image_path = os.path.dirname(os.path.abspath(__file__))
+            image_path = (self._rp.get_path('baxter_tools') +
+                          '/share/images')
             img = cv.LoadImage(image_path + '/baxterworking.png')
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
             pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
@@ -481,10 +483,8 @@ class Cameras(SmokeTest):
             """
             Reset the screen to research sdk image.
             """
-            image_path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                os.path.basename('researchsdk.png'),
-            )
+            image_path = (self._rp.get_path('baxter_tools') +
+                          '/share/images/researchsdk.png')
             img = cv.LoadImage(image_path)
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
             xpub_img.publish(msg)

@@ -46,7 +46,7 @@ from std_msgs.msg import (
 
 import baxter_interface
 
-from joint_torque.cfg import (
+from baxter_examples.cfg import (
     JointSpringsExampleConfig,
 )
 

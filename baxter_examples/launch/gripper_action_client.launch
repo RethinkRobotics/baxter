@@ -9,8 +9,8 @@
   required="true" />
 
   <!-- Run the Gripper Action Test -->
-  <node name="rsdk_gripper_action_test" pkg="gripper_control"
-  type="gripper_action_test.py" args="--gripper $(arg gripper)"
+  <node name="rsdk_gripper_action_test" pkg="baxter_examples"
+  type="gripper_action_client.py" args="--gripper $(arg gripper)"
   output="screen" />
 
 </launch>

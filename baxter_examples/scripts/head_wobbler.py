@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import random
-import signal
 
 import rospy
 
@@ -41,13 +40,26 @@ class Wobbler(object):
         """
         'Wobbles' the head
         """
-        self._done = False
-        signal.signal(signal.SIGINT, self._handle_ctrl_c)
         self._head = baxter_interface.Head()
 
-    def _handle_ctrl_c(self, _signum, _frame):
-        print("stopping...")
-        self._done = True
+        # verify robot is enabled
+        print("Getting robot state... ")
+        self._rs = baxter_interface.RobotEnable()
+        self._init_state = self._rs.state().enabled
+        print("Enabling robot... ")
+        self._rs.enable()
+        print("Running. Ctrl-c to quit")
+
+    def clean_shutdown(self):
+        """
+        Exits example cleanly by moving head to neutral position and
+        maintaining start state
+        """
+        print("\nExiting example...")
+        self.set_neutral()
+        if not self._init_state and self._rs.state().enabled:
+            print("Disabling robot...")
+            self._rs.disable()
 
     def set_neutral(self):
         """
@@ -61,33 +73,29 @@ class Wobbler(object):
         Performs the wobbling
         """
         self._head.command_nod()
-        rate = rospy.Rate(1)
+        command_rate = rospy.Rate(1)
+        control_rate = rospy.Rate(100)
         start = rospy.get_time()
-        while not self._done and (rospy.get_time() - start < 5.0):
+        while not rospy.is_shutdown() and (rospy.get_time() - start < 10.0):
             angle = random.uniform(-1.5, 1.5)
-            self._head.set_pan(angle)
-            rate.sleep()
+            while (not rospy.is_shutdown() and
+                   not (abs(self._head.pan() - angle) <=
+                       baxter_interface.HEAD_PAN_ANGLE_TOLERANCE)):
+                self._head.set_pan(angle, speed=30, timeout=0)
+                control_rate.sleep()
+            command_rate.sleep()
 
-        #return to normal
-        if not self._done:
-            self.set_neutral()
+        rospy.signal_shutdown("Example finished.")
 
 
 def main():
     print("Initializing node... ")
     rospy.init_node("rethink_rsdk_head_wobbler")
-    print("Getting robot state... ")
-    rs = baxter_interface.RobotEnable()
-    print("Enabling robot... ")
-    rs.enable()
 
     wobbler = Wobbler()
+    rospy.on_shutdown(wobbler.clean_shutdown)
     print("Wobbling... ")
     wobbler.wobble()
-
-    print("Disabling robot... ")
-    rs.disable()
-    print("done.")
 
 if __name__ == '__main__':
     main()

@@ -29,7 +29,7 @@ import errno
 
 import rospy
 
-import baxter_interface
+import baxter_dataflow
 
 from baxter_core_msgs.msg import (
     AnalogIOState,

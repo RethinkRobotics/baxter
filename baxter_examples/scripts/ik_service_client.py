@@ -104,7 +104,7 @@ def ik_test(limb):
     if (resp.isValid[0]):
         print("SUCCESS - Valid Joint Solution Found:")
         # Format solution into Limb API-compatible dictionary
-        limb_joints = dict(zip(resp.joints[0].names, resp.joints[0].angles))
+        limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
         print limb_joints
     else:
         print("INVALID POSE - No Valid Joint Solution Found.")
