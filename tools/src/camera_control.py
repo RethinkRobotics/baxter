@@ -28,23 +28,21 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import os
 import sys
 
 import roslib
-roslib.load_manifest('input_output')
+roslib.load_manifest('tools')
 import rospy
-
-import baxter_interface
 
 from baxter_core_msgs.srv import (
     ListCameras,
 )
+from baxter_interface.camera import CameraController
 
 
 def list_cameras(*_args, **_kwds):
-    ls = rospy.ServiceProxy('/cameras/list', ListCameras)
-    rospy.wait_for_service('/cameras/list', timeout=10)
+    ls = rospy.ServiceProxy('cameras/list', ListCameras)
+    rospy.wait_for_service('cameras/list', timeout=10)
     resp = ls()
     if len(resp.cameras):
         print ('Cameras:')
@@ -54,19 +52,25 @@ def list_cameras(*_args, **_kwds):
 
 
 def open_camera(camera, res, *_args, **_kwds):
-    cam = baxter_interface.CameraController(camera)
+    cam = CameraController(camera)
     cam.close()
     cam.resolution = res
     cam.open()
 
 
 def close_camera(camera, *_args, **_kwds):
-    cam = baxter_interface.CameraController(camera)
+    cam = CameraController(camera)
     cam.close()
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    str_res = ["%rx%r" % (r[0], r[1]) for r in CameraController.MODES]
+    fmt_res = ("Valid resolutions:\n[" +
+              ("%s, " * (len(CameraController.MODES) - 1)) + "%s]")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(fmt_res % tuple(str_res))
+    )
     action_grp = parser.add_mutually_exclusive_group(required=True)
     action_grp.add_argument(
         '-o', '--open', metavar='CAMERA', help='Open specified camera'
@@ -94,8 +98,13 @@ def main():
         camera = args.open
         lres = args.resolution.split('x')
         if len(lres) != 2:
+            print fmt_res % tuple(str_res)
             parser.error("Invalid resolution format: %s. Use [X]x[Y].")
         res = (int(lres[0]), int(lres[1]))
+        if not any((res[0] == r[0] and res[1] == r[1])
+                   for r in CameraController.MODES):
+            print fmt_res % tuple(str_res)
+            parser.error("Invalid resolution provided.")
     elif args.close:
         action = close_camera
         camera = args.close
@@ -104,7 +113,7 @@ def main():
         parser.print_usage()
         parser.error("No action defined.")
 
-    rospy.init_node('cameras_example', anonymous=True)
+    rospy.init_node('rsdk_camera_control', anonymous=True)
     action(camera, res)
     return 0
 
