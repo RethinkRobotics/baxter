@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-Baxter RSDK Gripper Action Test
+Baxter RSDK Gripper Action Client Example
 """
 import sys
 import argparse
