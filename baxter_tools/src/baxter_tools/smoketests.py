@@ -483,8 +483,8 @@ class Cameras(SmokeTest):
             """
             Reset the screen to research sdk image.
             """
-            image_path = (self._rp.get_path('baxter_tools') +
-                          '/share/images/researchsdk.png')
+            image_path = self._rp.get_path('baxter_tools')
+            image_path += '/share/images/researchsdk.png'
             img = cv.LoadImage(image_path)
             msg = cv_bridge.CvBridge().cv_to_imgmsg(img)
             xpub_img.publish(msg)
