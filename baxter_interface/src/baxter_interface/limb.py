@@ -29,8 +29,6 @@ import collections
 
 from copy import deepcopy
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 from sensor_msgs.msg import (
@@ -40,7 +38,7 @@ from std_msgs.msg import (
     Float64,
 )
 
-import dataflow
+import baxter_dataflow
 
 from baxter_core_msgs.msg import (
     JointCommand,
@@ -104,8 +102,8 @@ class Limb(object):
 
         err_msg = ("%s limb init failed to get current joint_states "
                    "from %s") % (self.name.capitalize(), joint_state_topic)
-        dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0,
-                          timeout_msg=err_msg)
+        baxter_dataflow.wait_for(lambda: len(self._joint_angle.keys()) > 0,
+                                 timeout_msg=err_msg)
 
     def _on_joint_states(self, msg):
         for idx, name in enumerate(msg.name):
@@ -318,7 +316,7 @@ class Limb(object):
         diffs = [genf(j, a) for j, a in positions.items() if
                  j in self._joint_angle]
 
-        dataflow.wait_for(
+        baxter_dataflow.wait_for(
             lambda: (all(diff() < settings.JOINT_ANGLE_TOLERANCE
                          for diff in diffs)),
             timeout=timeout,

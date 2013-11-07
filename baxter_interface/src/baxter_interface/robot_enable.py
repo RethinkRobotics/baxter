@@ -27,8 +27,6 @@
 
 import errno
 
-import roslib
-roslib.load_manifest('baxter_interface')
 import rospy
 
 from std_msgs.msg import (
@@ -36,7 +34,7 @@ from std_msgs.msg import (
     Empty,
 )
 
-import dataflow
+import baxter_dataflow
 
 from baxter_core_msgs.msg import (
     AssemblyState,
@@ -60,11 +58,12 @@ class RobotEnable(object):
                                            self._state_callback
                                            )
 
-        dataflow.wait_for(lambda: not self._state is None,
-                          timeout=2.0,
-                          timeout_msg=("Failed to get robot state on %s" %
-                                       (state_topic,)),
-                          )
+        baxter_dataflow.wait_for(
+            lambda: not self._state is None,
+            timeout=2.0,
+            timeout_msg=("Failed to get robot state on %s" %
+            (state_topic,)),
+        )
 
     def _state_callback(self, msg):
         self._state = msg
@@ -73,12 +72,13 @@ class RobotEnable(object):
 
         pub = rospy.Publisher('robot/set_super_enable', Bool)
 
-        dataflow.wait_for(test=lambda: self._state.enabled == status,
-                          timeout=2.0 if status else 5.0,
-                          timeout_msg=("Failed to %sable robot" %
-                                       ('en' if status else 'dis',)),
-                          body=lambda: pub.publish(status),
-                          )
+        baxter_dataflow.wait_for(
+            test=lambda: self._state.enabled == status,
+            timeout=2.0 if status else 5.0,
+            timeout_msg=("Failed to %sable robot" %
+                         ('en' if status else 'dis',)),
+            body=lambda: pub.publish(status),
+        )
         rospy.loginfo("Robot %s", ('Enabled' if status else 'Disabled'))
 
     def state(self):
@@ -127,11 +127,12 @@ Please verify that the ROS_IP or ROS_HOSTNAME environment variables are set and
 resolvable. For more information please visit:
 https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
 """
-        dataflow.wait_for(test=is_reset,
-                          timeout=3.0,
-                          timeout_msg=error_msg,
-                          body=pub.publish,
-                          )
+        baxter_dataflow.wait_for(
+            test=is_reset,
+            timeout=3.0,
+            timeout_msg=error_msg,
+            body=pub.publish,
+        )
 
     def stop(self):
         """
@@ -139,8 +140,9 @@ https://github.com/RethinkRobotics/sdk-docs/wiki/Rsdk-shell#initialize
         the stopped state.
         """
         pub = rospy.Publisher('robot/set_super_stop', Empty)
-        dataflow.wait_for(test=lambda: self._state.stopped == True,
-                          timeout=3.0,
-                          timeout_msg="Failed to stop the robot",
-                          body=pub.publish,
-                          )
+        baxter_dataflow.wait_for(
+            test=lambda: self._state.stopped == True,
+            timeout=3.0,
+            timeout_msg="Failed to stop the robot",
+            body=pub.publish,
+        )

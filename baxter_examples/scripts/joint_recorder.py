@@ -27,43 +27,41 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from dynamic_reconfigure.parameter_generator_catkin import (
-    ParameterGenerator,
-    double_t,
-)
+import argparse
 
-gen = ParameterGenerator()
+import rospy
 
-gen.add(
-    'goal_time', double_t, 0,
-    "Amount of time (s) controller is permitted to be late achieving goal",
-    0.0, 0.0, 120.0,
+import baxter_interface
+from baxter_examples import JointRecorder
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument(
+        '-f', '--file', dest='filename', required=True,
+        help='the file name to record to'
     )
-
-joints = (
-    'left_s0', 'left_s1', 'left_e0', 'left_e1', 'left_w0', 'left_w1',
-    'left_w2', 'right_s0', 'right_s1', 'right_e0', 'right_e1', 'right_w0',
-    'right_w1', 'right_w2',
+    parser.add_argument(
+        '-r', '--record-rate', type=int, default=10, metavar='RECORDRATE',
+        help='rate at which to record'
     )
+    args = parser.parse_args(rospy.myargv()[1:])
 
-params = ('_goal', '_trajectory', '_default_velocity', '_kp', '_ki', '_kd',)
-msg = (
-    " - maximum final error",
-    " - maximum error during trajectory execution",
-    " - default max velocity during trajectory execution",
-    " - Kp proportional control gain",
-    " - Ki integral control gain",
-    " - Kd derivative control gain",
-    )
-min = (-1.0, -1.0, 0.0, 0.0, 0.0, 0.0,)
-default = (-1.0, -1.0, 0.25, 2.0, 0.0, 0.0,)
-max = (3.0, 3.0, 2.5, 500.0, 100.0, 100.0,)
+    print("Initializing node... ")
+    rospy.init_node("rethink_rsdk_joint_recorder")
+    print("Getting robot state... ")
+    rs = baxter_interface.RobotEnable()
+    print("Enabling robot... ")
+    rs.enable()
 
-for idx, param in enumerate(params):
-    for joint in joints:
-        gen.add(
-            joint + param, double_t, 0, joint + msg[idx],
-            default[idx], min[idx], max[idx]
-            )
+    recorder = JointRecorder(args.filename, args.record_rate)
+    rospy.on_shutdown(recorder.stop)
 
-exit(gen.generate('baxter_interface', '', 'JointTrajectoryActionServer'))
+    print("Recording. Press Ctrl-C to stop.")
+    recorder.record()
+
+    print("\nDone.")
+
+if __name__ == '__main__':
+    main()

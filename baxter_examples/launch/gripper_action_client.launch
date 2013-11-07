@@ -1,0 +1,16 @@
+<launch>
+
+  <!-- Gripper Argument -->
+  <arg name="gripper" default="right" />
+
+  <!-- Start the Gripper Action Server -->
+  <node name="rsdk_gripper_action_server" pkg="baxter_interface"
+  type="gripper_action_server.py" args="--gripper $(arg gripper)"
+  required="true" />
+
+  <!-- Run the Gripper Action Test -->
+  <node name="rsdk_gripper_action_test" pkg="baxter_examples"
+  type="gripper_action_client.py" args="--gripper $(arg gripper)"
+  output="screen" />
+
+</launch>

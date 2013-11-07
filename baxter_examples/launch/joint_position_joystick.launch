@@ -1,0 +1,20 @@
+<launch>
+
+  <!-- Joystick Device Argument-->
+  <arg name="dev" default="/dev/input/js0" />
+
+  <!-- Joystick Argument -->
+  <arg name="joystick" default="xbox" />
+
+  <!-- Start the Joy Node -->
+  <node name="joy_node" pkg="joy"
+  type="joy_node" required="true" output="screen">
+    <param name="dev" type="string" value="$(arg dev)" />
+  </node>
+
+  <!-- Run the Joint Position Joystick Example -->
+  <node name="rsdk_joint_position_joystick" pkg="baxter_examples"
+  type="joint_position_joystick.py" args="--joystick $(arg joystick)"
+  required="true" output="screen" />
+
+</launch>
