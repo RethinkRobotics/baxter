@@ -81,10 +81,10 @@ cat <<-EOF > ${tf}
 	[ -s "\${HOME}"/.bashrc ] && source "\${HOME}"/.bashrc
 	[ -s "\${HOME}"/.bash_profile ] && source "\${HOME}"/.bash_profile
 
-	# verify this script is moved out of sdk-examples
-	if [[ "${topdir}" == "sdk-examples" ]]; then
-		echo -ne "EXITING - This script must be moved from sdk-examples to \
-the root of your catkin workspace.\n"
+	# verify this script is moved out of baxter folder
+	if [[ "${topdir}" == "baxter" ]]; then
+		echo -ne "EXITING - This script must be moved from the baxter folder \
+to the root of your catkin workspace.\n"
 		exit 1
 	fi
 
