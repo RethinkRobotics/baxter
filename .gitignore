@@ -41,12 +41,12 @@ catkin
 catkin_generated
 devel
 
-*.smoketest
-*.cfgc
-baxter/baxter_interface/docs/
-baxter/baxter_interface/src/baxter_interface/cfg/
-baxter/baxter_interface/cfg/cpp/
-baxter/examples/joint-interface/baxter_joint_msgs/src/baxter_joint_msgs/msg/
-baxter/baxter_msgs/src/
+cpp
+docs
 msg_gen
 srv_gen
+*.smoketest
+*.cfgc
+*_msgs/src/
+*/src/**/cfg
+*/*/src/**/*

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package>
+  <name>baxter_sdk</name>
+  <version>0.7.0</version>
+  <description>
+    baxter_sdk metapackage containing all of the SDK packages
+    for the Baxter Research Robot from Rethink Robotics.
+  </description>
+
+  <maintainer email="rsdk.support@rethinkrobotics.com">
+    Rethink Robotics Inc.
+  </maintainer>
+  <license>BSD</license>
+  <url type="website">http://www.rethinkrobotics.com/sdk</url>
+  <url type="repository">
+    https://github.com/RethinkRobotics/baxter
+  </url>
+  <url type="bugtracker">
+    https://github.com/RethinkRobotics/baxter/issues
+  </url>
+  <author>Rethink Robotics Inc.</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>baxter_interface</run_depend>
+  <run_depend>baxter_examples</run_depend>
+  <run_depend>baxter_tools</run_depend>
+  <run_depend>baxter_common</run_depend>
+  
+  <export>
+    <metapackage/>
+  </export>
+
+</package>
