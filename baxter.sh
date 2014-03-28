@@ -33,6 +33,9 @@
 # should be executed with every new instance of a shell in which you plan on
 # working with Baxter.
 
+# Clear any previously set your_ip/your_hostname
+unset your_ip
+unset your_hostname
 #-----------------------------------------------------------------------------#
 #                 USER CONFIGURABLE ROS ENVIRONMENT VARIABLES                 #
 #-----------------------------------------------------------------------------#
@@ -66,16 +69,19 @@ else
 fi
 
 # If argument provided, set baxter_hostname to argument
-# If argument is sim, set baxter_hostname to localhost
+# If argument is sim or local, set baxter_hostname to localhost
 if [ -n "${1}" ]; then
-	if [[ "${1}" == "sim" ]]; then
+	if [[ "${1}" == "sim" ]] || [[ "${1}" == "local" ]]; then
 		baxter_hostname="localhost"
-	else
-		baxter_hostname="${1}"
+		if [[ -z ${your_ip} || "${your_ip}" == "192.168.XXX.XXX" ]] && \
+		[[ -z ${your_hostname} || "${your_hostname}" == "my_computer.local" ]]; then
+			your_hostname="localhost"
+			your_ip=""
+		fi
 	fi
 fi
 
-topdir=$(basename $(dirname $(readlink -m ${0})))
+topdir=$(basename $(readlink -f $(dirname ${BASH_SOURCE[0]})))
 
 cat <<-EOF > ${tf}
 	[ -s "\${HOME}"/.bashrc ] && source "\${HOME}"/.bashrc
@@ -117,7 +123,7 @@ variable to reflect your current IP address.\n"
 	if [ -n ${your_hostname} ] && \
 	[[ "${your_hostname}" == "my_computer.local" ]]; then
 		echo -ne "EXITING - Please edit this file, modifying the \
-'your_hostname' variable to reflect your current IP address.\n"
+'your_hostname' variable to reflect your current PC hostname.\n"
 		exit 1
 	fi
 
