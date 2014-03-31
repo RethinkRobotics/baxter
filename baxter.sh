@@ -78,6 +78,8 @@ if [ -n "${1}" ]; then
 			your_hostname="localhost"
 			your_ip=""
 		fi
+	else
+		baxter_hostname="${1}"
 	fi
 fi
 
