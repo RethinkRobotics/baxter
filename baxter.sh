@@ -90,7 +90,7 @@ cat <<-EOF > ${tf}
 	[ -s "\${HOME}"/.bash_profile ] && source "\${HOME}"/.bash_profile
 
 	# verify this script is moved out of baxter folder
-	if [[ "${topdir}" == "baxter" ]]; then
+	if [[ -e "${topdir}/baxter_sdk/package.xml" ]]; then
 		echo -ne "EXITING - This script must be moved from the baxter folder \
 to the root of your catkin workspace.\n"
 		exit 1
@@ -185,7 +185,7 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 		if [ -n "\${__ORIG_PROMPT_COMMAND}" ]; then
 			eval \${__ORIG_PROMPT_COMMAND}
 		fi
-		if ! echo \${PS1} | grep 'baxter' &>/dev/null; then
+		if ! echo \${PS1} | grep '\[baxter' &>/dev/null; then
 			export PS1="\[\033[00;33m\][baxter - \
 \${ROS_MASTER_URI}]\[\033[00m\] \${PS1}"
 		fi
@@ -194,7 +194,7 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 	if [ "\${TERM}" != "dumb" ]; then
 		export PROMPT_COMMAND=__ros_prompt
 		__ROS_PROMPT=1
-	elif ! echo \${PS1} | grep 'baxter' &>/dev/null; then
+	elif ! echo \${PS1} | grep '\[baxter' &>/dev/null; then
 		export PS1="[baxter - \${ROS_MASTER_URI}] \${PS1}"
 	fi
 
