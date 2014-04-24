@@ -8,17 +8,17 @@ This repository contains metapackages and files for installation/use of the Baxt
 Installation
 ------------
 | Please follow the Getting Started wiki page for instructions on installation of the Baxter SDK:
-| https://github.com/RethinkRobotics/sdk-docs/wiki/Installing-the-Research-SDK
+| http://sdk.rethinkrobotics.com/wiki/Workstation_Setup
 
 Code & Tickets
 --------------
 
 +-----------------+----------------------------------------------------------------+
-| Documentation   | https://github.com/RethinkRobotics/sdk-docs/wiki               |
+| Documentation   | http://sdk.rethinkrobotics.com/wiki                            |
 +-----------------+----------------------------------------------------------------+
 | Issues          | https://github.com/RethinkRobotics/baxter/issues               |
 +-----------------+----------------------------------------------------------------+
-| Contributions   | https://github.com/RethinkRobotics/sdk-docs/wiki/Contributions |
+| Contributions   | http://sdk.rethinkrobotics.com/wiki/Contributions              |
 +-----------------+----------------------------------------------------------------+
 
 Baxter Repository Overview
@@ -50,4 +50,4 @@ Other Baxter Repositories
 Latest Release Information
 --------------------------
 
-https://github.com/RethinkRobotics/sdk-docs/wiki/Release-Changes
+http://sdk.rethinkrobotics.com/wiki/Release-Changes
