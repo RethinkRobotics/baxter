@@ -1,7 +1,7 @@
-Rethink Robotics SDK 0.7.0 Release Notes
+Rethink Robotics SDK 1.0.0 Release Notes
 ========================================
 
-Date: 11/21/2013
+Date: 5/1/2014
 
 Overview
 ------------
@@ -11,83 +11,79 @@ applications to run with the Baxter Research Robot.
 
 
 See our wiki for more information:
-https://github.com/RethinkRobotics/sdk-docs/wiki
-
+http://sdk.rethinkrobotics.com/wiki
 
 Update Instructions
 -------------------
 
-https://github.com/RethinkRobotics/sdk-docs/wiki/Software-Update
+http://sdk.rethinkrobotics.com/wiki/Software_Update
 
 Changes Wiki Page
 -------------------
 
-https://github.com/RethinkRobotics/sdk-docs/wiki/Release-Changes
+http://sdk.rethinkrobotics.com/wiki/Release_Changes
 
 Major Updates
 -------------
 
-* Now publicly available!
-* Joint torque control
-* Gazebo Support
-* Joint position accuracy improvements (factor of 10)
-* ROS Groovy on robot
-* ROS Topic/Message cleanup allowing for direct robot communication (no '/sdk' proxy, decreased latency)
-* Catkinization of SDK
-* SDK reorganization into standalone metapackages, multiple repositories
-* Ability to set speeds of joint position command execution
-* Ability to specify gripper/object mass for custom grippers
+* SSH access to the robot! Compile and run custom software on the robot
+* New user editable wiki (http://sdk.rethinkrobotics.com/wiki)
+* New 'raw' joint position control mode, command joint positions directly to JCBs
+* Dynamic URDF loading of robot internal model to the parameter server
+* Inverse kinematics service seeding ability
+* Bootable demo mode
+* Joint trajectory action server spline fitting, more accurate trajectory execution
+* Full interface compatible Gazebo support
+* Rosbridge
+* Debian installation availability
+* New joint position waypoints example program
+* Advanced network configuration options
+* Custom gripper state/property publication, ability to emulate Rethink grippers
 
 Additions
 ---------
 
-* Joint torque control
-* Gazebo Support
-* Ability to set speeds of joint position command execution
-* Ability to specify gripper/object mass for custom grippers
-* Introduction of baxter_core_msgs and baxter_maintenance_msgs (formerly baxter_msgs)
-* Convenient catkin environment initialization script baxter.sh (formerly init.sh)
-* ROS/network configuration display in tty3 of the robot
-* Gripper Cuff control example
-* Ability to reset cameras (re-enumerate if not listed at startup)
-* Gripper Action Server and example program
-* Gripper control in joint trajectory playback example
-* Gripper cuff control in joint recorder
-* Ability to disable arm-to-arm collision avoidance
-* Ability to disable cuff zero-g interaction
-* Ability to disable gravity compensation
-* Launch files for action server/joystick examples
-* Boot animation
-* rosbags of /diagnostics in FTP Logs
-* All (rosrun) examples now include -h (help) argument/description
+* SSH access to the robot
+* New user editable wiki (http://sdk.rethinkrobotics.com/wiki)
+* Dynamic URDF loading of robot internal model to the parameter server
+* Rosbridge
+* Demo mode
+* 'Raw' joint position control mode, command directly to the JCBs
+* Software version compatibility verification
+* Debian installation
+* Advanced network and ROS environment configuration options (static IP, ROS master naming type, etc.)
+* Joint position waypoints example
+* Ability to stop, start, reboot robot software
+* URDF accelerometer, display links and joints
+* URDF Gazebo plugins for cameras, display, sonar, IR range sensors, accelerometers
+* Gripper assembly meshes
+* Second generation pneumatic gripper meshes
 
 Removals
 --------
 
-* baxter_msgs (now baxter_core_msgs, baxter_maintenance_msgs)
-* rosbuild support
-* joystart scripts (now replaced with roslaunch files)
-* init.sh (now replaced with baxter.sh for catkin environments)
+* baxter_maintenance_msgs LSCores and RMCores services
 
 Changes
 -------
 
-* ROS Groovy on robot
-* Joint position accuracy improvements (factor of 10)
-* ROS Topic/Message cleanup allowing for direct robot communication (no '/sdk' proxy, decreased latency)
-* SDK reorganization into standalone metapackages
-* Catkin/Bloom standard package reorganization
-* Limb joint commands now single message - reflected in limb interface
-* Major gripper rewrite to support more advanced usage and future custom grippers
-* ROS logging cleanup for console, diagnostics use.
-* More explicit error messages
-* Improved verbosity/standardization of help output
-* DigitalIO state_changed signal/slot and read-only state property (no longer callable)
+* Inverse kinematics service seeding ability
+* Joint trajectory action server spline fitting, more accurate trajectory execution
+* Full interface compatible Gazebo support
+* All examples and tools verify software version compatibility
+* Command timeout no longer disables robot, reverts to position mode holding current
+* Sourceable baxter.sh script
+* 'sim' baxter.sh argument
+* https rosinstall repository checkouts (no SSH keys required)
+* Gripper class hardware_version to hardware_name
 
 Fixes
 -----
 
-* Tuck arm improvements to handle ctrl-c and partial tucks
+* Limb tcp_nodelay transport hint for joint states, endpoint state, and joint commands
+* Ability to command subset of joints in torque and velocity control modes
+* Head nod incorrect wait_for validation
+* Update_robot timeout waiting for available updates
 
 Known Issues
 ------------
