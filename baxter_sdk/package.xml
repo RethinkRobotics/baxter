@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>baxter_sdk</name>
-  <version>0.7.0</version>
+  <version>1.0.0</version>
   <description>
     baxter_sdk metapackage containing all of the SDK packages
     for the Baxter Research Robot from Rethink Robotics.

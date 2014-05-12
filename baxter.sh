@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2013, Rethink Robotics
+# Copyright (c) 2013-2014, Rethink Robotics
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,9 @@
 # should be executed with every new instance of a shell in which you plan on
 # working with Baxter.
 
+# Clear any previously set your_ip/your_hostname
+unset your_ip
+unset your_hostname
 #-----------------------------------------------------------------------------#
 #                 USER CONFIGURABLE ROS ENVIRONMENT VARIABLES                 #
 #-----------------------------------------------------------------------------#
@@ -66,23 +69,28 @@ else
 fi
 
 # If argument provided, set baxter_hostname to argument
-# If argument is sim, set baxter_hostname to localhost
+# If argument is sim or local, set baxter_hostname to localhost
 if [ -n "${1}" ]; then
-	if [[ "${1}" == "sim" ]]; then
+	if [[ "${1}" == "sim" ]] || [[ "${1}" == "local" ]]; then
 		baxter_hostname="localhost"
+		if [[ -z ${your_ip} || "${your_ip}" == "192.168.XXX.XXX" ]] && \
+		[[ -z ${your_hostname} || "${your_hostname}" == "my_computer.local" ]]; then
+			your_hostname="localhost"
+			your_ip=""
+		fi
 	else
 		baxter_hostname="${1}"
 	fi
 fi
 
-topdir=$(basename $(dirname $(readlink -m ${0})))
+topdir=$(basename $(readlink -f $(dirname ${BASH_SOURCE[0]})))
 
 cat <<-EOF > ${tf}
 	[ -s "\${HOME}"/.bashrc ] && source "\${HOME}"/.bashrc
 	[ -s "\${HOME}"/.bash_profile ] && source "\${HOME}"/.bash_profile
 
 	# verify this script is moved out of baxter folder
-	if [[ "${topdir}" == "baxter" ]]; then
+	if [[ -e "${topdir}/baxter_sdk/package.xml" ]]; then
 		echo -ne "EXITING - This script must be moved from the baxter folder \
 to the root of your catkin workspace.\n"
 		exit 1
@@ -117,7 +125,7 @@ variable to reflect your current IP address.\n"
 	if [ -n ${your_hostname} ] && \
 	[[ "${your_hostname}" == "my_computer.local" ]]; then
 		echo -ne "EXITING - Please edit this file, modifying the \
-'your_hostname' variable to reflect your current IP address.\n"
+'your_hostname' variable to reflect your current PC hostname.\n"
 		exit 1
 	fi
 
@@ -177,7 +185,7 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 		if [ -n "\${__ORIG_PROMPT_COMMAND}" ]; then
 			eval \${__ORIG_PROMPT_COMMAND}
 		fi
-		if ! echo \${PS1} | grep 'baxter' &>/dev/null; then
+		if ! echo \${PS1} | grep '\[baxter' &>/dev/null; then
 			export PS1="\[\033[00;33m\][baxter - \
 \${ROS_MASTER_URI}]\[\033[00m\] \${PS1}"
 		fi
@@ -186,7 +194,7 @@ has been built (source /opt/ros/\${ros_version}/setup.sh; catkin_make).\n\
 	if [ "\${TERM}" != "dumb" ]; then
 		export PROMPT_COMMAND=__ros_prompt
 		__ROS_PROMPT=1
-	elif ! echo \${PS1} | grep 'baxter' &>/dev/null; then
+	elif ! echo \${PS1} | grep '\[baxter' &>/dev/null; then
 		export PS1="[baxter - \${ROS_MASTER_URI}] \${PS1}"
 	fi
 

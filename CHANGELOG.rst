@@ -1,3 +1,9 @@
+1.0.0 (2014-5-1)
+---------------------------------
+- Updates rosinstall to use https repo checkouts (no SSH keys required)
+- Updates baxter.sh to support 'sim' (local) environment settings argument
+- Verbose baxter.sh run location and shell status
+
 0.7.0 (2013-11-21)
 ---------------------------------
 - The baxter repository replaces sdk-examples. This package contains metapackages and files for installation of the 'broken out' sdk repository structure.
