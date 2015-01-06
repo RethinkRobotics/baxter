@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2013-2014, Rethink Robotics
+# Copyright (c) 2013-2015, Rethink Robotics
 # All rights reserved.
 
 # This file is to be used in the *root* of your Catkin workspace.

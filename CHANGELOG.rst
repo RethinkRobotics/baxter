@@ -1,4 +1,4 @@
-1.1.0 (2014-12-1)
+1.1.0 (2015-1-2)
 ---------------------------------
 - Updates baxter.sh to default to indigo ROS version
 
