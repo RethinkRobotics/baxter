@@ -1,3 +1,7 @@
+1.1.0 (2015-1-2)
+---------------------------------
+- Updates baxter.sh to default to indigo ROS version
+
 1.0.0 (2014-5-1)
 ---------------------------------
 - Updates rosinstall to use https repo checkouts (no SSH keys required)
