@@ -1,3 +1,7 @@
+1.1.1 (2015-4-15)
+---------------------------------
+- Updates baxter.sh to use a cross platform compatible command for making temporary directories
+
 1.1.0 (2015-1-2)
 ---------------------------------
 - Updates baxter.sh to default to indigo ROS version

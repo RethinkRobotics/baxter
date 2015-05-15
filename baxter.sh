@@ -30,7 +30,7 @@ your_ip="192.168.XXX.XXX"
 ros_version="indigo"
 #-----------------------------------------------------------------------------#
 
-tf=$(tempfile)
+tf=$(mktemp)
 trap "rm -f -- '${tf}'" EXIT
 
 # If this file specifies an ip address or hostname - unset any previously set

@@ -1,7 +1,7 @@
-Rethink Robotics SDK 1.0.0 Release Notes
+Rethink Robotics SDK 1.1.1 Release Notes
 ========================================
 
-Date: 5/1/2014
+Date: 5/15/2015
 
 Overview
 ------------
@@ -26,64 +26,42 @@ http://sdk.rethinkrobotics.com/wiki/Release_Changes
 Major Updates
 -------------
 
-* SSH access to the robot! Compile and run custom software on the robot
-* New user editable wiki (http://sdk.rethinkrobotics.com/wiki)
-* New 'raw' joint position control mode, command joint positions directly to JCBs
-* Dynamic URDF loading of robot internal model to the parameter server
-* Inverse kinematics service seeding ability
-* Bootable demo mode
-* Joint trajectory action server spline fitting, more accurate trajectory execution
-* Full interface compatible Gazebo support
-* Rosbridge
-* Debian installation availability
-* New joint position waypoints example program
-* Advanced network configuration options
-* Custom gripper state/property publication, ability to emulate Rethink grippers
-
 Additions
 ---------
 
-* SSH access to the robot
-* New user editable wiki (http://sdk.rethinkrobotics.com/wiki)
-* Dynamic URDF loading of robot internal model to the parameter server
-* Rosbridge
-* Demo mode
-* 'Raw' joint position control mode, command directly to the JCBs
-* Software version compatibility verification
-* Debian installation
-* Advanced network and ROS environment configuration options (static IP, ROS master naming type, etc.)
-* Joint position waypoints example
-* Ability to stop, start, reboot robot software
-* URDF accelerometer, display links and joints
-* URDF Gazebo plugins for cameras, display, sonar, IR range sensors, accelerometers
-* Gripper assembly meshes
-* Second generation pneumatic gripper meshes
+* Added torso navigators to control the UI in Demo Mode
 
 Removals
 --------
 
-* baxter_maintenance_msgs LSCores and RMCores services
-
 Changes
 -------
 
-* Inverse kinematics service seeding ability
-* Joint trajectory action server spline fitting, more accurate trajectory execution
-* Full interface compatible Gazebo support
-* All examples and tools verify software version compatibility
-* Command timeout no longer disables robot, reverts to position mode holding current
-* Sourceable baxter.sh script
-* 'sim' baxter.sh argument
-* https rosinstall repository checkouts (no SSH keys required)
-* Gripper class hardware_version to hardware_name
+* Migration from update_robot.py to the *rethink-updater* command on-robot via *SSH*
+  http://sdk.rethinkrobotics.com/wiki/SSH_Update
 
 Fixes
 -----
 
-* Limb tcp_nodelay transport hint for joint states, endpoint state, and joint commands
-* Ability to command subset of joints in torque and velocity control modes
-* Head nod incorrect wait_for validation
-* Update_robot timeout waiting for available updates
+* Reduced overall robot restart/shutdown time
+* Added access to cmake, git, and wstool tools for the ruser account
+* Patched on-robot ros_comm Transport Memory leak
+* Upgraded on-robot OpenCV to 2.4.9 and recompiled with several plugins enabled (including gtk).
+  This fixes an issue that prevented xdisplay_image.py from displaying any image on Baxter's screen when   
+  run from the ruser account
+* Fixed an issue that prevented on-robot ROSBridge from loading and communicating properly
+* Fixed a bug that caused the JTAS to error with a path of one or two points is supplied as a trajectory
+* Fixed an issue that caused the Joint Trajectory Action Server to throw an error when a path
+  of one or two points were supplied
+* Added use of mktemp in baxter.sh for Arch linux compatibility
+* Added a calculation to increase the amount of time allowed to move arm to the initial
+  pose of joint_trajectory_playback script in baxter_examples
+* Fixed an issue in syncing gripper playback with joint_trajectory_playback arm execution
+* Fixed a timing issue preventing joint_trajectory_playback from completing execution
+* Fixed an issue where the on-robot /cameras/list service returned only one camera if another camera
+  was broken (or unplugged)
+* Fixed an issue that caused the on-robot IK service to be too conservative in estimating if  solutions
+  were feasible which resulted in an increase in No Solutions
 
 Known Issues
 ------------
