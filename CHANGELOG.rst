@@ -1,3 +1,7 @@
+1.2.0 (2015-12-21)
+---------------------------------
+- No changes other than version bumps
+
 1.1.1 (2015-4-15)
 ---------------------------------
 - Updates baxter.sh to use a cross platform compatible command for making temporary directories
